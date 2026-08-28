@@ -2,7 +2,7 @@
 
 Part 2. React + Tailwind client, Node.js/Express API,
 managed as an npm workspaces monorepo. See the Part 1 planning document for full
-architecture, data schema, and design pattern decisions — this README covers day-to-day
+architecture, data schema, and design pattern decisions - this README covers day-to-day
 setup only.
 
 ## Structure
@@ -33,18 +33,18 @@ System Architecture doc.
 
 ## Prerequisites
 
-- Node.js 22 (see `.nvmrc` — run `nvm use` if you have nvm installed)
+- Node.js 22 (see `.nvmrc` - run `nvm use` if you have nvm installed)
 - npm 10+ (ships with Node 22)
 
 ## Getting started
 
 ```bash
-# from the repo root — installs both client and server dependencies
+# from the repo root - installs both client and server dependencies
 npm install
 
 # copy env templates and fill in real values
 cp server/.env.example server/.env
-cp client/.env.example client/.env.local   # optional — defaults work for local dev
+cp client/.env.example client/.env.local   # optional - defaults work for local dev
 ```
 
 Run both apps in separate terminals:
@@ -67,7 +67,7 @@ curl http://localhost:4000/api/health
 
 ## Environment variables
 
-Never commit a real `.env` file — `.env.example` files document what's needed and are
+Never commit a real `.env` file - `.env.example` files document what's needed and are
 safe to commit. See `server/.env.example` and `client/.env.example` for the full list.
 In production, these are set via Azure App Service → Configuration, not committed files.
 
@@ -83,9 +83,27 @@ In production, these are set via Azure App Service → Configuration, not commit
 
 ## Contributing
 
-- Branch from `develop`, not `main` (see the DevOps: GitHub Actions Pipeline task for
-  the full branching strategy).
-- Keep controllers thin — business logic belongs in `services/`, data access in
+## Branching & team workflow
+
+There is no `develop` branch. Each team member works on their own personal branch
+(`Thomas-backend`, `Michaela-backend`, `Justin-frontend`, `Nomsa-Frontend`, etc.),
+branched from and merged back into `main` via pull request.
+
+**A note on enforcement:** GitHub Free for organizations does not support branch
+protection rules on private repositories (this requires GitHub Team or above), so
+none of the rules below are technically enforced by GitHub - they're a team agreement
+everyone commits to following manually:
+
+- Never push directly to `main` - always open a pull request, even for small changes.
+- Pull the latest `main` into your branch before opening a PR, to catch conflicts early
+  rather than at merge time.
+- Get at least one teammate's review/approval on a PR before merging it, even though
+  GitHub won't block the merge if you skip this.
+- Keep commits scoped and clearly described (what changed and why), so `git log` stays
+  useful for the team and for the module's Proof of Collaboration evidence.
+
+## Contributing
+
+- Keep controllers thin - business logic belongs in `services/`, data access in
   `repositories/`. This keeps everything testable without a real database connection.
 - Add new environment variables to the relevant `.env.example` in the same PR that
-  introduces them, so nobody's local setup silently breaks.
