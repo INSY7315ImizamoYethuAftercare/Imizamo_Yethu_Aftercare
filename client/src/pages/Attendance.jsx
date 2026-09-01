@@ -1,5 +1,5 @@
 function Attendance() {
-  // Temporary fake data (we will connect to real data later)
+  // Temporary fake data
   const learners = [
     { id: 1, name: "Aisha Petersen", status: "Present" },
     { id: 2, name: "Amara Okoye", status: "Present" },
@@ -31,7 +31,7 @@ function Attendance() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-4 pt-2 pb-28">
+      <div className="flex-1 px-4 pt-2 pb-32">
         
         {/* Title */}
         <h1 className="text-2xl font-bold text-gray-900 mb-5 flex items-center gap-2">
@@ -71,7 +71,7 @@ function Attendance() {
         </div>
 
         {/* Learner List */}
-        <div className="space-y-4">
+        <div className="space-y-4 mb-8">
           {learners.map((learner) => (
             <div 
               key={learner.id}
@@ -93,6 +93,22 @@ function Attendance() {
             </div>
           ))}
         </div>
+
+        {/* Session Notes */}
+        <div className="mb-6">
+          <label className="block text-xs font-semibold text-gray-400 tracking-wide mb-2">
+            SESSION NOTES
+          </label>
+          <textarea
+            placeholder="Add any notes about today's session..."
+            className="w-full h-24 p-3 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-300 resize-none"
+          ></textarea>
+        </div>
+
+        {/* Save Button */}
+        <button className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-sm active:scale-95 transition">
+          Save Attendance
+        </button>
 
       </div>
     </div>
