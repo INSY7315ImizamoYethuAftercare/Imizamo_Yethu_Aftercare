@@ -1,4 +1,14 @@
 function Attendance() {
+  // Temporary fake data (we will connect to real data later)
+  const learners = [
+    { id: 1, name: "Aisha Petersen", status: "Present" },
+    { id: 2, name: "Amara Okoye", status: "Present" },
+    { id: 3, name: "Liam van der Berg", status: "Present" },
+    { id: 4, name: "Keanu Abrahams", status: "Present" },
+    { id: 5, name: "Zoe Ntombela", status: "Present" },
+    { id: 6, name: "Sipho Mkhize", status: "Absent" },
+  ];
+
   return (
     <div className="min-h-screen bg-white flex flex-col">
       
@@ -15,7 +25,6 @@ function Attendance() {
           </span>
         </div>
 
-        {/* Notification Bell Placeholder */}
         <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
           <span className="text-xl">🔔</span>
         </button>
@@ -30,28 +39,28 @@ function Attendance() {
           <span className="text-green-500 text-xl">✓</span>
         </h1>
 
-        {/* Colour Group Filters - Placeholder for now */}
-        <div className="flex gap-2 mb-5">
-          <button className="px-4 py-1.5 rounded-full text-sm font-medium bg-yellow-300 text-gray-800">
+        {/* Colour Group Filters */}
+        <div className="flex gap-2 mb-5 overflow-x-auto">
+          <button className="px-4 py-1.5 rounded-full text-sm font-medium bg-yellow-300 text-gray-800 whitespace-nowrap">
             Yellow
           </button>
-          <button className="px-4 py-1.5 rounded-full text-sm font-medium text-gray-500">
+          <button className="px-4 py-1.5 rounded-full text-sm font-medium text-gray-500 whitespace-nowrap">
             Green
           </button>
-          <button className="px-4 py-1.5 rounded-full text-sm font-medium text-gray-500">
+          <button className="px-4 py-1.5 rounded-full text-sm font-medium text-gray-500 whitespace-nowrap">
             Red
           </button>
-          <button className="px-4 py-1.5 rounded-full text-sm font-medium text-gray-500">
+          <button className="px-4 py-1.5 rounded-full text-sm font-medium text-gray-500 whitespace-nowrap">
             Blue
           </button>
         </div>
 
-        {/* Counter + Actions - Placeholder */}
+        {/* Counter + Actions */}
         <div className="flex items-center justify-between mb-6">
           <div className="text-3xl font-bold text-yellow-400">
             2 / 2
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
             <button className="px-4 py-1.5 rounded-full bg-cyan-400 text-white text-sm font-medium">
               All In
             </button>
@@ -61,7 +70,29 @@ function Attendance() {
           </div>
         </div>
 
-        {/* Learner List will go here next */}
+        {/* Learner List */}
+        <div className="space-y-4">
+          {learners.map((learner) => (
+            <div 
+              key={learner.id}
+              className="flex items-center justify-between"
+            >
+              <span className="text-base text-gray-800">
+                {learner.name}
+              </span>
+
+              <button
+                className={`px-5 py-1.5 rounded-full text-sm font-medium ${
+                  learner.status === "Present"
+                    ? "bg-cyan-400 text-white"
+                    : "bg-orange-400 text-white"
+                }`}
+              >
+                {learner.status}
+              </button>
+            </div>
+          ))}
+        </div>
 
       </div>
     </div>
