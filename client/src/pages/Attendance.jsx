@@ -20,6 +20,20 @@ function Attendance() {
     );
   };
 
+  // Mark everyone as Present
+  const markAllPresent = () => {
+    setLearners((prev) =>
+      prev.map((learner) => ({ ...learner, status: "Present" }))
+    );
+  };
+
+  // Mark everyone as Absent
+  const clearAll = () => {
+    setLearners((prev) =>
+      prev.map((learner) => ({ ...learner, status: "Absent" }))
+    );
+  };
+
   const presentCount = learners.filter((l) => l.status === "Present").length;
 
   return (
@@ -101,10 +115,16 @@ function Attendance() {
           </div>
 
           <div className="flex gap-2">
-            <button className="px-4 py-1.5 rounded-full bg-emerald-400 text-white text-sm font-medium">
+            <button 
+              onClick={markAllPresent}
+              className="px-4 py-1.5 rounded-full bg-emerald-400 text-white text-sm font-medium"
+            >
               All In
             </button>
-            <button className="px-4 py-1.5 rounded-full bg-white text-gray-500 text-sm font-medium border border-gray-200">
+            <button 
+              onClick={clearAll}
+              className="px-4 py-1.5 rounded-full bg-white text-gray-500 text-sm font-medium border border-gray-200"
+            >
               Clear
             </button>
           </div>
