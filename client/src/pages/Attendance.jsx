@@ -31,7 +31,7 @@ function Attendance() {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 px-4 pt-2 pb-32">
+      <div className="flex-1 px-4 pt-2 pb-28">
         
         {/* Title */}
         <h1 className="text-2xl font-bold text-gray-900 mb-5 flex items-center gap-2">
@@ -111,6 +111,31 @@ function Attendance() {
         </button>
 
       </div>
+
+      {/* Bottom Navigation */}
+      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-3 flex justify-between items-center">
+        <button className="flex flex-col items-center text-gray-400">
+          <span className="text-xl">🏠</span>
+        </button>
+
+        <button className="flex flex-col items-center text-green-500">
+          <span className="text-xl">✓</span>
+          <span className="text-[10px] mt-0.5">Attendance</span>
+        </button>
+
+        <button className="flex flex-col items-center text-red-400">
+          <span className="text-xl">🎒</span>
+        </button>
+
+        <button className="flex flex-col items-center text-gray-400">
+          <span className="text-xl">📊</span>
+        </button>
+
+        <button className="flex flex-col items-center text-orange-400">
+          <span className="text-xl">☰</span>
+        </button>
+      </div>
+
     </div>
   );
 }
