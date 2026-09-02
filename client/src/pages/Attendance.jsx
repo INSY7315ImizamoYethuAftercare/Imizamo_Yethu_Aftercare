@@ -2,15 +2,20 @@ import { useState } from "react";
 
 function Attendance() {
   const [learners, setLearners] = useState([
-    { id: 1, name: "Aisha Petersen", grade: "Grade 2", status: "Present" },
-    { id: 2, name: "Amara Okoye", grade: "Grade 1", status: "Present" },
-    { id: 3, name: "Liam van der Berg", grade: "Grade 4", status: "Present" },
-    { id: 4, name: "Keanu Abrahams", grade: "Grade 3", status: "Present" },
-    { id: 5, name: "Zoe Ntombela", grade: "Grade 6", status: "Present" },
-    { id: 6, name: "Sipho Mkhize", grade: "Grade 7", status: "Absent" },
+    { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", status: "Present" },
+    { id: 2, name: "Amara Okoye", grade: "Grade 1", group: "Yellow", status: "Present" },
+    { id: 3, name: "Liam van der Berg", grade: "Grade 4", group: "Green", status: "Present" },
+    { id: 4, name: "Keanu Abrahams", grade: "Grade 3", group: "Green", status: "Present" },
+    { id: 5, name: "Zoe Ntombela", grade: "Grade 6", group: "Red", status: "Present" },
+    { id: 6, name: "Sipho Mkhize", grade: "Grade 7", group: "Blue", status: "Absent" },
   ]);
 
   const [selectedGroup, setSelectedGroup] = useState("Yellow");
+
+  // Only show learners in the selected colour group
+  const filteredLearners = learners.filter(
+    (learner) => learner.group === selectedGroup
+  );
 
   const toggleStatus = (id, newStatus) => {
     setLearners((prev) =>
@@ -20,21 +25,27 @@ function Attendance() {
     );
   };
 
-  // Mark everyone as Present
   const markAllPresent = () => {
     setLearners((prev) =>
-      prev.map((learner) => ({ ...learner, status: "Present" }))
+      prev.map((learner) =>
+        learner.group === selectedGroup
+          ? { ...learner, status: "Present" }
+          : learner
+      )
     );
   };
 
-  // Mark everyone as Absent
   const clearAll = () => {
     setLearners((prev) =>
-      prev.map((learner) => ({ ...learner, status: "Absent" }))
+      prev.map((learner) =>
+        learner.group === selectedGroup
+          ? { ...learner, status: "Absent" }
+          : learner
+      )
     );
   };
 
-  const presentCount = learners.filter((l) => l.status === "Present").length;
+  const presentCount = filteredLearners.filter((l) => l.status === "Present").length;
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
@@ -49,7 +60,7 @@ function Attendance() {
           />
           <div>
             <p className="text-sm font-semibold text-orange-500">Ms Nkosi</p>
-            <p className="text-xs text-gray-500">Teacher • Yellow</p>
+            <p className="text-xs text-gray-500">Teacher • {selectedGroup}</p>
           </div>
         </div>
 
@@ -109,7 +120,7 @@ function Attendance() {
               selectedGroup === "Green" ? "text-green-600" :
               selectedGroup === "Red" ? "text-red-500" : "text-sky-500"
             }`}>
-              {presentCount} / {learners.length}
+              {presentCount} / {filteredLearners.length}
             </p>
             <p className="text-xs text-gray-500 mt-0.5">learners present</p>
           </div>
@@ -132,7 +143,7 @@ function Attendance() {
 
         {/* Learner Cards */}
         <div className="space-y-3 mb-6">
-          {learners.map((learner) => (
+          {filteredLearners.map((learner) => (
             <div 
               key={learner.id}
               className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm"
