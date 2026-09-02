@@ -1,6 +1,7 @@
+import { useState } from "react";
+
 function Observations() {
-  // Temporary fake observations
-  const observations = [
+  const [observations, setObservations] = useState([
     {
       id: 1,
       category: "Social",
@@ -15,9 +16,14 @@ function Observations() {
       note: "Reading fluency improving significantly. Completed level 3 book.",
       teacher: "Ms Nkosi",
     },
-  ];
+  ]);
 
-  // Helper to get colour for category
+  const [showForm, setShowForm] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("Academic");
+  const [note, setNote] = useState("");
+
+  const categories = ["Academic", "Social", "Wellbeing", "Creative", "Physical"];
+
   const getCategoryColour = (category) => {
     switch (category) {
       case "Social":
@@ -33,6 +39,40 @@ function Observations() {
       default:
         return "text-gray-500";
     }
+  };
+
+  const getCategoryBg = (category) => {
+    switch (category) {
+      case "Social":
+        return "bg-cyan-400 text-white";
+      case "Academic":
+        return "bg-blue-400 text-white";
+      case "Wellbeing":
+        return "bg-green-400 text-white";
+      case "Creative":
+        return "bg-pink-400 text-white";
+      case "Physical":
+        return "bg-purple-400 text-white";
+      default:
+        return "bg-gray-200 text-gray-600";
+    }
+  };
+
+  const handleSave = () => {
+    if (!note.trim()) return;
+
+    const newObservation = {
+      id: Date.now(),
+      category: selectedCategory,
+      date: new Date().toISOString().split("T")[0],
+      note: note,
+      teacher: "Ms Nkosi",
+    };
+
+    setObservations([newObservation, ...observations]);
+    setNote("");
+    setSelectedCategory("Academic");
+    setShowForm(false);
   };
 
   return (
@@ -114,9 +154,65 @@ function Observations() {
         </div>
 
         {/* Add Observation Button */}
-        <button className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base mb-6 shadow-sm">
-          + Add Observation
-        </button>
+        {!showForm && (
+          <button 
+            onClick={() => setShowForm(true)}
+            className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base mb-6 shadow-sm"
+          >
+            + Add Observation
+          </button>
+        )}
+
+        {/* New Observation Form */}
+        {showForm && (
+          <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm">
+            <h2 className="font-semibold text-gray-900 mb-3">New Observation</h2>
+
+            {/* Category Pills */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {categories.map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                    selectedCategory === cat
+                      ? getCategoryBg(cat)
+                      : "bg-gray-100 text-gray-500"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Note Textarea */}
+            <textarea
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="Write your observation here..."
+              className="w-full h-28 p-3 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none mb-4"
+            ></textarea>
+
+            {/* Cancel + Save Buttons */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setShowForm(false);
+                  setNote("");
+                }}
+                className="flex-1 py-2.5 rounded-full bg-gray-100 text-gray-600 font-medium text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleSave}
+                className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-medium text-sm"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Observations List */}
         <div className="space-y-4">
