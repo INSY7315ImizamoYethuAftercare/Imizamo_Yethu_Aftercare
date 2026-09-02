@@ -1,9 +1,9 @@
-import Attendance from './pages/Attendance';
+import Observations from './pages/Observations';
 
 function App() {
   return (
     <div>
-      <Attendance />
+      <Observations />
     </div>
   );
 }
