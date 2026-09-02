@@ -1,6 +1,11 @@
 import { useState } from "react";
 
 function Observations() {
+  const [activeTab, setActiveTab] = useState("Observations");
+  const [showForm, setShowForm] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState("Academic");
+  const [note, setNote] = useState("");
+
   const [observations, setObservations] = useState([
     {
       id: 1,
@@ -18,43 +23,27 @@ function Observations() {
     },
   ]);
 
-  const [showForm, setShowForm] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState("Academic");
-  const [note, setNote] = useState("");
-
   const categories = ["Academic", "Social", "Wellbeing", "Creative", "Physical"];
 
   const getCategoryColour = (category) => {
     switch (category) {
-      case "Social":
-        return "text-cyan-500";
-      case "Academic":
-        return "text-blue-500";
-      case "Wellbeing":
-        return "text-green-500";
-      case "Creative":
-        return "text-pink-500";
-      case "Physical":
-        return "text-purple-500";
-      default:
-        return "text-gray-500";
+      case "Social": return "text-cyan-500";
+      case "Academic": return "text-blue-500";
+      case "Wellbeing": return "text-green-500";
+      case "Creative": return "text-pink-500";
+      case "Physical": return "text-purple-500";
+      default: return "text-gray-500";
     }
   };
 
   const getCategoryBg = (category) => {
     switch (category) {
-      case "Social":
-        return "bg-cyan-400 text-white";
-      case "Academic":
-        return "bg-blue-400 text-white";
-      case "Wellbeing":
-        return "bg-green-400 text-white";
-      case "Creative":
-        return "bg-pink-400 text-white";
-      case "Physical":
-        return "bg-purple-400 text-white";
-      default:
-        return "bg-gray-200 text-gray-600";
+      case "Social": return "bg-cyan-400 text-white";
+      case "Academic": return "bg-blue-400 text-white";
+      case "Wellbeing": return "bg-green-400 text-white";
+      case "Creative": return "bg-pink-400 text-white";
+      case "Physical": return "bg-purple-400 text-white";
+      default: return "bg-gray-200 text-gray-600";
     }
   };
 
@@ -142,102 +131,201 @@ function Observations() {
 
         {/* Tabs */}
         <div className="flex gap-2 mb-5">
-          <button className="flex-1 py-2 rounded-full text-sm font-medium bg-white text-gray-500 border border-gray-200">
-            Profile
-          </button>
-          <button className="flex-1 py-2 rounded-full text-sm font-medium bg-yellow-300 text-gray-800">
-            Observations
-          </button>
-          <button className="flex-1 py-2 rounded-full text-sm font-medium bg-white text-gray-500 border border-gray-200">
-            Attendance
-          </button>
+          {["Profile", "Observations", "Attendance"].map((tab) => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`flex-1 py-2 rounded-full text-sm font-medium transition ${
+                activeTab === tab
+                  ? "bg-yellow-300 text-gray-800"
+                  : "bg-white text-gray-500 border border-gray-200"
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
         </div>
 
-        {/* Add Observation Button */}
-        {!showForm && (
-          <button 
-            onClick={() => setShowForm(true)}
-            className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base mb-6 shadow-sm"
-          >
-            + Add Observation
-          </button>
-        )}
-
-        {/* New Observation Form */}
-        {showForm && (
-          <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm">
-            <h2 className="font-semibold text-gray-900 mb-3">New Observation</h2>
-
-            {/* Category Pills */}
-            <div className="flex flex-wrap gap-2 mb-4">
-              {categories.map((cat) => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
-                    selectedCategory === cat
-                      ? getCategoryBg(cat)
-                      : "bg-gray-100 text-gray-500"
-                  }`}
-                >
-                  {cat}
-                </button>
-              ))}
+        {/* ===================== PROFILE TAB ===================== */}
+        {activeTab === "Profile" && (
+          <div className="space-y-4">
+            {/* Parent / Guardian */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">👤</span>
+                <h3 className="font-semibold text-gray-900">Parent / Guardian</h3>
+              </div>
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Name</span>
+                  <span className="text-gray-800 font-medium">Fatima Petersen</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Phone</span>
+                  <span className="text-gray-800 font-medium">072 345 6789</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Email</span>
+                  <span className="text-gray-800 font-medium">fatima.petersen@gmail.com</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-500">Address</span>
+                  <span className="text-gray-800 font-medium text-right">14 Kloof Street, Hout Bay</span>
+                </div>
+              </div>
             </div>
 
-            {/* Note Textarea */}
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              placeholder="Write your observation here..."
-              className="w-full h-28 p-3 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none mb-4"
-            ></textarea>
+            {/* Authorised Pickups */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-green-500">✓</span>
+                <h3 className="font-semibold text-gray-900">Authorised Pickups</h3>
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm text-gray-800">
+                  <span>👤</span> Fatima Petersen
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-800">
+                  <span>👤</span> Ahmed Petersen
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-800">
+                  <span>👤</span> Zainab Hendricks
+                </div>
+              </div>
+            </div>
 
-            {/* Cancel + Save Buttons */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => {
-                  setShowForm(false);
-                  setNote("");
-                }}
-                className="flex-1 py-2.5 rounded-full bg-gray-100 text-gray-600 font-medium text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-medium text-sm"
-              >
-                Save
-              </button>
+            {/* Notes */}
+            <div className="bg-white rounded-2xl p-4 shadow-sm">
+              <div className="flex items-center gap-2 mb-2">
+                <span>📌</span>
+                <h3 className="font-semibold text-gray-900">Notes</h3>
+              </div>
+              <p className="text-sm text-gray-700">
+                Loves reading. Mild peanut allergy.
+              </p>
             </div>
           </div>
         )}
 
-        {/* Observations List */}
-        <div className="space-y-4">
-          {observations.map((obs) => (
-            <div 
-              key={obs.id}
-              className="bg-white rounded-2xl p-4 shadow-sm"
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className={`text-sm font-semibold ${getCategoryColour(obs.category)}`}>
-                  {obs.category}
-                </span>
-                <span className="text-xs text-gray-400">
-                  {obs.date}
-                </span>
+        {/* ===================== OBSERVATIONS TAB ===================== */}
+        {activeTab === "Observations" && (
+          <>
+            {!showForm && (
+              <button 
+                onClick={() => setShowForm(true)}
+                className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base mb-6 shadow-sm"
+              >
+                + Add Observation
+              </button>
+            )}
+
+            {showForm && (
+              <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm">
+                <h2 className="font-semibold text-gray-900 mb-3">New Observation</h2>
+
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {categories.map((cat) => (
+                    <button
+                      key={cat}
+                      onClick={() => setSelectedCategory(cat)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition ${
+                        selectedCategory === cat
+                          ? getCategoryBg(cat)
+                          : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {cat}
+                    </button>
+                  ))}
+                </div>
+
+                <textarea
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="Write your observation here..."
+                  className="w-full h-28 p-3 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none mb-4"
+                ></textarea>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowForm(false);
+                      setNote("");
+                    }}
+                    className="flex-1 py-2.5 rounded-full bg-gray-100 text-gray-600 font-medium text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-medium text-sm"
+                  >
+                    Save
+                  </button>
+                </div>
               </div>
-              <p className="text-sm text-gray-700 mb-2">
-                {obs.note}
-              </p>
-              <p className="text-xs text-gray-400">
-                — {obs.teacher}
-              </p>
+            )}
+
+            <div className="space-y-4">
+              {observations.map((obs) => (
+                <div key={obs.id} className="bg-white rounded-2xl p-4 shadow-sm">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className={`text-sm font-semibold ${getCategoryColour(obs.category)}`}>
+                      {obs.category}
+                    </span>
+                    <span className="text-xs text-gray-400">{obs.date}</span>
+                  </div>
+                  <p className="text-sm text-gray-700 mb-2">{obs.note}</p>
+                  <p className="text-xs text-gray-400">— {obs.teacher}</p>
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
+
+        {/* ===================== ATTENDANCE TAB ===================== */}
+        {activeTab === "Attendance" && (
+          <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <h3 className="font-semibold text-gray-900 mb-4">This Week</h3>
+            <div className="space-y-3">
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-green-500">✓</span>
+                <div>
+                  <p className="text-gray-800 font-medium">2025-07-25</p>
+                  <p className="text-gray-500 text-xs">Signed out by Zainab Hendricks at 17:00</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-green-500">✓</span>
+                <div>
+                  <p className="text-gray-800 font-medium">2025-07-24</p>
+                  <p className="text-gray-500 text-xs">Signed out by Fatima Petersen at 17:15</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-red-500">✗</span>
+                <div>
+                  <p className="text-gray-800 font-medium">2025-07-23</p>
+                  <p className="text-gray-500 text-xs">Absent</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-green-500">✓</span>
+                <div>
+                  <p className="text-gray-800 font-medium">2025-07-22</p>
+                  <p className="text-gray-500 text-xs">Signed out by Ahmed Petersen at 17:45</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3 text-sm">
+                <span className="text-green-500">✓</span>
+                <div>
+                  <p className="text-gray-800 font-medium">2025-07-21</p>
+                  <p className="text-gray-500 text-xs">Signed out by Fatima Petersen at 17:30</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
 
@@ -247,22 +335,18 @@ function Observations() {
           <span className="text-lg">🏠</span>
           <span className="text-[10px]">Home</span>
         </button>
-
         <button className="flex flex-col items-center text-gray-400 gap-0.5">
           <span className="text-lg">✓</span>
           <span className="text-[10px]">Attendance</span>
         </button>
-
         <button className="flex flex-col items-center text-red-400 gap-0.5">
           <span className="text-lg">🎒</span>
           <span className="text-[10px] font-medium">Learners</span>
         </button>
-
         <button className="flex flex-col items-center text-gray-400 gap-0.5">
           <span className="text-lg">🏫</span>
           <span className="text-[10px]">Classes</span>
         </button>
-
         <button className="flex flex-col items-center text-gray-400 gap-0.5">
           <span className="text-lg">🚪</span>
           <span className="text-[10px]">Sign Out</span>
