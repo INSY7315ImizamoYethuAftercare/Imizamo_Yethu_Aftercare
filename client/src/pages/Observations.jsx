@@ -1,4 +1,40 @@
 function Observations() {
+  // Temporary fake observations
+  const observations = [
+    {
+      id: 1,
+      category: "Social",
+      date: "2025-07-15",
+      note: "Showed great leadership during group activity today.",
+      teacher: "Ms Nkosi",
+    },
+    {
+      id: 2,
+      category: "Academic",
+      date: "2025-07-08",
+      note: "Reading fluency improving significantly. Completed level 3 book.",
+      teacher: "Ms Nkosi",
+    },
+  ];
+
+  // Helper to get colour for category
+  const getCategoryColour = (category) => {
+    switch (category) {
+      case "Social":
+        return "text-cyan-500";
+      case "Academic":
+        return "text-blue-500";
+      case "Wellbeing":
+        return "text-green-500";
+      case "Creative":
+        return "text-pink-500";
+      case "Physical":
+        return "text-purple-500";
+      default:
+        return "text-gray-500";
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
       
@@ -49,7 +85,7 @@ function Observations() {
             <p className="text-xs text-gray-500">Age</p>
           </div>
           <div className="bg-white rounded-xl p-3 text-center shadow-sm">
-            <p className="text-xl font-bold text-orange-500">2</p>
+            <p className="text-xl font-bold text-orange-500">{observations.length}</p>
             <p className="text-xs text-gray-500">Observations</p>
           </div>
         </div>
@@ -82,7 +118,30 @@ function Observations() {
           + Add Observation
         </button>
 
-        {/* We will add the list of observations here next */}
+        {/* Observations List */}
+        <div className="space-y-4">
+          {observations.map((obs) => (
+            <div 
+              key={obs.id}
+              className="bg-white rounded-2xl p-4 shadow-sm"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className={`text-sm font-semibold ${getCategoryColour(obs.category)}`}>
+                  {obs.category}
+                </span>
+                <span className="text-xs text-gray-400">
+                  {obs.date}
+                </span>
+              </div>
+              <p className="text-sm text-gray-700 mb-2">
+                {obs.note}
+              </p>
+              <p className="text-xs text-gray-400">
+                — {obs.teacher}
+              </p>
+            </div>
+          ))}
+        </div>
 
       </div>
 
