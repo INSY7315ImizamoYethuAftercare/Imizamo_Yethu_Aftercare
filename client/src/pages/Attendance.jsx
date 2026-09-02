@@ -1,13 +1,29 @@
+import { useState } from "react";
+
 function Attendance() {
-  // Temporary fake data
-  const learners = [
+  // Temporary fake data - now using state so it can change
+  const [learners, setLearners] = useState([
     { id: 1, name: "Aisha Petersen", status: "Present" },
     { id: 2, name: "Amara Okoye", status: "Present" },
     { id: 3, name: "Liam van der Berg", status: "Present" },
     { id: 4, name: "Keanu Abrahams", status: "Present" },
     { id: 5, name: "Zoe Ntombela", status: "Present" },
     { id: 6, name: "Sipho Mkhize", status: "Absent" },
-  ];
+  ]);
+
+  // Function that runs when a Present/Absent button is clicked
+  const toggleStatus = (id) => {
+    setLearners((prev) =>
+      prev.map((learner) =>
+        learner.id === id
+          ? {
+              ...learner,
+              status: learner.status === "Present" ? "Absent" : "Present",
+            }
+          : learner
+      )
+    );
+  };
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -58,7 +74,7 @@ function Attendance() {
         {/* Counter + Actions */}
         <div className="flex items-center justify-between mb-6">
           <div className="text-3xl font-bold text-yellow-400">
-            2 / 2
+            {learners.filter((l) => l.status === "Present").length} / {learners.length}
           </div>
           <div className="flex gap-3 items-center">
             <button className="px-4 py-1.5 rounded-full bg-cyan-400 text-white text-sm font-medium">
@@ -82,7 +98,8 @@ function Attendance() {
               </span>
 
               <button
-                className={`px-5 py-1.5 rounded-full text-sm font-medium ${
+                onClick={() => toggleStatus(learner.id)}
+                className={`px-5 py-1.5 rounded-full text-sm font-medium transition ${
                   learner.status === "Present"
                     ? "bg-cyan-400 text-white"
                     : "bg-orange-400 text-white"
