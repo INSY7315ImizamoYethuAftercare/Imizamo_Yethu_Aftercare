@@ -1,0 +1,91 @@
+// repositories/AttendanceRepository.js
+
+class AttendanceRepository {
+    constructor(pool) {
+        // pool is the shared Singleton PgPool instance
+        this.pool = pool;
+    }
+
+    /**
+     * Retrieves the full attendance history for a single learner.
+     * 
+     * @param {number} learnerId - The unique identifier of the learner.
+     * @returns {Promise<Array<Object>>} A list of attendance records for the learner, ordered for most recent to oldest. 
+     */
+    async findByLearnerId(learnerId) {
+        const result = await this.pool.query(
+            `SELECT "recordID", "learnerID", "teacherID", "recordDate', "timeIn", "status" 
+            WHERE "learnerID" = $1 ORDER BY "recordDate" DESC`,
+            [learnerId]
+        );
+        return result.rows;
+    }
+
+    /**
+     * Retrieves attendance records for every learner in a specific class on a given date.
+     * It joins against the learners table since attendance
+     * records only store a learnerID, not a classID directly.
+     * 
+     * @param {number} classId - The unique identifier of the class.
+     * @param {string} date - The date to filter attendance records with the format YYYY-MM-DD. 
+     * @returns {Promise<Array<Object>>} A list of attendance records for learners
+     * in the specified class on the given date.
+     */
+    async findByClassAndDate(classId, date) {
+        // Joins against learners to scope by class, since attendance rows only carry learnerID
+        const result = await this.pool.query(
+        `SELECT ar."recordID", ar."learnerID", ar."recordDate", ar."timeIn", ar."status" 
+        FROM attendance_records ar
+        JOIN learners l ON l."learnerID" = ar."learnerID"
+        WHERE l."classID" = $1 AND ar."recordDate" = $2`,
+        [classId, date]
+    );
+    return result.rows;
+    }
+
+     /**
+     * Creates a new attendance record marking a learner as present. Called
+     * exclusively by a Teacher during the daily attendance-marking flow.
+     *
+     * @param {Object} params - The attendance details.
+     * @param {number} params.learnerId - The unique identifier of the learner.
+     * @param {number} params.teacherId - The unique identifier of the
+     * teacher recording the attendance.
+     * @param {string} params.recordDate - The date attendance is being
+     * recorded for (format: YYYY-MM-DD).
+     * @param {string} params.timeIn - The time the learner arrived.
+     * @returns {Promise<Object>} The newly created attendance record.
+     */
+    async markPresent({ learnerId, teacherId, recordDate, timeIn }) {
+        const result = await this.pool.query(
+            `INSERT INTO attendance_records ("learnerID", "teacherID", "recordDate", "timeIn", "status")
+            VALUES ($1, $2, $3, $4, 'Present')
+            RETURNING "learnerID", "teacherID", "recordDate", "status"`,
+            [learnerId, teacherId, recordDate]
+        );
+        return result.rows[0];
+    }
+
+    /**
+     * Creates a new attendance record marking a learner as absent. No
+     * timeIn is recorded, since the learner did not arrive.
+     *
+     * @param {Object} params - The attendance details.
+     * @param {number} params.learnerId - The unique identifier of the learner.
+     * @param {number} params.teacherId - The unique identifier of the
+     * teacher recording the attendance.
+     * @param {string} params.recordDate - The date attendance is being
+     * recorded for (format: YYYY-MM-DD).
+     * @returns {Promise<Object>} The newly created attendance record.
+     */
+    async markAbsent({ learnerId, teacherId, recordDate }) {
+        const result = await this.pool.query(
+            `INSERT INTO attendance_records ("learnerID", "teacherID", "recordDate", "status")
+             VALUES ($1, $2, $3, 'Absent')
+             RETURNING "recordID", "learnerID", "teacherID", "recordDate", "status"`,
+            [learnerId, teacherId, recordDate]
+        );
+        return result.rows[0];
+    }
+}
+module.exports = AttendanceRepository;
