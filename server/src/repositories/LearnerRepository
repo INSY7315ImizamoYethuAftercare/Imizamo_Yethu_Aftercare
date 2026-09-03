@@ -1,0 +1,62 @@
+// repositories/LearnerRepository.js
+
+class LearnerRepository {
+    constructor(pool) {
+        // pool is the shared Singleton PgPool instance
+        this.pool = pool
+    }
+
+    async findById(learnerId) {
+        const result = await this.pool.query(
+            'SELECT "learnerID", "classID", "firstName", "lastName", "dateOfBirth", "canWalkHomeAlone" FROM learners WHERE "learnerID" = $1',
+            [learnerId]
+        );
+        return result.rows[0] || null;
+    }
+
+    async findByClassId(classId) {
+    const result = await this.pool.query(
+      'SELECT "learnerID", "firstName", "lastName", "canWalkHomeAlone" FROM learners WHERE "classID" = $1 ORDER BY "lastName", "firstName"',
+      [classId]
+    );
+    return result.rows;
+  }
+
+  async create({ classId, firstName, lastName, dateOfBirth, canWalkHomeAlone }) {
+    const result = await this.pool.query(
+      `INSERT INTO learners ("classID", "firstName", "lastName", "dateOfBirth", "canWalkHomeAlone")
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING "learnerID", "classID", "firstName", "lastName", "dateOfBirth", "canWalkHomeAlone"`,
+      [classId, firstName, lastName, dateOfBirth, canWalkHomeAlone]
+    );
+    return result.rows[0];
+  }
+
+  async update(learnerId, fields) {
+    // Whitelist updatable columns so callers can't inject arbitrary column names
+    const allowed = ['firstName', 'lastName', 'dateOfBirth', 'canWalkHomeAlone', 'classID'];
+    const keys = Object.keys(fields).filter(k => allowed.includes(k));
+    if (keys.length === 0) return this.findById(learnerId);
+
+    const setClause = keys.map((k, i) => `"${k}" = $${i + 1}`).join(', ');
+    const values = keys.map(k => fields[k]);
+
+    const result = await this.pool.query(
+      `UPDATE learners SET ${setClause} 
+      WHERE "learnerID" = $${keys.length + 1} 
+      RETURNING "learnerID", "classID", "firstName", "lastName", "dateOfBirth", "canWalkHomeAlone"`,
+      [...values, learnerId]
+    );
+    return result.rows[0] || null;
+  }
+
+  async delete(learnerId) {
+    const result = await this.pool.query(
+      'DELETE FROM learners WHERE "learnerID" = $1 RETURNING "learnerID"',
+      [learnerId]
+    );
+    return result.rowCount > 0;
+  }
+}
+
+module.exports = LearnerRepository;
