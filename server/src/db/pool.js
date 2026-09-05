@@ -1,9 +1,9 @@
 import pg from 'pg'
 import { env, isProduction } from '../config/env.js'
- 
+
 const { Pool } = pg
- 
-// Singleton pattern: a single Pool
+
+// Singleton pattern (see Architecture doc, Figure 22): a single Pool
 // instance is created here at module load, and every repository imports
 // this same `pool` rather than opening its own connection. ES modules are
 // cached by Node after the first import, so this file only ever runs
@@ -23,14 +23,14 @@ export const pool = new Pool({
   // this is only switched on in production.
   ssl: isProduction ? { rejectUnauthorized: false } : false,
 })
- 
+
 // Surfaces connection-level errors (e.g. the DB restarting) on the pool's
 // idle clients instead of crashing the whole process silently.
 pool.on('error', (err) => {
   // eslint-disable-next-line no-console
   console.error('Unexpected error on idle PostgreSQL client', err)
 })
- 
+
 // Quick startup check so a bad DATABASE_URL fails loudly at boot instead
 // of surfacing as a confusing error on the first API request.
 export async function verifyConnection() {
@@ -41,4 +41,3 @@ export async function verifyConnection() {
     client.release()
   }
 }
- 
