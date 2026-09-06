@@ -71,22 +71,33 @@ function Home() {
           </div>
         </div>
 
-        {/* Quick Actions */}
-        <h2 className="font-semibold text-gray-900 mb-3">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <button className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-center gap-2">
-            <span className="text-2xl text-green-500">✓</span>
-            <span className="text-sm font-medium text-gray-800">Mark Attendance</span>
-          </button>
-          <button className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-center gap-2">
-            <span className="text-2xl">🎒</span>
-            <span className="text-sm font-medium text-gray-800">View Learners</span>
-          </button>
-          <button className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-center gap-2 col-span-2">
-            <span className="text-2xl">🚪</span>
-            <span className="text-sm font-medium text-gray-800">Sign-Out</span>
-          </button>
-        </div>
+{/* Quick Actions */}
+<h2 className="font-semibold text-gray-900 mb-3">Quick Actions</h2>
+<div className="grid grid-cols-2 gap-3 mb-6">
+  <button
+    onClick={() => window.location.href = "/attendance"}
+    className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-center gap-2"
+  >
+    <span className="text-2xl text-green-500">✓</span>
+    <span className="text-sm font-medium text-gray-800">Mark Attendance</span>
+  </button>
+
+  <button
+    onClick={() => window.location.href = "/learners"}
+    className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-center gap-2"
+  >
+    <span className="text-2xl">🎒</span>
+    <span className="text-sm font-medium text-gray-800">View Learners</span>
+  </button>
+
+  <button
+    onClick={() => window.location.href = "/signout"}
+    className="bg-white rounded-2xl p-4 shadow-sm flex flex-col items-center gap-2 col-span-2"
+  >
+    <span className="text-2xl">🚪</span>
+    <span className="text-sm font-medium text-gray-800">Sign-Out</span>
+  </button>
+</div>    
 
         {/* Recent Activity */}
         <h2 className="font-semibold text-gray-900 mb-3">Recent Activity</h2>
@@ -143,30 +154,6 @@ function Home() {
           </div>
         </div>
 
-      </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 flex justify-between items-center">
-        <button className="flex flex-col items-center text-orange-500 gap-0.5">
-          <span className="text-lg">🏠</span>
-          <span className="text-[10px] font-medium">Home</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-400 gap-0.5">
-          <span className="text-lg">✓</span>
-          <span className="text-[10px]">Attendance</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-400 gap-0.5">
-          <span className="text-lg">🎒</span>
-          <span className="text-[10px]">Learners</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-400 gap-0.5">
-          <span className="text-lg">🏫</span>
-          <span className="text-[10px]">Classes</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-400 gap-0.5">
-          <span className="text-lg">🚪</span>
-          <span className="text-[10px]">Sign Out</span>
-        </button>
       </div>
 
     </div>
