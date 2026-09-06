@@ -1,9 +1,9 @@
-import Learners from './pages/Learners';
+import Classes from './pages/Classes';
 
 function App() {
   return (
     <div>
-      <Learners />
+      <Classes />
     </div>
   );
 }
