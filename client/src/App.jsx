@@ -1,9 +1,9 @@
-import SignOut from './pages/SignOut';
+import Home from './pages/Home';
 
 function App() {
   return (
     <div>
-      <SignOut />
+      <Home />
     </div>
   );
 }
