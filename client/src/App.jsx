@@ -1,9 +1,9 @@
-import Observations from './pages/Observations';
+import SignOut from './pages/SignOut';
 
 function App() {
   return (
     <div>
-      <Observations />
+      <SignOut />
     </div>
   );
 }
