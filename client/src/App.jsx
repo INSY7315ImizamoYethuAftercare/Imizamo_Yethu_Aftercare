@@ -1,9 +1,9 @@
-import SignOut from './pages/SignOut';
+import Classes from './pages/Learners';
 
 function App() {
   return (
     <div>
-      <SignOut />
+      <Classes />
     </div>
   );
 }
