@@ -1,4 +1,4 @@
-import Classes from './pages/Classes';
+import Classes from './pages/Learners';
 
 function App() {
   return (
