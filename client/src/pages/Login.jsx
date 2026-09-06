@@ -1,6 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-function Login({ onSwitchToRegister }) {
+function Login() {
+  const navigate = useNavigate();
   const [role, setRole] = useState("Teacher");
   const [email, setEmail] = useState("nkosi@iylh.org");
   const [password, setPassword] = useState("••••••••");
@@ -67,7 +69,10 @@ function Login({ onSwitchToRegister }) {
         </div>
 
         {/* Sign In Button */}
-        <button className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base mb-4">
+        <button 
+          onClick={() => navigate("/home")}
+          className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base mb-4"
+        >
           Sign In
         </button>
 
@@ -77,9 +82,10 @@ function Login({ onSwitchToRegister }) {
 
         <p className="text-sm text-center text-gray-500">
           New to the hub?{" "}
-          <button onClick={onSwitchToRegister} className="text-orange-500 font-medium">
-            Create an account →
-          </button>
+        <button 
+          onClick={() => navigate("/register")} className="text-orange-500 font-medium">
+          Create an account →
+        </button>
         </p>
       </div>
 

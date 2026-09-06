@@ -328,31 +328,6 @@ function Observations() {
         )}
 
       </div>
-
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 flex justify-between items-center">
-        <button className="flex flex-col items-center text-gray-400 gap-0.5">
-          <span className="text-lg">🏠</span>
-          <span className="text-[10px]">Home</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-400 gap-0.5">
-          <span className="text-lg">✓</span>
-          <span className="text-[10px]">Attendance</span>
-        </button>
-        <button className="flex flex-col items-center text-red-400 gap-0.5">
-          <span className="text-lg">🎒</span>
-          <span className="text-[10px] font-medium">Learners</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-400 gap-0.5">
-          <span className="text-lg">🏫</span>
-          <span className="text-[10px]">Classes</span>
-        </button>
-        <button className="flex flex-col items-center text-gray-400 gap-0.5">
-          <span className="text-lg">🚪</span>
-          <span className="text-[10px]">Sign Out</span>
-        </button>
-      </div>
-
     </div>
   );
 }

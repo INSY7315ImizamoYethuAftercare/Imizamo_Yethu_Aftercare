@@ -1,6 +1,8 @@
+import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 
-function Register({ onSwitchToLogin }) {
+function Register() {
+  const navigate = useNavigate();
   const [step, setStep] = useState(1); // 1 = choose role, 2 = form
   const [role, setRole] = useState("Teacher");
 
@@ -49,7 +51,10 @@ function Register({ onSwitchToLogin }) {
             Continue as {role} →
           </button>
 
-          <button onClick={onSwitchToLogin} className="w-full text-center text-sm text-gray-500">
+          <button
+            onClick={() => navigate("/")}
+            className="w-full text-center text-sm text-gray-500"
+          >
             ← Back to Sign In
           </button>
         </div>
@@ -121,7 +126,10 @@ function Register({ onSwitchToLogin }) {
           Create Account
         </button>
 
-        <button onClick={onSwitchToLogin} className="w-full text-center text-sm text-gray-500">
+        <button
+          onClick={() => navigate("/")}
+          className="w-full text-center text-sm text-gray-500"
+        >
           ← Back
         </button>
       </div>
