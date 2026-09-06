@@ -1,11 +1,15 @@
-import Classes from './pages/Learners';
+import { useState } from "react";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 function App() {
-  return (
-    <div>
-      <Classes />
-    </div>
-  );
+  const [showRegister, setShowRegister] = useState(false);
+
+  if (showRegister) {
+    return <Register onSwitchToLogin={() => setShowRegister(false)} />;
+  }
+
+  return <Login onSwitchToRegister={() => setShowRegister(true)} />;
 }
 
 export default App;
