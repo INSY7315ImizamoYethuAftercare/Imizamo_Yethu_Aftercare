@@ -41,14 +41,11 @@ class LearnerRepository {
      * Creates a new learner record and enrolls them in the specified class.
      *
      * @param {Object} params - The new learner's details.
-     * @param {number} params.classId - The unique identifier of the class
-     * the learner is being enrolled in.
+     * @param {number} params.classId - The unique identifier of the class the learner is being enrolled in.
      * @param {string} params.firstName - The learner's first name.
      * @param {string} params.lastName - The learner's last name.
-     * @param {string} params.dateOfBirth - The learner's date of birth
-     * (format: YYYY-MM-DD).
-     * @param {boolean} params.canWalkHomeAlone - Whether the learner is
-     * permitted to leave the aftercare without a guardian.
+     * @param {string} params.dateOfBirth - The learner's date of birth (format: YYYY-MM-DD).
+     * @param {boolean} params.canWalkHomeAlone - Whether the learner is permitted to leave the aftercare without a guardian.
      * @returns {Promise<Object>} The newly created learner record.
      */
   async create({ classId, firstName, lastName, dateOfBirth, canWalkHomeAlone }) {
@@ -70,8 +67,7 @@ class LearnerRepository {
      * @param {Object} fields - A partial object containing the fields to
      * update (any of: firstName, lastName, dateOfBirth, canWalkHomeAlone, classID).
      * @returns {Promise<Object|null>} The updated learner record, or the
-     * unchanged record if no valid fields were provided, or null if the
-     * learner does not exist.
+     * unchanged record if no valid fields were provided, or null if the learner does not exist.
      */
   async update(learnerId, fields) {
     // Whitelist updatable columns so callers can't inject arbitrary column names
@@ -95,8 +91,7 @@ class LearnerRepository {
      * Permanently deletes a learner record.
      *
      * @param {number} learnerId - The unique identifier of the learner to delete.
-     * @returns {Promise<boolean>} True if a learner was deleted, false if
-     * no matching learner was found.
+     * @returns {Promise<boolean>} True if a learner was deleted, false if no matching learner was found.
      */
   async delete(learnerId) {
     const result = await this.pool.query(

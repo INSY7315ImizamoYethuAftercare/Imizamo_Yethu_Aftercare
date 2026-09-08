@@ -49,10 +49,8 @@ class AttendanceRepository {
      *
      * @param {Object} params - The attendance details.
      * @param {number} params.learnerId - The unique identifier of the learner.
-     * @param {number} params.teacherId - The unique identifier of the
-     * teacher recording the attendance.
-     * @param {string} params.recordDate - The date attendance is being
-     * recorded for (format: YYYY-MM-DD).
+     * @param {number} params.teacherId - The unique identifier of the teacher recording the attendance.
+     * @param {string} params.recordDate - The date attendance is being recorded for (format: YYYY-MM-DD).
      * @param {string} params.timeIn - The time the learner arrived.
      * @returns {Promise<Object>} The newly created attendance record.
      */
@@ -74,8 +72,7 @@ class AttendanceRepository {
      * @param {number} params.learnerId - The unique identifier of the learner.
      * @param {number} params.teacherId - The unique identifier of the
      * teacher recording the attendance.
-     * @param {string} params.recordDate - The date attendance is being
-     * recorded for (format: YYYY-MM-DD).
+     * @param {string} params.recordDate - The date attendance is being recorded for (format: YYYY-MM-DD).
      * @returns {Promise<Object>} The newly created attendance record.
      */
     async markAbsent({ learnerId, teacherId, recordDate }) {
