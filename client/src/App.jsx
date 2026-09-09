@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
-import Home from "./pages/Home";
+import Home from "./pages/ManagerHome";
 import Attendance from "./pages/Attendance";
 import Learners from "./pages/Learners";
 import Classes from "./pages/Classes";
