@@ -56,21 +56,21 @@ function ManagerBottomNav() {
         <span className="text-lg">🏠</span>
         <span className={`text-[10px] ${isActive("/manager") ? "font-medium" : ""}`}>Home</span>
       </button>
-      <button onClick={() => navigate("/attendance")} className={`flex flex-col items-center gap-0.5 ${isActive("/attendance") ? "text-green-500" : "text-gray-400"}`}>
+      <button onClick={() => navigate("/manager/attendance")} className={`flex flex-col items-center gap-0.5 ${isActive("/manager/attendance") ? "text-green-500" : "text-gray-400"}`}>
         <span className="text-lg">✓</span>
-        <span className={`text-[10px] ${isActive("/attendance") ? "font-medium" : ""}`}>Attendance</span>
+        <span className={`text-[10px] ${isActive("/manager/attendance") ? "font-medium" : ""}`}>Attendance</span>
       </button>
-      <button onClick={() => navigate("/learners")} className={`flex flex-col items-center gap-0.5 ${isActive("/learners") ? "text-orange-500" : "text-gray-400"}`}>
+      <button onClick={() => navigate("/manager/learners")} className={`flex flex-col items-center gap-0.5 ${isActive("/manager/learners") ? "text-orange-500" : "text-gray-400"}`}>
         <span className="text-lg">🎒</span>
-        <span className={`text-[10px] ${isActive("/learners") ? "font-medium" : ""}`}>Learners</span>
+        <span className={`text-[10px] ${isActive("/manager/learners") ? "font-medium" : ""}`}>Learners</span>
       </button>
-      <button onClick={() => navigate("/classes")} className={`flex flex-col items-center gap-0.5 ${isActive("/classes") ? "text-orange-500" : "text-gray-400"}`}>
+      <button onClick={() => navigate("/manager/classes")} className={`flex flex-col items-center gap-0.5 ${isActive("/manager/classes") ? "text-orange-500" : "text-gray-400"}`}>
         <span className="text-lg">🏫</span>
-        <span className={`text-[10px] ${isActive("/classes") ? "font-medium" : ""}`}>Classes</span>
+        <span className={`text-[10px] ${isActive("/manager/classes") ? "font-medium" : ""}`}>Classes</span>
       </button>
-      <button onClick={() => navigate("/signout")} className={`flex flex-col items-center gap-0.5 ${isActive("/signout") ? "text-orange-500" : "text-gray-400"}`}>
+      <button onClick={() => navigate("/manager/signout")} className={`flex flex-col items-center gap-0.5 ${isActive("/manager/signout") ? "text-orange-500" : "text-gray-400"}`}>
         <span className="text-lg">🚪</span>
-        <span className={`text-[10px] ${isActive("/signout") ? "font-medium" : ""}`}>Sign Out</span>
+        <span className={`text-[10px] ${isActive("/manager/signout") ? "font-medium" : ""}`}>Sign Out</span>
       </button>
       <button onClick={() => navigate("/reports")} className={`flex flex-col items-center gap-0.5 ${isActive("/reports") ? "text-orange-500" : "text-gray-400"}`}>
         <span className="text-lg">📊</span>
@@ -80,7 +80,6 @@ function ManagerBottomNav() {
   );
 }
 
-// Layouts
 function TeacherLayout({ children }) {
   return (
     <div>
@@ -103,11 +102,11 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Auth screens */}
+        {/* Auth */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* Teacher screens */}
+        {/* ========== TEACHER ========== */}
         <Route path="/home" element={<TeacherLayout><Home /></TeacherLayout>} />
         <Route path="/attendance" element={<TeacherLayout><Attendance /></TeacherLayout>} />
         <Route path="/learners" element={<TeacherLayout><Learners /></TeacherLayout>} />
@@ -115,15 +114,15 @@ function App() {
         <Route path="/signout" element={<TeacherLayout><SignOut /></TeacherLayout>} />
         <Route path="/observations" element={<TeacherLayout><Observations /></TeacherLayout>} />
 
-        {/* Manager screens */}
+        {/* ========== MANAGER ========== */}
         <Route path="/manager" element={<ManagerLayout><ManagerHome /></ManagerLayout>} />
+        <Route path="/manager/attendance" element={<ManagerLayout><Attendance role="Manager" /></ManagerLayout>} />
+        <Route path="/manager/learners" element={<ManagerLayout><Learners role="Manager" /></ManagerLayout>} />
+        <Route path="/manager/classes" element={<ManagerLayout><Classes role="Manager" /></ManagerLayout>} />
+        <Route path="/manager/signout" element={<ManagerLayout><SignOut role="Manager" /></ManagerLayout>} />
         <Route path="/reports" element={<ManagerLayout><Reports /></ManagerLayout>} />
         <Route path="/settings" element={<ManagerLayout><Settings /></ManagerLayout>} />
 
-        {/* Shared screens also available under Manager layout if needed later */}
-        {/* For now Manager uses the same Attendance/Learners/Classes/SignOut routes */}
-
-        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

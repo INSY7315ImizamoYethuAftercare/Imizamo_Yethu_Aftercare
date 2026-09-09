@@ -1,6 +1,10 @@
 import { useState } from "react";
 
-function SignOut() {
+function SignOut({ role = "Teacher" }) {
+  const isManager = role === "Manager";
+  const displayName = isManager ? "Sarah Botha" : "Ms Nkosi";
+  const displayRole = isManager ? "Manager" : "Teacher • Yellow";
+
   const [learners, setLearners] = useState([
     { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", status: "Present today" },
     { id: 2, name: "Liam van der Berg", grade: "Grade 4", group: "Green", status: "Present today" },
@@ -14,7 +18,7 @@ function SignOut() {
   const [selectedLearner, setSelectedLearner] = useState(null);
   const [collectorName, setCollectorName] = useState("");
   const [selectedPickup, setSelectedPickup] = useState(null);
-  const [step, setStep] = useState("list"); // list | verify | confirmed | success
+  const [step, setStep] = useState("list");
 
   const authorisedPickups = [
     { id: 1, name: "Fatima Petersen" },
@@ -34,7 +38,6 @@ function SignOut() {
   };
 
   const handleConfirmSignOut = () => {
-    // Move learner to collected list
     setCollected([
       ...collected,
       {
@@ -43,29 +46,35 @@ function SignOut() {
         time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       },
     ]);
-    // Remove from active list
     setLearners(learners.filter((l) => l.id !== selectedLearner.id));
     setStep("success");
   };
+
+  const Header = () => (
+    <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
+      <div className="flex items-center gap-2">
+        <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
+        <div>
+          <p className="text-sm font-semibold text-orange-500">{displayName}</p>
+          <p className="text-xs text-gray-500">{displayRole}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-3">
+        <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <span className="text-lg">🔔</span>
+        </button>
+        <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
+          <span className="text-lg">⋮</span>
+        </button>
+      </div>
+    </div>
+  );
 
   // ========== SCREEN 1: List ==========
   if (step === "list") {
     return (
       <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
-        <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
-            <div>
-              <p className="text-sm font-semibold text-orange-500">Ms Nkosi</p>
-              <p className="text-xs text-gray-500">Teacher • Yellow</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"><span className="text-lg">🔔</span></button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"><span className="text-lg">⋮</span></button>
-          </div>
-        </div>
-
+        <Header />
         <div className="flex-1 px-4 pt-5 pb-28">
           <div className="mb-1">
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -107,7 +116,6 @@ function SignOut() {
             ))}
           </div>
 
-          {/* Already collected today */}
           {collected.length > 0 && (
             <div>
               <p className="text-xs font-medium text-gray-400 mb-3 tracking-wide">ALREADY COLLECTED TODAY</p>
@@ -122,15 +130,6 @@ function SignOut() {
             </div>
           )}
         </div>
-
-        {/* Bottom Nav */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 flex justify-between items-center">
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🏠</span><span className="text-[10px]">Home</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">✓</span><span className="text-[10px]">Attendance</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🎒</span><span className="text-[10px]">Learners</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🏫</span><span className="text-[10px]">Classes</span></button>
-          <button className="flex flex-col items-center text-orange-500 gap-0.5"><span className="text-lg">🚪</span><span className="text-[10px] font-medium">Sign Out</span></button>
-        </div>
       </div>
     );
   }
@@ -139,20 +138,7 @@ function SignOut() {
   if (step === "verify") {
     return (
       <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
-        <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
-            <div>
-              <p className="text-sm font-semibold text-orange-500">Ms Nkosi</p>
-              <p className="text-xs text-gray-500">Teacher • Yellow</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"><span className="text-lg">🔔</span></button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"><span className="text-lg">⋮</span></button>
-          </div>
-        </div>
-
+        <Header />
         <div className="flex-1 px-4 pt-5 pb-28">
           <div className="mb-4">
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Digital Sign-Out <span>🚪</span></h1>
@@ -229,14 +215,6 @@ function SignOut() {
             </button>
           </div>
         </div>
-
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 flex justify-between items-center">
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🏠</span><span className="text-[10px]">Home</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">✓</span><span className="text-[10px]">Attendance</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🎒</span><span className="text-[10px]">Learners</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🏫</span><span className="text-[10px]">Classes</span></button>
-          <button className="flex flex-col items-center text-orange-500 gap-0.5"><span className="text-lg">🚪</span><span className="text-[10px] font-medium">Sign Out</span></button>
-        </div>
       </div>
     );
   }
@@ -247,27 +225,13 @@ function SignOut() {
 
     return (
       <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
-        <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
-            <div>
-              <p className="text-sm font-semibold text-orange-500">Ms Nkosi</p>
-              <p className="text-xs text-gray-500">Teacher • Yellow</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"><span className="text-lg">🔔</span></button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"><span className="text-lg">⋮</span></button>
-          </div>
-        </div>
-
+        <Header />
         <div className="flex-1 px-4 pt-5 pb-28">
           <div className="mb-4">
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Digital Sign-Out <span>🚪</span></h1>
             <p className="text-sm text-gray-500 mt-1">{learners.length} learners still to be collected</p>
           </div>
 
-          {/* Verified banner */}
           <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-5 text-center">
             <div className="text-3xl mb-2">✅</div>
             <p className="font-bold text-green-700 text-lg">Verified!</p>
@@ -276,7 +240,6 @@ function SignOut() {
             </p>
           </div>
 
-          {/* Summary */}
           <div className="bg-white rounded-2xl p-4 shadow-sm mb-6">
             <h3 className="font-semibold text-gray-900 mb-3">Sign-Out Summary</h3>
             <div className="space-y-2 text-sm">
@@ -294,7 +257,7 @@ function SignOut() {
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-500">Teacher</span>
-                <span className="font-medium text-gray-900">Ms Nkosi</span>
+                <span className="font-medium text-gray-900">{displayName}</span>
               </div>
             </div>
           </div>
@@ -309,14 +272,6 @@ function SignOut() {
             Go back
           </button>
         </div>
-
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 flex justify-between items-center">
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🏠</span><span className="text-[10px]">Home</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">✓</span><span className="text-[10px]">Attendance</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🎒</span><span className="text-[10px]">Learners</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🏫</span><span className="text-[10px]">Classes</span></button>
-          <button className="flex flex-col items-center text-orange-500 gap-0.5"><span className="text-lg">🚪</span><span className="text-[10px] font-medium">Sign Out</span></button>
-        </div>
       </div>
     );
   }
@@ -325,20 +280,7 @@ function SignOut() {
   if (step === "success") {
     return (
       <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
-        <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
-          <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
-            <div>
-              <p className="text-sm font-semibold text-orange-500">Ms Nkosi</p>
-              <p className="text-xs text-gray-500">Teacher • Yellow</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"><span className="text-lg">🔔</span></button>
-            <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"><span className="text-lg">⋮</span></button>
-          </div>
-        </div>
-
+        <Header />
         <div className="flex-1 px-4 pt-5 pb-28 flex flex-col items-center justify-center">
           <div className="bg-orange-50 rounded-2xl p-6 text-center mb-8 w-full">
             <div className="text-4xl mb-3">⭐</div>
@@ -356,14 +298,6 @@ function SignOut() {
           >
             Sign Out Another Learner
           </button>
-        </div>
-
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 px-4 py-2 flex justify-between items-center">
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🏠</span><span className="text-[10px]">Home</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">✓</span><span className="text-[10px]">Attendance</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🎒</span><span className="text-[10px]">Learners</span></button>
-          <button className="flex flex-col items-center text-gray-400 gap-0.5"><span className="text-lg">🏫</span><span className="text-[10px]">Classes</span></button>
-          <button className="flex flex-col items-center text-orange-500 gap-0.5"><span className="text-lg">🚪</span><span className="text-[10px] font-medium">Sign Out</span></button>
         </div>
       </div>
     );
