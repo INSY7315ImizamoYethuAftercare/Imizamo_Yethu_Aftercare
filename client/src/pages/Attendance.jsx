@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-function Attendance() {
+function Attendance({ role = "Teacher" }) {
   const [learners, setLearners] = useState([
     { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", status: "Present" },
     { id: 2, name: "Amara Okoye", grade: "Grade 1", group: "Yellow", status: "Present" },
@@ -12,7 +12,10 @@ function Attendance() {
 
   const [selectedGroup, setSelectedGroup] = useState("Yellow");
 
-  // Only show learners in the selected colour group
+  const isManager = role === "Manager";
+  const displayName = isManager ? "Sarah Botha" : "Ms Nkosi";
+  const displayRole = isManager ? "Manager" : `Teacher • ${selectedGroup}`;
+
   const filteredLearners = learners.filter(
     (learner) => learner.group === selectedGroup
   );
@@ -59,8 +62,8 @@ function Attendance() {
             className="w-9 h-9 object-contain"
           />
           <div>
-            <p className="text-sm font-semibold text-orange-500">Ms Nkosi</p>
-            <p className="text-xs text-gray-500">Teacher • {selectedGroup}</p>
+            <p className="text-sm font-semibold text-orange-500">{displayName}</p>
+            <p className="text-xs text-gray-500">{displayRole}</p>
           </div>
         </div>
 
@@ -77,7 +80,6 @@ function Attendance() {
       {/* Main Content */}
       <div className="flex-1 px-4 pt-5 pb-28">
         
-        {/* Title + Date */}
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             Attendance <span className="text-green-500">✓</span>
@@ -85,7 +87,6 @@ function Attendance() {
           <p className="text-sm text-gray-500 mt-1">Wed, 29 Jul</p>
         </div>
 
-        {/* Colour Group Filters */}
         <div className="flex gap-2 mb-5">
           {["Yellow", "Green", "Red", "Blue"].map((group) => (
             <button
@@ -108,7 +109,6 @@ function Attendance() {
           ))}
         </div>
 
-        {/* Counter Card */}
         <div className={`rounded-2xl p-4 mb-5 flex items-center justify-between ${
           selectedGroup === "Yellow" ? "bg-yellow-100" :
           selectedGroup === "Green" ? "bg-green-100" :
@@ -141,7 +141,6 @@ function Attendance() {
           </div>
         </div>
 
-        {/* Learner Cards */}
         <div className="space-y-3 mb-6">
           {filteredLearners.map((learner) => (
             <div 
@@ -179,7 +178,6 @@ function Attendance() {
           ))}
         </div>
 
-        {/* Session Notes */}
         <div className="mb-5">
           <label className="block text-xs font-medium text-gray-500 mb-2">
             SESSION NOTES (optional)
@@ -190,13 +188,11 @@ function Attendance() {
           ></textarea>
         </div>
 
-        {/* Save Button */}
         <button className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-sm active:scale-[0.98] transition">
           Save Attendance
         </button>
 
       </div>
-
     </div>
   );
 }

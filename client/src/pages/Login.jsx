@@ -69,12 +69,18 @@ function Login() {
         </div>
 
         {/* Sign In Button */}
-        <button 
-          onClick={() => navigate("/home")}
-          className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base mb-4"
-        >
-          Sign In
-        </button>
+<button
+  onClick={() => {
+    if (role === "Manager") {
+      navigate("/manager");
+    } else {
+      navigate("/home");
+    }
+  }}
+  className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base mb-4"
+>
+  Sign In
+</button>
 
         <p className="text-xs text-center text-gray-400 mb-3">
           Demo: select any role above and tap Sign In

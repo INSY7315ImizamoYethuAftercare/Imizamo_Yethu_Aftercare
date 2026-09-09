@@ -1,6 +1,10 @@
 import { useState } from "react";
 
-function Classes() {
+function Classes({ role = "Teacher" }) {
+  const isManager = role === "Manager";
+  const displayName = isManager ? "Sarah Botha" : "Ms Nkosi";
+  const displayRole = isManager ? "Manager" : "Teacher • Yellow";
+
   const [classes, setClasses] = useState([
     { id: 1, name: "Yellow", grade: "Gr 1-2", colour: "bg-yellow-300" },
     { id: 2, name: "Green", grade: "Gr 3-4", colour: "bg-green-400" },
@@ -29,12 +33,7 @@ function Classes() {
     if (!newName.trim()) return;
     setClasses([
       ...classes,
-      {
-        id: Date.now(),
-        name: newName,
-        grade: newGrade,
-        colour: newColour,
-      },
+      { id: Date.now(), name: newName, grade: newGrade, colour: newColour },
     ]);
     setNewName("");
     setNewGrade("Gr 1-2");
@@ -55,8 +54,8 @@ function Classes() {
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
           <div>
-            <p className="text-sm font-semibold text-orange-500">Ms Nkosi</p>
-            <p className="text-xs text-gray-500">Teacher • Yellow</p>
+            <p className="text-sm font-semibold text-orange-500">{displayName}</p>
+            <p className="text-xs text-gray-500">{displayRole}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -72,7 +71,6 @@ function Classes() {
       {/* Main Content */}
       <div className="flex-1 px-4 pt-5 pb-28">
         
-        {/* Title + Add */}
         <div className="flex items-center justify-between mb-5">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -88,13 +86,9 @@ function Classes() {
           </button>
         </div>
 
-        {/* Class Cards */}
         <div className="space-y-3">
           {classes.map((cls) => (
-            <div
-              key={cls.id}
-              className="bg-white rounded-2xl px-4 py-4 flex items-center justify-between shadow-sm"
-            >
+            <div key={cls.id} className="bg-white rounded-2xl px-4 py-4 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-xl ${cls.colour} flex items-center justify-center`}>
                   <span className="text-lg">🏫</span>
@@ -107,10 +101,7 @@ function Classes() {
 
               <div className="flex items-center gap-3">
                 <div className={`w-3 h-3 rounded-full ${cls.colour}`}></div>
-                <button
-                  onClick={() => setShowRemoveModal(cls)}
-                  className="text-gray-400 hover:text-red-400"
-                >
+                <button onClick={() => setShowRemoveModal(cls)} className="text-gray-400 hover:text-red-400">
                   🗑️
                 </button>
               </div>
@@ -145,9 +136,7 @@ function Classes() {
                       key={g}
                       onClick={() => setNewGrade(g)}
                       className={`px-3 py-1.5 rounded-full text-sm font-medium ${
-                        newGrade === g
-                          ? "bg-gray-900 text-white"
-                          : "bg-gray-100 text-gray-600"
+                        newGrade === g ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-600"
                       }`}
                     >
                       {g}
@@ -173,18 +162,8 @@ function Classes() {
             </div>
 
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="flex-1 py-3 rounded-full bg-gray-100 text-gray-600 font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleAdd}
-                className="flex-1 py-3 rounded-full bg-orange-400 text-white font-medium"
-              >
-                Add Classroom
-              </button>
+              <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 rounded-full bg-gray-100 text-gray-600 font-medium">Cancel</button>
+              <button onClick={handleAdd} className="flex-1 py-3 rounded-full bg-orange-400 text-white font-medium">Add Classroom</button>
             </div>
           </div>
         </div>
@@ -203,18 +182,8 @@ function Classes() {
               </div>
             </div>
             <div className="flex gap-3 mt-5">
-              <button
-                onClick={() => setShowRemoveModal(null)}
-                className="flex-1 py-3 rounded-full bg-gray-100 text-gray-600 font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleRemove(showRemoveModal.id)}
-                className="flex-1 py-3 rounded-full bg-orange-400 text-white font-medium"
-              >
-                🗑️ Remove
-              </button>
+              <button onClick={() => setShowRemoveModal(null)} className="flex-1 py-3 rounded-full bg-gray-100 text-gray-600 font-medium">Cancel</button>
+              <button onClick={() => handleRemove(showRemoveModal.id)} className="flex-1 py-3 rounded-full bg-orange-400 text-white font-medium">🗑️ Remove</button>
             </div>
           </div>
         </div>

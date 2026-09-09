@@ -1,6 +1,10 @@
 import { useState } from "react";
 
-function Learners() {
+function Learners({ role = "Teacher" }) {
+  const isManager = role === "Manager";
+  const displayName = isManager ? "Sarah Botha" : "Ms Nkosi";
+  const displayRole = isManager ? "Manager" : "Teacher • Yellow";
+
   const [learners, setLearners] = useState([
     { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", attendance: 94, tags: ["Reading Club", "Art"] },
     { id: 2, name: "Liam van der Berg", grade: "Grade 4", group: "Green", attendance: 88, tags: ["Football", "Maths Club"] },
@@ -36,8 +40,8 @@ function Learners() {
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
           <div>
-            <p className="text-sm font-semibold text-orange-500">Ms Nkosi</p>
-            <p className="text-xs text-gray-500">Teacher • Yellow</p>
+            <p className="text-sm font-semibold text-orange-500">{displayName}</p>
+            <p className="text-xs text-gray-500">{displayRole}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -53,7 +57,6 @@ function Learners() {
       {/* Main Content */}
       <div className="flex-1 px-4 pt-5 pb-28">
         
-        {/* Title + Add button */}
         <div className="flex items-center justify-between mb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -69,7 +72,6 @@ function Learners() {
           </button>
         </div>
 
-        {/* Search */}
         <input
           type="text"
           placeholder="Search learners..."
@@ -78,7 +80,6 @@ function Learners() {
           className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-orange-300"
         />
 
-        {/* Group Filters */}
         <div className="flex gap-2 mb-5 overflow-x-auto">
           {groups.map((group) => (
             <button
@@ -95,13 +96,9 @@ function Learners() {
           ))}
         </div>
 
-        {/* Learner Cards */}
         <div className="space-y-3">
           {filteredLearners.map((learner) => (
-            <div
-              key={learner.id}
-              className="bg-white rounded-2xl px-4 py-3 shadow-sm"
-            >
+            <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 shadow-sm">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-gray-900">{learner.name}</p>
@@ -157,18 +154,8 @@ function Learners() {
             </div>
 
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="flex-1 py-3 rounded-full bg-gray-100 text-gray-600 font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="flex-1 py-3 rounded-full bg-orange-400 text-white font-medium"
-              >
-                Add Student
-              </button>
+              <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 rounded-full bg-gray-100 text-gray-600 font-medium">Cancel</button>
+              <button onClick={() => setShowAddModal(false)} className="flex-1 py-3 rounded-full bg-orange-400 text-white font-medium">Add Student</button>
             </div>
           </div>
         </div>
@@ -183,22 +170,10 @@ function Learners() {
               <p className="font-medium text-gray-900">{showRemoveModal.name}</p>
               <p className="text-sm text-gray-500">{showRemoveModal.grade} • {showRemoveModal.group}</p>
             </div>
-            <p className="text-sm text-gray-500 mb-5">
-              This will permanently remove this learner from the system.
-            </p>
+            <p className="text-sm text-gray-500 mb-5">This will permanently remove this learner from the system.</p>
             <div className="flex gap-3">
-              <button
-                onClick={() => setShowRemoveModal(null)}
-                className="flex-1 py-3 rounded-full bg-gray-100 text-gray-600 font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleRemove(showRemoveModal.id)}
-                className="flex-1 py-3 rounded-full bg-orange-400 text-white font-medium"
-              >
-                🗑️ Remove
-              </button>
+              <button onClick={() => setShowRemoveModal(null)} className="flex-1 py-3 rounded-full bg-gray-100 text-gray-600 font-medium">Cancel</button>
+              <button onClick={() => handleRemove(showRemoveModal.id)} className="flex-1 py-3 rounded-full bg-orange-400 text-white font-medium">🗑️ Remove</button>
             </div>
           </div>
         </div>
