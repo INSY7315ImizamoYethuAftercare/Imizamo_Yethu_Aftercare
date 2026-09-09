@@ -10,6 +10,7 @@ import Classes from "./pages/Classes";
 import SignOut from "./pages/SignOut";
 import Observations from "./pages/Observations";
 import Reports from "./pages/Reports";
+import Settings from "./pages/Settings";
 
 // ---------- TEACHER BOTTOM NAV ----------
 function TeacherBottomNav() {
@@ -117,6 +118,7 @@ function App() {
         {/* Manager screens */}
         <Route path="/manager" element={<ManagerLayout><ManagerHome /></ManagerLayout>} />
         <Route path="/reports" element={<ManagerLayout><Reports /></ManagerLayout>} />
+        <Route path="/settings" element={<ManagerLayout><Settings /></ManagerLayout>} />
 
         {/* Shared screens also available under Manager layout if needed later */}
         {/* For now Manager uses the same Attendance/Learners/Classes/SignOut routes */}

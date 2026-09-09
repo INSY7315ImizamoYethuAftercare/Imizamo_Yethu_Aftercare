@@ -20,9 +20,12 @@ function ManagerHome() {
           <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
             <span className="text-lg">🔔</span>
           </button>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
-            <span className="text-lg">⚙️</span>
-          </button>
+<button
+  onClick={() => window.location.href = "/settings"}
+  className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100"
+>
+  <span className="text-lg">⚙️</span>
+</button>
         </div>
       </div>
 
