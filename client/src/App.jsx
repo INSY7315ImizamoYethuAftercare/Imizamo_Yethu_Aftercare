@@ -1,4 +1,5 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
@@ -8,6 +9,7 @@ import Learners from "./pages/Learners";
 import Classes from "./pages/Classes";
 import SignOut from "./pages/SignOut";
 import Observations from "./pages/Observations";
+import Reports from "./pages/Reports";
 
 // ---------- TEACHER BOTTOM NAV ----------
 function TeacherBottomNav() {
@@ -77,7 +79,7 @@ function ManagerBottomNav() {
   );
 }
 
-// Layout wrappers
+// Layouts
 function TeacherLayout({ children }) {
   return (
     <div>
@@ -100,7 +102,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Auth */}
+        {/* Auth screens */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
@@ -114,9 +116,12 @@ function App() {
 
         {/* Manager screens */}
         <Route path="/manager" element={<ManagerLayout><ManagerHome /></ManagerLayout>} />
-        {/* Manager can also use the same Attendance/Learners/Classes/SignOut for now */}
-        <Route path="/reports" element={<ManagerLayout><div className="p-8 text-center">Reports screen coming next</div></ManagerLayout>} />
+        <Route path="/reports" element={<ManagerLayout><Reports /></ManagerLayout>} />
 
+        {/* Shared screens also available under Manager layout if needed later */}
+        {/* For now Manager uses the same Attendance/Learners/Classes/SignOut routes */}
+
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
