@@ -10,12 +10,14 @@ class AttendanceRepository {
      * Retrieves the full attendance history for a single learner.
      * 
      * @param {number} learnerId - The unique identifier of the learner.
-     * @returns {Promise<Array<Object>>} A list of attendance records for the learner, ordered for most recent to oldest. 
+     * @returns {Promise<Array<Object>>} A list of attendance records for the 
+     * learner, ordered for most recent to oldest. 
      */
     async findByLearnerId(learnerId) {
         const result = await this.pool.query(
-            `SELECT "recordID", "learnerID", "teacherID", "recordDate', "timeIn", "status" 
-            WHERE "learnerID" = $1 ORDER BY "recordDate" DESC`,
+            `SELECT "record_id", "learner_id", "teacher_id", "record_date", "time_in", "status"
+            FROM attendance_records
+            WHERE "learner_id" = $1 ORDER BY "record_date" DESC`,
             [learnerId]
         );
         return result.rows;
@@ -34,10 +36,10 @@ class AttendanceRepository {
     async findByClassAndDate(classId, date) {
         // Joins against learners to scope by class, since attendance rows only carry learnerID
         const result = await this.pool.query(
-        `SELECT ar."recordID", ar."learnerID", ar."recordDate", ar."timeIn", ar."status" 
+        `SELECT ar."record_id", ar."learner_id", ar."record_date", ar."time_in", ar."status" 
         FROM attendance_records ar
-        JOIN learners l ON l."learnerID" = ar."learnerID"
-        WHERE l."classID" = $1 AND ar."recordDate" = $2`,
+        JOIN learners l ON l."learner_id" = ar."learner_id"
+        WHERE l."class_id" = $1 AND ar."record_date" = $2`,
         [classId, date]
     );
     return result.rows;
@@ -56,10 +58,10 @@ class AttendanceRepository {
      */
     async markPresent({ learnerId, teacherId, recordDate, timeIn }) {
         const result = await this.pool.query(
-            `INSERT INTO attendance_records ("learnerID", "teacherID", "recordDate", "timeIn", "status")
-            VALUES ($1, $2, $3, $4, 'Present')
-            RETURNING "learnerID", "teacherID", "recordDate", "status"`,
-            [learnerId, teacherId, recordDate]
+            `INSERT INTO attendance_records ("learner_id", "teacher_id", "record_date", "time_in", "status")
+            VALUES ($1, $2, $3, $4, 'present')
+            RETURNING "learner_id", "teacher_id", "record_date", "time_in", "status"`,
+            [learnerId, teacherId, recordDate, timeIn]
         );
         return result.rows[0];
     }
@@ -77,9 +79,9 @@ class AttendanceRepository {
      */
     async markAbsent({ learnerId, teacherId, recordDate }) {
         const result = await this.pool.query(
-            `INSERT INTO attendance_records ("learnerID", "teacherID", "recordDate", "status")
-             VALUES ($1, $2, $3, 'Absent')
-             RETURNING "recordID", "learnerID", "teacherID", "recordDate", "status"`,
+            `INSERT INTO attendance_records ("learner_id", "teacher_id", "record_date", "status")
+             VALUES ($1, $2, $3, 'absent')
+             RETURNING "record_id", "learner_id", "teacher_id", "record_date", "status"`,
             [learnerId, teacherId, recordDate]
         );
         return result.rows[0];
