@@ -131,16 +131,16 @@ function Observations({ role = "Teacher" }) {
           <span className="px-3 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full">Art</span>
         </div>
 
-        {/* Tabs */}
-        <div className="flex gap-2 mb-5">
+        {/* Tabs - stronger interactive style */}
+        <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-md border border-gray-100 flex gap-1">
           {["Profile", "Observations", "Attendance"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 rounded-full text-sm font-medium shadow-sm active:scale-95 transition ${
+              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition active:scale-[0.97] ${
                 activeTab === tab
-                  ? "bg-yellow-300 text-gray-800"
-                  : "bg-white text-gray-500 border border-gray-200"
+                  ? "bg-yellow-300 text-gray-800 shadow-sm"
+                  : "text-gray-500 hover:bg-yellow-50 hover:text-yellow-700"
               }`}
             >
               {tab}

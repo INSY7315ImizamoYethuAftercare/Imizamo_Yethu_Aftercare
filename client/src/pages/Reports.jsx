@@ -33,13 +33,16 @@ function Reports({ role = "Manager" }) {
           <p className="text-sm text-gray-500">Analytics & PDF exports</p>
         </div>
 
-        <div className="flex gap-2 mb-5">
+        {/* Stronger interactive tabs */}
+        <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-md border border-gray-100 flex gap-1">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 rounded-full text-xs font-medium shadow-sm active:scale-95 transition ${
-                activeTab === tab ? "bg-orange-400 text-white" : "bg-white text-gray-500 border border-gray-200"
+              className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition active:scale-[0.97] ${
+                activeTab === tab
+                  ? "bg-orange-400 text-white shadow-sm"
+                  : "bg-transparent text-gray-500 hover:bg-orange-50 hover:text-orange-500"
               }`}
             >
               {tab}
@@ -50,25 +53,25 @@ function Reports({ role = "Manager" }) {
         {activeTab === "Overview" && (
           <div className="space-y-5">
             <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
+              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 text-center">
                 <p className="text-2xl font-bold text-orange-500">6</p>
                 <p className="text-xs text-gray-500 mt-1">Total Learners</p>
               </div>
-              <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
+              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 text-center">
                 <p className="text-2xl font-bold text-green-500">92%</p>
                 <p className="text-xs text-gray-500 mt-1">Avg Attendance</p>
               </div>
-              <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
+              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 text-center">
                 <p className="text-2xl font-bold text-purple-500">8</p>
                 <p className="text-xs text-gray-500 mt-1">Observations</p>
               </div>
-              <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
+              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 text-center">
                 <p className="text-2xl font-bold text-sky-500">4</p>
                 <p className="text-xs text-gray-500 mt-1">Classes</p>
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2"><span>📅</span> Weekly Attendance</h3>
               <div className="flex justify-between items-end h-24 px-2">
                 {[
@@ -86,7 +89,7 @@ function Reports({ role = "Manager" }) {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-3">Attendance by Class</h3>
               <div className="space-y-3">
                 {[
@@ -108,7 +111,7 @@ function Reports({ role = "Manager" }) {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-3">Development Categories</h3>
               <div className="space-y-3">
                 {[
@@ -128,7 +131,10 @@ function Reports({ role = "Manager" }) {
               </div>
             </div>
 
-            <button onClick={comingSoon} className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 active:scale-[0.98] transition">
+            <button
+              onClick={comingSoon}
+              className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition"
+            >
               📄 Export as PDF
             </button>
           </div>
@@ -136,12 +142,12 @@ function Reports({ role = "Manager" }) {
 
         {activeTab === "Donor Report" && (
           <div className="space-y-5">
-            <div className="bg-purple-50 rounded-2xl p-5 text-center shadow-sm">
+            <div className="bg-purple-50 rounded-2xl p-5 text-center shadow-md border border-purple-100">
               <span className="text-3xl">💼</span>
               <h2 className="font-bold text-purple-700 text-lg mt-2">Donor Impact Report</h2>
               <p className="text-sm text-gray-500">Q3 2025 · July</p>
             </div>
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-3">Key Impact Metrics</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between"><span className="text-gray-600">🎒 Learners served this quarter</span><span className="font-semibold">6</span></div>
@@ -151,13 +157,16 @@ function Reports({ role = "Manager" }) {
                 <div className="flex justify-between"><span className="text-gray-600">📅 Days of aftercare delivered</span><span className="font-semibold">22</span></div>
               </div>
             </div>
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-2">Narrative Summary</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 During Q3 2025, the Imizamo Yethu Learning Hub successfully provided aftercare services to 6 registered learners across 4 class groups. The programme maintained a strong 92% average attendance rate, demonstrating consistent learner engagement and parental trust in our services.
               </p>
             </div>
-            <button onClick={comingSoon} className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 active:scale-[0.98] transition">
+            <button
+              onClick={comingSoon}
+              className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition"
+            >
               📄 Export as PDF
             </button>
           </div>
@@ -165,12 +174,12 @@ function Reports({ role = "Manager" }) {
 
         {activeTab === "Board Report" && (
           <div className="space-y-5">
-            <div className="bg-orange-50 rounded-2xl p-5 text-center shadow-sm">
+            <div className="bg-orange-50 rounded-2xl p-5 text-center shadow-md border border-orange-100">
               <span className="text-3xl">📋</span>
               <h2 className="font-bold text-orange-600 text-lg mt-2">Board Report</h2>
               <p className="text-sm text-gray-500">July 2025 · Monthly Overview</p>
             </div>
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-3">Enrolment</h3>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-center gap-2"><span className="text-orange-400">●</span> 6 active learners</li>
@@ -179,7 +188,7 @@ function Reports({ role = "Manager" }) {
                 <li className="flex items-center gap-2"><span className="text-orange-400">●</span> 1 new enrolment (July)</li>
               </ul>
             </div>
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-3">Operations</h3>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-center gap-2"><span className="text-orange-400">●</span> Digital attendance: 100% compliance</li>
@@ -188,7 +197,7 @@ function Reports({ role = "Manager" }) {
                 <li className="flex items-center gap-2"><span className="text-orange-400">●</span> 0 safety incidents</li>
               </ul>
             </div>
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
               <h3 className="font-semibold text-gray-900 mb-3">Wellbeing</h3>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li className="flex items-center gap-2"><span className="text-orange-400">●</span> 8 teacher observations</li>
@@ -197,7 +206,10 @@ function Reports({ role = "Manager" }) {
                 <li className="flex items-center gap-2"><span className="text-orange-400">●</span> Parent communication: ongoing</li>
               </ul>
             </div>
-            <button onClick={comingSoon} className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 active:scale-[0.98] transition">
+            <button
+              onClick={comingSoon}
+              className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition"
+            >
               📄 Export as PDF
             </button>
           </div>
