@@ -1,53 +1,45 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-function Reports() {
+function Reports({ role = "Manager" }) {
   const [activeTab, setActiveTab] = useState("Overview");
-
+  const navigate = useNavigate();
+  const comingSoon = () => alert("Coming soon");
   const tabs = ["Overview", "Donor Report", "Board Report"];
+
+  const displayName = role === "Admin" ? "System Admin" : "Sarah Botha";
+  const displayRole = role === "Admin" ? "Admin" : "Manager";
+  const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
-      
-      {/* Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
           <div>
-            <p className="text-sm font-semibold text-orange-500">Sarah Botha</p>
-            <p className="text-xs text-gray-500">Manager</p>
+            <p className="text-sm font-semibold text-orange-500">{displayName}</p>
+            <p className="text-xs text-gray-500">{displayRole}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
-            <span className="text-lg">🔔</span>
-          </button>
-          <button className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100">
-            <span className="text-lg">⚙️</span>
-          </button>
+          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">🔔</button>
+          <button onClick={() => navigate(settingsPath)} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">⚙️</button>
         </div>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 px-4 pt-5 pb-28">
-        
-        {/* Title */}
+      <div className="flex-1 px-4 pt-5 pb-32">
         <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            Reports <span>📊</span>
-          </h1>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Reports <span>📊</span></h1>
           <p className="text-sm text-gray-500">Analytics & PDF exports</p>
         </div>
 
-        {/* Tabs */}
         <div className="flex gap-2 mb-5">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2 rounded-full text-xs font-medium transition ${
-                activeTab === tab
-                  ? "bg-orange-400 text-white"
-                  : "bg-white text-gray-500 border border-gray-200"
+              className={`flex-1 py-2 rounded-full text-xs font-medium shadow-sm active:scale-95 transition ${
+                activeTab === tab ? "bg-orange-400 text-white" : "bg-white text-gray-500 border border-gray-200"
               }`}
             >
               {tab}
@@ -55,10 +47,8 @@ function Reports() {
           ))}
         </div>
 
-        {/* ==================== OVERVIEW TAB ==================== */}
         {activeTab === "Overview" && (
           <div className="space-y-5">
-            {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-white rounded-2xl p-4 shadow-sm text-center">
                 <p className="text-2xl font-bold text-orange-500">6</p>
@@ -78,11 +68,8 @@ function Reports() {
               </div>
             </div>
 
-            {/* Weekly Attendance */}
             <div className="bg-white rounded-2xl p-4 shadow-sm">
-              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <span>📅</span> Weekly Attendance
-              </h3>
+              <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2"><span>📅</span> Weekly Attendance</h3>
               <div className="flex justify-between items-end h-24 px-2">
                 {[
                   { day: "Mon 21", value: 5 },
@@ -92,17 +79,13 @@ function Reports() {
                   { day: "Fri 25", value: 4 },
                 ].map((item) => (
                   <div key={item.day} className="flex flex-col items-center gap-1">
-                    <div
-                      className="w-8 bg-orange-400 rounded-t-md"
-                      style={{ height: `${item.value * 12}px` }}
-                    ></div>
+                    <div className="w-8 bg-orange-400 rounded-t-md" style={{ height: `${item.value * 12}px` }}></div>
                     <span className="text-[10px] text-gray-500">{item.day}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Attendance by Class */}
             <div className="bg-white rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-3">Attendance by Class</h3>
               <div className="space-y-3">
@@ -125,7 +108,6 @@ function Reports() {
               </div>
             </div>
 
-            {/* Development Categories */}
             <div className="bg-white rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-3">Development Categories</h3>
               <div className="space-y-3">
@@ -146,69 +128,48 @@ function Reports() {
               </div>
             </div>
 
-            <button className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold">
+            <button onClick={comingSoon} className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 active:scale-[0.98] transition">
               📄 Export as PDF
             </button>
           </div>
         )}
 
-        {/* ==================== DONOR REPORT TAB ==================== */}
         {activeTab === "Donor Report" && (
           <div className="space-y-5">
-            <div className="bg-purple-50 rounded-2xl p-5 text-center">
+            <div className="bg-purple-50 rounded-2xl p-5 text-center shadow-sm">
               <span className="text-3xl">💼</span>
               <h2 className="font-bold text-purple-700 text-lg mt-2">Donor Impact Report</h2>
               <p className="text-sm text-gray-500">Q3 2025 · July</p>
             </div>
-
             <div className="bg-white rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-3">Key Impact Metrics</h3>
               <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">🎒 Learners served this quarter</span>
-                  <span className="font-semibold">6</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">📈 Average attendance rate</span>
-                  <span className="font-semibold">92%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">📝 Development observations</span>
-                  <span className="font-semibold">8</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">🏠 Safe collections this month</span>
-                  <span className="font-semibold">48</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">📅 Days of aftercare delivered</span>
-                  <span className="font-semibold">22</span>
-                </div>
+                <div className="flex justify-between"><span className="text-gray-600">🎒 Learners served this quarter</span><span className="font-semibold">6</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">📈 Average attendance rate</span><span className="font-semibold">92%</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">📝 Development observations</span><span className="font-semibold">8</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">🏠 Safe collections this month</span><span className="font-semibold">48</span></div>
+                <div className="flex justify-between"><span className="text-gray-600">📅 Days of aftercare delivered</span><span className="font-semibold">22</span></div>
               </div>
             </div>
-
             <div className="bg-white rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-2">Narrative Summary</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 During Q3 2025, the Imizamo Yethu Learning Hub successfully provided aftercare services to 6 registered learners across 4 class groups. The programme maintained a strong 92% average attendance rate, demonstrating consistent learner engagement and parental trust in our services.
               </p>
             </div>
-
-            <button className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold">
+            <button onClick={comingSoon} className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 active:scale-[0.98] transition">
               📄 Export as PDF
             </button>
           </div>
         )}
 
-        {/* ==================== BOARD REPORT TAB ==================== */}
         {activeTab === "Board Report" && (
           <div className="space-y-5">
-            <div className="bg-orange-50 rounded-2xl p-5 text-center">
+            <div className="bg-orange-50 rounded-2xl p-5 text-center shadow-sm">
               <span className="text-3xl">📋</span>
               <h2 className="font-bold text-orange-600 text-lg mt-2">Board Report</h2>
               <p className="text-sm text-gray-500">July 2025 · Monthly Overview</p>
             </div>
-
             <div className="bg-white rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-3">Enrolment</h3>
               <ul className="space-y-2 text-sm text-gray-700">
@@ -218,7 +179,6 @@ function Reports() {
                 <li className="flex items-center gap-2"><span className="text-orange-400">●</span> 1 new enrolment (July)</li>
               </ul>
             </div>
-
             <div className="bg-white rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-3">Operations</h3>
               <ul className="space-y-2 text-sm text-gray-700">
@@ -228,7 +188,6 @@ function Reports() {
                 <li className="flex items-center gap-2"><span className="text-orange-400">●</span> 0 safety incidents</li>
               </ul>
             </div>
-
             <div className="bg-white rounded-2xl p-4 shadow-sm">
               <h3 className="font-semibold text-gray-900 mb-3">Wellbeing</h3>
               <ul className="space-y-2 text-sm text-gray-700">
@@ -238,8 +197,7 @@ function Reports() {
                 <li className="flex items-center gap-2"><span className="text-orange-400">●</span> Parent communication: ongoing</li>
               </ul>
             </div>
-
-            <button className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold">
+            <button onClick={comingSoon} className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 active:scale-[0.98] transition">
               📄 Export as PDF
             </button>
           </div>

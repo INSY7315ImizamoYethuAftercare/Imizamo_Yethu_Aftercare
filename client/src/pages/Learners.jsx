@@ -1,10 +1,15 @@
 import { useState } from "react";
 
 function Learners({ role = "Teacher" }) {
-  const isManager = role === "Manager";
-  const displayName = isManager ? "Sarah Botha" : "Ms Nkosi";
-  const displayRole = isManager ? "Manager" : "Teacher • Yellow";
   const comingSoon = () => alert("Coming soon");
+
+  const displayName =
+    role === "Admin" ? "System Admin" :
+    role === "Manager" ? "Sarah Botha" : "Ms Nkosi";
+
+  const displayRole =
+    role === "Admin" ? "Admin" :
+    role === "Manager" ? "Manager" : "Teacher • Yellow";
 
   const [learners, setLearners] = useState([
     { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", attendance: 94, tags: ["Reading Club", "Art"] },
@@ -54,12 +59,14 @@ function Learners({ role = "Teacher" }) {
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Learners <span>🎒</span></h1>
             <p className="text-sm text-gray-500">{learners.length} learners enrolled</p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 rounded-full bg-orange-400 text-white text-sm font-semibold shadow-md hover:bg-orange-500 active:scale-95 transition"
-          >
-            + Add
-          </button>
+          {role !== "Admin" && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 rounded-full bg-orange-400 text-white text-sm font-semibold shadow-md hover:bg-orange-500 active:scale-95 transition"
+            >
+              + Add
+            </button>
+          )}
         </div>
 
         <input
@@ -101,12 +108,14 @@ function Learners({ role = "Teacher" }) {
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-green-500">{learner.attendance}%</span>
-                  <button
-                    onClick={() => setShowRemoveModal(learner)}
-                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 active:scale-95 transition"
-                  >
-                    🗑️
-                  </button>
+                  {role !== "Admin" && (
+                    <button
+                      onClick={() => setShowRemoveModal(learner)}
+                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 active:scale-95 transition"
+                    >
+                      🗑️
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

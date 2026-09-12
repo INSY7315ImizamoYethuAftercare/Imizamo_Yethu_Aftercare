@@ -11,10 +11,15 @@ function Attendance({ role = "Teacher" }) {
   ]);
 
   const [selectedGroup, setSelectedGroup] = useState("Yellow");
-  const isManager = role === "Manager";
-  const displayName = isManager ? "Sarah Botha" : "Ms Nkosi";
-  const displayRole = isManager ? "Manager" : `Teacher • ${selectedGroup}`;
   const comingSoon = () => alert("Coming soon");
+
+  const displayName =
+    role === "Admin" ? "System Admin" :
+    role === "Manager" ? "Sarah Botha" : "Ms Nkosi";
+
+  const displayRole =
+    role === "Admin" ? "Admin" :
+    role === "Manager" ? "Manager" : `Teacher • ${selectedGroup}`;
 
   const filteredLearners = learners.filter((l) => l.group === selectedGroup);
 
@@ -62,7 +67,6 @@ function Attendance({ role = "Teacher" }) {
           <p className="text-sm text-gray-500 mt-1">Wed, 29 Jul</p>
         </div>
 
-        {/* Colour filters */}
         <div className="flex gap-2 mb-5">
           {["Yellow", "Green", "Red", "Blue"].map((group) => (
             <button
@@ -82,7 +86,6 @@ function Attendance({ role = "Teacher" }) {
           ))}
         </div>
 
-        {/* Counter */}
         <div className={`rounded-2xl p-4 mb-5 flex items-center justify-between shadow-sm ${
           selectedGroup === "Yellow" ? "bg-yellow-100" :
           selectedGroup === "Green" ? "bg-green-100" :
@@ -99,16 +102,11 @@ function Attendance({ role = "Teacher" }) {
             <p className="text-xs text-gray-500 mt-0.5">learners present</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={markAllPresent} className="px-4 py-1.5 rounded-full bg-emerald-400 text-white text-sm font-medium shadow-sm hover:bg-emerald-500 active:scale-95 transition">
-              All In
-            </button>
-            <button onClick={clearAll} className="px-4 py-1.5 rounded-full bg-white text-gray-600 text-sm font-medium border border-gray-200 shadow-sm hover:bg-gray-50 active:scale-95 transition">
-              Clear
-            </button>
+            <button onClick={markAllPresent} className="px-4 py-1.5 rounded-full bg-emerald-400 text-white text-sm font-medium shadow-sm hover:bg-emerald-500 active:scale-95 transition">All In</button>
+            <button onClick={clearAll} className="px-4 py-1.5 rounded-full bg-white text-gray-600 text-sm font-medium border border-gray-200 shadow-sm hover:bg-gray-50 active:scale-95 transition">Clear</button>
           </div>
         </div>
 
-        {/* Learner cards */}
         <div className="space-y-3 mb-6">
           {filteredLearners.map((learner) => (
             <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
