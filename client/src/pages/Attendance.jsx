@@ -67,18 +67,19 @@ function Attendance({ role = "Teacher" }) {
           <p className="text-sm text-gray-500 mt-1">Wed, 29 Jul</p>
         </div>
 
-        <div className="flex gap-2 mb-5">
+        {/* Colour filters - stronger interactive style */}
+        <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-md border border-gray-100 flex gap-1">
           {["Yellow", "Green", "Red", "Blue"].map((group) => (
             <button
               key={group}
               onClick={() => setSelectedGroup(group)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium shadow-sm active:scale-95 transition ${
+              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition active:scale-[0.97] ${
                 selectedGroup === group
-                  ? group === "Yellow" ? "bg-yellow-300 text-gray-800"
-                  : group === "Green" ? "bg-green-400 text-white"
-                  : group === "Red" ? "bg-red-500 text-white"
-                  : "bg-sky-400 text-white"
-                  : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
+                  ? group === "Yellow" ? "bg-yellow-300 text-gray-800 shadow-sm"
+                  : group === "Green" ? "bg-green-400 text-white shadow-sm"
+                  : group === "Red" ? "bg-red-500 text-white shadow-sm"
+                  : "bg-sky-400 text-white shadow-sm"
+                  : "text-gray-500 hover:bg-gray-50"
               }`}
             >
               {group}
@@ -86,10 +87,10 @@ function Attendance({ role = "Teacher" }) {
           ))}
         </div>
 
-        <div className={`rounded-2xl p-4 mb-5 flex items-center justify-between shadow-sm ${
-          selectedGroup === "Yellow" ? "bg-yellow-100" :
-          selectedGroup === "Green" ? "bg-green-100" :
-          selectedGroup === "Red" ? "bg-red-100" : "bg-sky-100"
+        <div className={`rounded-2xl p-4 mb-5 flex items-center justify-between shadow-md border border-gray-100 ${
+          selectedGroup === "Yellow" ? "bg-yellow-50" :
+          selectedGroup === "Green" ? "bg-green-50" :
+          selectedGroup === "Red" ? "bg-red-50" : "bg-sky-50"
         }`}>
           <div>
             <p className={`text-3xl font-bold ${
@@ -102,14 +103,18 @@ function Attendance({ role = "Teacher" }) {
             <p className="text-xs text-gray-500 mt-0.5">learners present</p>
           </div>
           <div className="flex gap-2">
-            <button onClick={markAllPresent} className="px-4 py-1.5 rounded-full bg-emerald-400 text-white text-sm font-medium shadow-sm hover:bg-emerald-500 active:scale-95 transition">All In</button>
-            <button onClick={clearAll} className="px-4 py-1.5 rounded-full bg-white text-gray-600 text-sm font-medium border border-gray-200 shadow-sm hover:bg-gray-50 active:scale-95 transition">Clear</button>
+            <button onClick={markAllPresent} className="px-4 py-2 rounded-full bg-emerald-400 text-white text-sm font-semibold shadow-md hover:bg-emerald-500 active:scale-95 transition">
+              All In
+            </button>
+            <button onClick={clearAll} className="px-4 py-2 rounded-full bg-white text-gray-600 text-sm font-semibold border border-gray-200 shadow-sm hover:bg-gray-50 active:scale-95 transition">
+              Clear
+            </button>
           </div>
         </div>
 
         <div className="space-y-3 mb-6">
           {filteredLearners.map((learner) => (
-            <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
+            <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-md border border-gray-100">
               <div>
                 <p className="font-semibold text-gray-900">{learner.name}</p>
                 <p className="text-xs text-gray-500">{learner.grade}</p>
@@ -117,16 +122,20 @@ function Attendance({ role = "Teacher" }) {
               <div className="flex gap-2">
                 <button
                   onClick={() => toggleStatus(learner.id, "Present")}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium shadow-sm active:scale-95 transition ${
-                    learner.status === "Present" ? "bg-emerald-400 text-white" : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                  className={`px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm active:scale-95 transition ${
+                    learner.status === "Present"
+                      ? "bg-emerald-400 text-white"
+                      : "bg-gray-100 text-gray-400 hover:bg-gray-200"
                   }`}
                 >
                   Present
                 </button>
                 <button
                   onClick={() => toggleStatus(learner.id, "Absent")}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium shadow-sm active:scale-95 transition ${
-                    learner.status === "Absent" ? "bg-orange-400 text-white" : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                  className={`px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm active:scale-95 transition ${
+                    learner.status === "Absent"
+                      ? "bg-orange-400 text-white"
+                      : "bg-gray-100 text-gray-400 hover:bg-gray-200"
                   }`}
                 >
                   Absent
@@ -144,7 +153,7 @@ function Attendance({ role = "Teacher" }) {
           />
         </div>
 
-        <button className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 active:scale-[0.98] transition">
+        <button className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition">
           Save Attendance
         </button>
       </div>

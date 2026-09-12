@@ -13,11 +13,6 @@ function Learners({ role = "Teacher" }) {
     role === "Admin" ? "Admin" :
     role === "Manager" ? "Manager" : "Teacher • Yellow";
 
-  const observationsPath =
-    role === "Admin" ? "/admin/observations" :
-    role === "Manager" ? "/manager/learners" : // fallback until manager observations route exists
-    "/observations";
-
   const [learners, setLearners] = useState([
     { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", attendance: 94, tags: ["Reading Club", "Art"] },
     { id: 2, name: "Liam van der Berg", grade: "Grade 4", group: "Green", attendance: 88, tags: ["Football", "Maths Club"] },
@@ -45,9 +40,7 @@ function Learners({ role = "Teacher" }) {
   };
 
   const openLearner = () => {
-    // For now all cards open the same demo profile screen
     if (role === "Admin") navigate("/admin/observations");
-    else if (role === "Manager") navigate("/observations");
     else navigate("/observations");
   };
 
@@ -91,15 +84,15 @@ function Learners({ role = "Teacher" }) {
           className="w-full px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm mb-4 shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
         />
 
-        <div className="flex gap-2 mb-5 overflow-x-auto">
+        <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-md border border-gray-100 flex gap-1 overflow-x-auto">
           {groups.map((group) => (
             <button
               key={group}
               onClick={() => setSelectedGroup(group)}
-              className={`px-4 py-1.5 rounded-full text-sm font-medium whitespace-nowrap shadow-sm active:scale-95 transition ${
+              className={`px-3 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition active:scale-[0.97] ${
                 selectedGroup === group
-                  ? "bg-orange-400 text-white"
-                  : "bg-white text-gray-500 border border-gray-200 hover:bg-gray-50"
+                  ? "bg-orange-400 text-white shadow-sm"
+                  : "text-gray-500 hover:bg-orange-50 hover:text-orange-500"
               }`}
             >
               {group}
@@ -112,7 +105,7 @@ function Learners({ role = "Teacher" }) {
             <button
               key={learner.id}
               onClick={openLearner}
-              className="w-full text-left bg-white rounded-2xl px-4 py-3 shadow-sm hover:shadow-md hover:border-orange-100 border border-transparent active:scale-[0.99] transition"
+              className="w-full text-left bg-white rounded-2xl px-4 py-3 shadow-md border border-gray-100 hover:shadow-lg hover:border-orange-200 active:scale-[0.99] transition"
             >
               <div className="flex items-start justify-between">
                 <div>
@@ -120,9 +113,7 @@ function Learners({ role = "Teacher" }) {
                   <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
                   <div className="flex gap-1.5 mt-2">
                     {learner.tags.map((tag) => (
-                      <span key={tag} className="px-2 py-0.5 bg-orange-50 text-orange-500 text-[10px] font-medium rounded-full">
-                        {tag}
-                      </span>
+                      <span key={tag} className="px-2 py-0.5 bg-orange-50 text-orange-500 text-[10px] font-medium rounded-full">{tag}</span>
                     ))}
                   </div>
                 </div>
