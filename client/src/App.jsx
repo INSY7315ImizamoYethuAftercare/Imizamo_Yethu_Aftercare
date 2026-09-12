@@ -4,6 +4,7 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Home from "./pages/Home";
 import ManagerHome from "./pages/ManagerHome";
+import AdminHome from "./pages/AdminHome";
 import Attendance from "./pages/Attendance";
 import Learners from "./pages/Learners";
 import Classes from "./pages/Classes";
@@ -12,7 +13,6 @@ import Observations from "./pages/Observations";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 
-// Shared nav button style
 const navBtn = (active, activeColor = "text-orange-500") =>
   `flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition active:scale-95 ${
     active ? activeColor : "text-gray-400 hover:text-gray-600"
@@ -90,6 +90,36 @@ function ManagerBottomNav() {
   );
 }
 
+// ---------- ADMIN BOTTOM NAV ----------
+function AdminBottomNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isActive = (path) => location.pathname === path;
+
+  return (
+    <div className="fixed bottom-4 left-4 right-4 z-40">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 px-3 py-2.5 flex justify-between items-center">
+        <button onClick={() => navigate("/admin")} className={navBtn(isActive("/admin"))}>
+          <span className="text-lg">🏠</span>
+          <span className={`text-[10px] ${isActive("/admin") ? "font-semibold" : ""}`}>Home</span>
+        </button>
+        <button onClick={() => navigate("/admin/attendance")} className={navBtn(isActive("/admin/attendance"), "text-green-500")}>
+          <span className="text-lg">✓</span>
+          <span className={`text-[10px] ${isActive("/admin/attendance") ? "font-semibold" : ""}`}>Attendance</span>
+        </button>
+        <button onClick={() => navigate("/admin/learners")} className={navBtn(isActive("/admin/learners"))}>
+          <span className="text-lg">🎒</span>
+          <span className={`text-[10px] ${isActive("/admin/learners") ? "font-semibold" : ""}`}>Learners</span>
+        </button>
+        <button onClick={() => navigate("/admin/reports")} className={navBtn(isActive("/admin/reports"))}>
+          <span className="text-lg">📊</span>
+          <span className={`text-[10px] ${isActive("/admin/reports") ? "font-semibold" : ""}`}>Reports</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function TeacherLayout({ children }) {
   return (
     <div>
@@ -108,13 +138,24 @@ function ManagerLayout({ children }) {
   );
 }
 
+function AdminLayout({ children }) {
+  return (
+    <div>
+      {children}
+      <AdminBottomNav />
+    </div>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Auth */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
+        {/* ========== TEACHER ========== */}
         <Route path="/home" element={<TeacherLayout><Home /></TeacherLayout>} />
         <Route path="/attendance" element={<TeacherLayout><Attendance /></TeacherLayout>} />
         <Route path="/learners" element={<TeacherLayout><Learners /></TeacherLayout>} />
@@ -122,6 +163,7 @@ function App() {
         <Route path="/signout" element={<TeacherLayout><SignOut /></TeacherLayout>} />
         <Route path="/observations" element={<TeacherLayout><Observations /></TeacherLayout>} />
 
+        {/* ========== MANAGER ========== */}
         <Route path="/manager" element={<ManagerLayout><ManagerHome /></ManagerLayout>} />
         <Route path="/manager/attendance" element={<ManagerLayout><Attendance role="Manager" /></ManagerLayout>} />
         <Route path="/manager/learners" element={<ManagerLayout><Learners role="Manager" /></ManagerLayout>} />
@@ -129,6 +171,14 @@ function App() {
         <Route path="/manager/signout" element={<ManagerLayout><SignOut role="Manager" /></ManagerLayout>} />
         <Route path="/reports" element={<ManagerLayout><Reports /></ManagerLayout>} />
         <Route path="/settings" element={<ManagerLayout><Settings /></ManagerLayout>} />
+
+        {/* ========== ADMIN ========== */}
+        <Route path="/admin" element={<AdminLayout><AdminHome /></AdminLayout>} />
+        <Route path="/admin/attendance" element={<AdminLayout><Attendance role="Admin" /></AdminLayout>} />
+        <Route path="/admin/learners" element={<AdminLayout><Learners role="Admin" /></AdminLayout>} />
+        <Route path="/admin/reports" element={<AdminLayout><Reports role="Admin" /></AdminLayout>} />
+        <Route path="/admin/settings" element={<AdminLayout><Settings role="Admin" /></AdminLayout>} />
+        <Route path="/admin/observations" element={<AdminLayout><Observations role="Admin" /></AdminLayout>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
