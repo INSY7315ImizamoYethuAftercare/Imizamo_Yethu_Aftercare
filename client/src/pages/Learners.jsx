@@ -1,10 +1,22 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Learners({ role = "Teacher" }) {
-  const isManager = role === "Manager";
-  const displayName = isManager ? "Sarah Botha" : "Ms Nkosi";
-  const displayRole = isManager ? "Manager" : "Teacher • Yellow";
+  const navigate = useNavigate();
   const comingSoon = () => alert("Coming soon");
+
+  const displayName =
+    role === "Admin" ? "System Admin" :
+    role === "Manager" ? "Sarah Botha" : "Ms Nkosi";
+
+  const displayRole =
+    role === "Admin" ? "Admin" :
+    role === "Manager" ? "Manager" : "Teacher • Yellow";
+
+  const observationsPath =
+    role === "Admin" ? "/admin/observations" :
+    role === "Manager" ? "/manager/learners" : // fallback until manager observations route exists
+    "/observations";
 
   const [learners, setLearners] = useState([
     { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", attendance: 94, tags: ["Reading Club", "Art"] },
@@ -32,6 +44,13 @@ function Learners({ role = "Teacher" }) {
     setShowRemoveModal(null);
   };
 
+  const openLearner = () => {
+    // For now all cards open the same demo profile screen
+    if (role === "Admin") navigate("/admin/observations");
+    else if (role === "Manager") navigate("/observations");
+    else navigate("/observations");
+  };
+
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
@@ -54,12 +73,14 @@ function Learners({ role = "Teacher" }) {
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Learners <span>🎒</span></h1>
             <p className="text-sm text-gray-500">{learners.length} learners enrolled</p>
           </div>
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 rounded-full bg-orange-400 text-white text-sm font-semibold shadow-md hover:bg-orange-500 active:scale-95 transition"
-          >
-            + Add
-          </button>
+          {role !== "Admin" && (
+            <button
+              onClick={() => setShowAddModal(true)}
+              className="px-4 py-2 rounded-full bg-orange-400 text-white text-sm font-semibold shadow-md hover:bg-orange-500 active:scale-95 transition"
+            >
+              + Add
+            </button>
+          )}
         </div>
 
         <input
@@ -88,28 +109,39 @@ function Learners({ role = "Teacher" }) {
 
         <div className="space-y-3">
           {filteredLearners.map((learner) => (
-            <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 shadow-sm">
+            <button
+              key={learner.id}
+              onClick={openLearner}
+              className="w-full text-left bg-white rounded-2xl px-4 py-3 shadow-sm hover:shadow-md hover:border-orange-100 border border-transparent active:scale-[0.99] transition"
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-gray-900">{learner.name}</p>
                   <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
                   <div className="flex gap-1.5 mt-2">
                     {learner.tags.map((tag) => (
-                      <span key={tag} className="px-2 py-0.5 bg-orange-50 text-orange-500 text-[10px] font-medium rounded-full">{tag}</span>
+                      <span key={tag} className="px-2 py-0.5 bg-orange-50 text-orange-500 text-[10px] font-medium rounded-full">
+                        {tag}
+                      </span>
                     ))}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-green-500">{learner.attendance}%</span>
-                  <button
-                    onClick={() => setShowRemoveModal(learner)}
-                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 active:scale-95 transition"
-                  >
-                    🗑️
-                  </button>
+                  {role !== "Admin" && (
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowRemoveModal(learner);
+                      }}
+                      className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 active:scale-95 transition"
+                    >
+                      🗑️
+                    </span>
+                  )}
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
