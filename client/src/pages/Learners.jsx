@@ -1,6 +1,8 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Learners({ role = "Teacher" }) {
+  const navigate = useNavigate();
   const comingSoon = () => alert("Coming soon");
 
   const displayName =
@@ -10,6 +12,11 @@ function Learners({ role = "Teacher" }) {
   const displayRole =
     role === "Admin" ? "Admin" :
     role === "Manager" ? "Manager" : "Teacher • Yellow";
+
+  const observationsPath =
+    role === "Admin" ? "/admin/observations" :
+    role === "Manager" ? "/manager/learners" : // fallback until manager observations route exists
+    "/observations";
 
   const [learners, setLearners] = useState([
     { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", attendance: 94, tags: ["Reading Club", "Art"] },
@@ -35,6 +42,13 @@ function Learners({ role = "Teacher" }) {
   const handleRemove = (id) => {
     setLearners(learners.filter((l) => l.id !== id));
     setShowRemoveModal(null);
+  };
+
+  const openLearner = () => {
+    // For now all cards open the same demo profile screen
+    if (role === "Admin") navigate("/admin/observations");
+    else if (role === "Manager") navigate("/observations");
+    else navigate("/observations");
   };
 
   return (
@@ -95,30 +109,39 @@ function Learners({ role = "Teacher" }) {
 
         <div className="space-y-3">
           {filteredLearners.map((learner) => (
-            <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 shadow-sm">
+            <button
+              key={learner.id}
+              onClick={openLearner}
+              className="w-full text-left bg-white rounded-2xl px-4 py-3 shadow-sm hover:shadow-md hover:border-orange-100 border border-transparent active:scale-[0.99] transition"
+            >
               <div className="flex items-start justify-between">
                 <div>
                   <p className="font-semibold text-gray-900">{learner.name}</p>
                   <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
                   <div className="flex gap-1.5 mt-2">
                     {learner.tags.map((tag) => (
-                      <span key={tag} className="px-2 py-0.5 bg-orange-50 text-orange-500 text-[10px] font-medium rounded-full">{tag}</span>
+                      <span key={tag} className="px-2 py-0.5 bg-orange-50 text-orange-500 text-[10px] font-medium rounded-full">
+                        {tag}
+                      </span>
                     ))}
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-medium text-green-500">{learner.attendance}%</span>
                   {role !== "Admin" && (
-                    <button
-                      onClick={() => setShowRemoveModal(learner)}
+                    <span
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowRemoveModal(learner);
+                      }}
                       className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-red-50 active:scale-95 transition"
                     >
                       🗑️
-                    </button>
+                    </span>
                   )}
                 </div>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
