@@ -17,18 +17,18 @@ function Login() {
   const handleSignIn = () => {
     if (role === "Manager") navigate("/manager");
     else if (role === "Admin") navigate("/admin");
+    else if (role === "Parent") navigate("/parent");
     else navigate("/home");
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col items-center justify-center px-4">
-      
       <div className="text-center mb-8">
         <div className="w-24 h-24 mx-auto mb-4 bg-white rounded-2xl shadow-md flex items-center justify-center p-3">
           <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
         </div>
         <h1 className="text-2xl font-bold text-gray-900">Imizamo Yethu</h1>
-        <p className="text-sm text-purple-500 mt-1">Learning Hub + Aftercare System</p>
+        <p className="text-sm text-purple-500 mt-1">Learning Hub • Aftercare System</p>
       </div>
 
       <div className="bg-white rounded-3xl shadow-lg p-6 w-full max-w-sm">

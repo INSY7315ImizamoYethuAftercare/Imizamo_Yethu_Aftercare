@@ -13,18 +13,17 @@ function Register() {
     { name: "Parent", icon: "💛" },
   ];
 
-  // ===== STEP 1: Choose Role =====
+  const isParent = role === "Parent";
+
   if (step === 1) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col items-center justify-center px-4">
-        
-        {/* Logo on card */}
         <div className="text-center mb-8">
           <div className="w-24 h-24 mx-auto mb-4 bg-white rounded-2xl shadow-md flex items-center justify-center p-3">
             <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900">Create Account</h1>
-          <p className="text-sm text-purple-500 mt-1">Aftercare System</p>
+          <p className="text-sm text-purple-500 mt-1">Imizamo Yethu Learning Hub</p>
         </div>
 
         <div className="bg-white rounded-3xl shadow-lg p-6 w-full max-w-sm">
@@ -43,7 +42,9 @@ function Register() {
                 }`}
               >
                 <span className="text-2xl">{r.icon}</span>
-                <span className="text-sm font-medium text-gray-800">{r.name}</span>
+                <span className="text-sm font-medium text-gray-800">
+                  {r.name === "Parent" ? "Parent/Guardian" : r.name}
+                </span>
               </button>
             ))}
           </div>
@@ -52,7 +53,7 @@ function Register() {
             onClick={() => setStep(2)}
             className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 active:scale-[0.98] transition mb-4"
           >
-            Continue as {role} →
+            Continue as {isParent ? "Parent 💛" : role} →
           </button>
 
           <button
@@ -66,11 +67,8 @@ function Register() {
     );
   }
 
-  // ===== STEP 2: Registration Form =====
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col items-center justify-center px-4 py-8">
-      
-      {/* Logo on card */}
       <div className="text-center mb-6">
         <div className="w-20 h-20 mx-auto mb-3 bg-white rounded-2xl shadow-md flex items-center justify-center p-2.5">
           <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
@@ -82,8 +80,11 @@ function Register() {
       <div className="bg-white rounded-3xl shadow-lg p-6 w-full max-w-sm">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 rounded-full">
-            <span>🍎</span>
-            <span className="text-sm font-medium text-orange-600">{role}</span>
+            <span>{isParent ? "💛" : "🍎"}</span>
+            <div>
+              <p className="text-sm font-medium text-orange-600">{isParent ? "Parent" : role}</p>
+              {isParent && <p className="text-[10px] text-orange-400">View your child’s progress</p>}
+            </div>
           </div>
           <button onClick={() => setStep(1)} className="text-xs text-gray-400 font-medium">
             Change
@@ -107,10 +108,30 @@ function Register() {
             <input placeholder="you@example.com" className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm" />
           </div>
 
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1 block">YOUR CLASS</label>
-            <input placeholder="e.g. Yellow" className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm" />
-          </div>
+          {isParent ? (
+            <>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">YOUR CHILD’S NAME</label>
+                <input placeholder="e.g. Aisha Petersen" className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">PHONE NUMBER (OPTIONAL)</label>
+                <input placeholder="+27 72 000 0000" className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm" />
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">YOUR CLASS</label>
+                <input placeholder="e.g. Yellow" className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-gray-500 mb-1 block">STAFF ACCESS CODE</label>
+                <input placeholder="Provided by your manager" className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm" />
+                <p className="text-xs text-gray-400 mt-1">Demo code: IYLH2025</p>
+              </div>
+            </>
+          )}
 
           <div>
             <label className="text-xs font-medium text-gray-500 mb-1 block">PASSWORD</label>
@@ -121,15 +142,12 @@ function Register() {
             <label className="text-xs font-medium text-gray-500 mb-1 block">CONFIRM PASSWORD</label>
             <input type="password" placeholder="Repeat password" className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm" />
           </div>
-
-          <div>
-            <label className="text-xs font-medium text-gray-500 mb-1 block">STAFF ACCESS CODE</label>
-            <input placeholder="Provided by your manager" className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-sm shadow-sm" />
-            <p className="text-xs text-gray-400 mt-1">Demo code: IYLH2025</p>
-          </div>
         </div>
 
-        <button className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 active:scale-[0.98] transition mb-3">
+        <button
+          onClick={() => navigate("/")}
+          className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 active:scale-[0.98] transition mb-3"
+        >
           Create Account
         </button>
 
