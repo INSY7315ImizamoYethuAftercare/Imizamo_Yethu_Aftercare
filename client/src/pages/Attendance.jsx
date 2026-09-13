@@ -1,16 +1,6 @@
 import { useState } from "react";
 
 function Attendance({ role = "Teacher" }) {
-  const [learners, setLearners] = useState([
-    { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", status: "Present" },
-    { id: 2, name: "Amara Okoye", grade: "Grade 1", group: "Yellow", status: "Present" },
-    { id: 3, name: "Liam van der Berg", grade: "Grade 4", group: "Green", status: "Present" },
-    { id: 4, name: "Keanu Abrahams", grade: "Grade 3", group: "Green", status: "Present" },
-    { id: 5, name: "Zoe Ntombela", grade: "Grade 6", group: "Red", status: "Present" },
-    { id: 6, name: "Sipho Mkhize", grade: "Grade 7", group: "Blue", status: "Absent" },
-  ]);
-
-  const [selectedGroup, setSelectedGroup] = useState("Yellow");
   const comingSoon = () => alert("Coming soon");
 
   const displayName =
@@ -19,29 +9,39 @@ function Attendance({ role = "Teacher" }) {
 
   const displayRole =
     role === "Admin" ? "Admin" :
-    role === "Manager" ? "Manager" : `Teacher • ${selectedGroup}`;
+    role === "Manager" ? "Manager" : "Teacher • Yellow";
 
-  const filteredLearners = learners.filter((l) => l.group === selectedGroup);
+  const [selectedClass, setSelectedClass] = useState("Yellow");
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [learners, setLearners] = useState([
+    { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", status: null },
+    { id: 2, name: "Liam van der Berg", grade: "Grade 4", group: "Green", status: null },
+    { id: 3, name: "Zoe Ntombela", grade: "Grade 6", group: "Red", status: null },
+    { id: 4, name: "Keanu Abrahams", grade: "Grade 3", group: "Green", status: null },
+    { id: 5, name: "Amara Okoye", grade: "Grade 1", group: "Yellow", status: null },
+    { id: 6, name: "Sipho Dlamini", grade: "Grade 5", group: "Blue", status: null },
+  ]);
 
-  const toggleStatus = (id, newStatus) => {
-    setLearners((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l))
-    );
+  const classes = ["All", "Yellow", "Green", "Red", "Blue"];
+
+  const filtered =
+    selectedClass === "All"
+      ? learners
+      : learners.filter((l) => l.group === selectedClass);
+
+  const presentCount = filtered.filter((l) => l.status === "present").length;
+  const absentCount = filtered.filter((l) => l.status === "absent").length;
+
+  const setStatus = (id, status) => {
+    setLearners((prev) => prev.map((l) => (l.id === id ? { ...l, status } : l)));
   };
 
-  const markAllPresent = () => {
-    setLearners((prev) =>
-      prev.map((l) => (l.group === selectedGroup ? { ...l, status: "Present" } : l))
-    );
+  const handleSave = () => {
+    setShowSuccess(true);
+    setTimeout(() => setShowSuccess(false), 2500);
   };
 
-  const clearAll = () => {
-    setLearners((prev) =>
-      prev.map((l) => (l.group === selectedGroup ? { ...l, status: "Absent" } : l))
-    );
-  };
-
-  const presentCount = filteredLearners.filter((l) => l.status === "Present").length;
+  const shell = role === "Teacher" ? "max-w-lg mx-auto w-full" : "max-w-5xl mx-auto w-full";
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
@@ -54,88 +54,70 @@ function Attendance({ role = "Teacher" }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">🔔</button>
-          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">⋮</button>
+          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
+          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">⋮</button>
         </div>
       </div>
 
-      <div className="flex-1 px-4 pt-5 pb-32">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-            Attendance <span className="text-green-500">✓</span>
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">Wed, 29 Jul</p>
+      <div className={`flex-1 px-4 pt-5 pb-32 ${shell}`}>
+        <div className="mb-1">
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Attendance <span>✓</span></h1>
+          <p className="text-sm text-gray-500 mt-1">{filtered.length} learners</p>
         </div>
 
-        {/* Colour filters - stronger interactive style */}
-        <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-md border border-gray-100 flex gap-1">
-          {["Yellow", "Green", "Red", "Blue"].map((group) => (
+        <div className="flex gap-2 mt-4 mb-5 overflow-x-auto">
+          {classes.map((cls) => (
             <button
-              key={group}
-              onClick={() => setSelectedGroup(group)}
-              className={`flex-1 py-2 rounded-xl text-sm font-semibold transition active:scale-[0.97] ${
-                selectedGroup === group
-                  ? group === "Yellow" ? "bg-yellow-300 text-gray-800 shadow-sm"
-                  : group === "Green" ? "bg-green-400 text-white shadow-sm"
-                  : group === "Red" ? "bg-red-500 text-white shadow-sm"
-                  : "bg-sky-400 text-white shadow-sm"
-                  : "text-gray-500 hover:bg-gray-50"
+              key={cls}
+              onClick={() => setSelectedClass(cls)}
+              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap shadow-md border transition active:scale-95 ${
+                selectedClass === cls
+                  ? "bg-orange-400 text-white border-orange-400"
+                  : "bg-white text-gray-600 border-gray-200"
               }`}
             >
-              {group}
+              {cls}
             </button>
           ))}
         </div>
 
-        <div className={`rounded-2xl p-4 mb-5 flex items-center justify-between shadow-md border border-gray-100 ${
-          selectedGroup === "Yellow" ? "bg-yellow-50" :
-          selectedGroup === "Green" ? "bg-green-50" :
-          selectedGroup === "Red" ? "bg-red-50" : "bg-sky-50"
-        }`}>
-          <div>
-            <p className={`text-3xl font-bold ${
-              selectedGroup === "Yellow" ? "text-yellow-500" :
-              selectedGroup === "Green" ? "text-green-600" :
-              selectedGroup === "Red" ? "text-red-500" : "text-sky-500"
-            }`}>
-              {presentCount} / {filteredLearners.length}
-            </p>
-            <p className="text-xs text-gray-500 mt-0.5">learners present</p>
+        <div className="grid grid-cols-2 gap-3 mb-5">
+          <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-200 text-center">
+            <p className="text-2xl font-bold text-green-500">{presentCount}</p>
+            <p className="text-xs text-gray-500">Present</p>
           </div>
-          <div className="flex gap-2">
-            <button onClick={markAllPresent} className="px-4 py-2 rounded-full bg-emerald-400 text-white text-sm font-semibold shadow-md hover:bg-emerald-500 active:scale-95 transition">
-              All In
-            </button>
-            <button onClick={clearAll} className="px-4 py-2 rounded-full bg-white text-gray-600 text-sm font-semibold border border-gray-200 shadow-sm hover:bg-gray-50 active:scale-95 transition">
-              Clear
-            </button>
+          <div className="bg-white rounded-2xl p-4 shadow-lg border border-gray-200 text-center">
+            <p className="text-2xl font-bold text-red-500">{absentCount}</p>
+            <p className="text-xs text-gray-500">Absent</p>
           </div>
         </div>
 
         <div className="space-y-3 mb-6">
-          {filteredLearners.map((learner) => (
-            <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-md border border-gray-100">
-              <div>
-                <p className="font-semibold text-gray-900">{learner.name}</p>
-                <p className="text-xs text-gray-500">{learner.grade}</p>
+          {filtered.map((learner) => (
+            <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 shadow-lg border border-gray-200">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <p className="font-semibold text-gray-900">{learner.name}</p>
+                  <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
+                </div>
               </div>
               <div className="flex gap-2">
                 <button
-                  onClick={() => toggleStatus(learner.id, "Present")}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm active:scale-95 transition ${
-                    learner.status === "Present"
-                      ? "bg-emerald-400 text-white"
-                      : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                  onClick={() => setStatus(learner.id, "present")}
+                  className={`flex-1 py-2 rounded-full text-sm font-semibold shadow-md border transition active:scale-95 ${
+                    learner.status === "present"
+                      ? "bg-green-500 text-white border-green-500"
+                      : "bg-white text-gray-600 border-gray-200"
                   }`}
                 >
                   Present
                 </button>
                 <button
-                  onClick={() => toggleStatus(learner.id, "Absent")}
-                  className={`px-4 py-1.5 rounded-full text-sm font-semibold shadow-sm active:scale-95 transition ${
-                    learner.status === "Absent"
-                      ? "bg-orange-400 text-white"
-                      : "bg-gray-100 text-gray-400 hover:bg-gray-200"
+                  onClick={() => setStatus(learner.id, "absent")}
+                  className={`flex-1 py-2 rounded-full text-sm font-semibold shadow-md border transition active:scale-95 ${
+                    learner.status === "absent"
+                      ? "bg-red-500 text-white border-red-500"
+                      : "bg-white text-gray-600 border-gray-200"
                   }`}
                 >
                   Absent
@@ -145,15 +127,16 @@ function Attendance({ role = "Teacher" }) {
           ))}
         </div>
 
-        <div className="mb-5">
-          <label className="block text-xs font-medium text-gray-500 mb-2">SESSION NOTES (optional)</label>
-          <textarea
-            placeholder="Any notes about today's session..."
-            className="w-full h-24 p-3 bg-white border border-gray-200 rounded-2xl text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"
-          />
-        </div>
+        {showSuccess && (
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm font-medium rounded-2xl px-4 py-3 text-center shadow-lg">
+            Attendance saved
+          </div>
+        )}
 
-        <button className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition">
+        <button
+          onClick={handleSave}
+          className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-lg hover:bg-orange-500 active:scale-[0.98] transition"
+        >
           Save Attendance
         </button>
       </div>

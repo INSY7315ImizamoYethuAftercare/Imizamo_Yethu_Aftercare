@@ -20,36 +20,44 @@ const navBtn = (active, activeColor = "text-orange-500") =>
     active ? activeColor : "text-gray-400 hover:text-gray-600"
   }`;
 
+function NavShell({ children }) {
+  return (
+    <div className="fixed bottom-4 left-4 right-4 z-40">
+      <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 px-3 py-2.5 flex justify-between items-center">
+        {children}
+      </div>
+    </div>
+  );
+}
+
 function TeacherBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-40">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 px-3 py-2.5 flex justify-between items-center">
-        <button onClick={() => navigate("/home")} className={navBtn(isActive("/home"))}>
-          <span className="text-lg">🏠</span>
-          <span className={`text-[10px] ${isActive("/home") ? "font-semibold" : ""}`}>Home</span>
-        </button>
-        <button onClick={() => navigate("/attendance")} className={navBtn(isActive("/attendance"), "text-green-500")}>
-          <span className="text-lg">✓</span>
-          <span className={`text-[10px] ${isActive("/attendance") ? "font-semibold" : ""}`}>Attendance</span>
-        </button>
-        <button onClick={() => navigate("/learners")} className={navBtn(isActive("/learners"))}>
-          <span className="text-lg">🎒</span>
-          <span className={`text-[10px] ${isActive("/learners") ? "font-semibold" : ""}`}>Learners</span>
-        </button>
-        <button onClick={() => navigate("/classes")} className={navBtn(isActive("/classes"))}>
-          <span className="text-lg">🏫</span>
-          <span className={`text-[10px] ${isActive("/classes") ? "font-semibold" : ""}`}>Classes</span>
-        </button>
-        <button onClick={() => navigate("/signout")} className={navBtn(isActive("/signout"))}>
-          <span className="text-lg">🚪</span>
-          <span className={`text-[10px] ${isActive("/signout") ? "font-semibold" : ""}`}>Sign Out</span>
-        </button>
-      </div>
-    </div>
+    <NavShell>
+      <button onClick={() => navigate("/home")} className={navBtn(isActive("/home"))}>
+        <span className="text-lg">🏠</span>
+        <span className={`text-[10px] ${isActive("/home") ? "font-semibold" : ""}`}>Home</span>
+      </button>
+      <button onClick={() => navigate("/attendance")} className={navBtn(isActive("/attendance"), "text-green-500")}>
+        <span className="text-lg">✓</span>
+        <span className={`text-[10px] ${isActive("/attendance") ? "font-semibold" : ""}`}>Attendance</span>
+      </button>
+      <button onClick={() => navigate("/learners")} className={navBtn(isActive("/learners"))}>
+        <span className="text-lg">🎒</span>
+        <span className={`text-[10px] ${isActive("/learners") ? "font-semibold" : ""}`}>Learners</span>
+      </button>
+      <button onClick={() => navigate("/classes")} className={navBtn(isActive("/classes"))}>
+        <span className="text-lg">🏫</span>
+        <span className={`text-[10px] ${isActive("/classes") ? "font-semibold" : ""}`}>Classes</span>
+      </button>
+      <button onClick={() => navigate("/signout")} className={navBtn(isActive("/signout"))}>
+        <span className="text-lg">🚪</span>
+        <span className={`text-[10px] ${isActive("/signout") ? "font-semibold" : ""}`}>Sign Out</span>
+      </button>
+    </NavShell>
   );
 }
 
@@ -60,7 +68,7 @@ function ManagerBottomNav() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-40">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 px-2 py-2.5 flex justify-between items-center">
+      <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 px-2 py-2.5 flex justify-between items-center">
         <button onClick={() => navigate("/manager")} className={navBtn(isActive("/manager"))}>
           <span className="text-lg">🏠</span>
           <span className={`text-[10px] ${isActive("/manager") ? "font-semibold" : ""}`}>Home</span>
@@ -96,26 +104,24 @@ function AdminBottomNav() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-40">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 px-3 py-2.5 flex justify-between items-center">
-        <button onClick={() => navigate("/admin")} className={navBtn(isActive("/admin"))}>
-          <span className="text-lg">🏠</span>
-          <span className={`text-[10px] ${isActive("/admin") ? "font-semibold" : ""}`}>Home</span>
-        </button>
-        <button onClick={() => navigate("/admin/attendance")} className={navBtn(isActive("/admin/attendance"), "text-green-500")}>
-          <span className="text-lg">✓</span>
-          <span className={`text-[10px] ${isActive("/admin/attendance") ? "font-semibold" : ""}`}>Attendance</span>
-        </button>
-        <button onClick={() => navigate("/admin/learners")} className={navBtn(isActive("/admin/learners"))}>
-          <span className="text-lg">🎒</span>
-          <span className={`text-[10px] ${isActive("/admin/learners") ? "font-semibold" : ""}`}>Learners</span>
-        </button>
-        <button onClick={() => navigate("/admin/reports")} className={navBtn(isActive("/admin/reports"))}>
-          <span className="text-lg">📊</span>
-          <span className={`text-[10px] ${isActive("/admin/reports") ? "font-semibold" : ""}`}>Reports</span>
-        </button>
-      </div>
-    </div>
+    <NavShell>
+      <button onClick={() => navigate("/admin")} className={navBtn(isActive("/admin"))}>
+        <span className="text-lg">🏠</span>
+        <span className={`text-[10px] ${isActive("/admin") ? "font-semibold" : ""}`}>Home</span>
+      </button>
+      <button onClick={() => navigate("/admin/attendance")} className={navBtn(isActive("/admin/attendance"), "text-green-500")}>
+        <span className="text-lg">✓</span>
+        <span className={`text-[10px] ${isActive("/admin/attendance") ? "font-semibold" : ""}`}>Attendance</span>
+      </button>
+      <button onClick={() => navigate("/admin/learners")} className={navBtn(isActive("/admin/learners"))}>
+        <span className="text-lg">🎒</span>
+        <span className={`text-[10px] ${isActive("/admin/learners") ? "font-semibold" : ""}`}>Learners</span>
+      </button>
+      <button onClick={() => navigate("/admin/reports")} className={navBtn(isActive("/admin/reports"))}>
+        <span className="text-lg">📊</span>
+        <span className={`text-[10px] ${isActive("/admin/reports") ? "font-semibold" : ""}`}>Reports</span>
+      </button>
+    </NavShell>
   );
 }
 
@@ -126,7 +132,7 @@ function ParentBottomNav() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-40">
-      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 px-3 py-2.5 flex justify-center items-center">
+      <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 px-3 py-2.5 flex justify-center items-center">
         <button onClick={() => navigate("/parent")} className={navBtn(isActive, "text-orange-500")}>
           <span className="text-lg">💛</span>
           <span className={`text-[10px] ${isActive ? "font-semibold" : ""}`}>My Child</span>
