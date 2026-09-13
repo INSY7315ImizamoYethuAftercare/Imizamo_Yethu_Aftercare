@@ -14,5 +14,8 @@
     "start:server": "npm run start --workspace server",
     "test": "npm run test --workspaces --if-present"
   },
-  "license": "UNLICENSED"
+  "license": "UNLICENSED",
+  "dependencies": {
+    "recharts": "^3.10.1"
+  }
 }
