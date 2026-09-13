@@ -6,10 +6,12 @@ function Reports({ role = "Manager" }) {
   const navigate = useNavigate();
   const comingSoon = () => alert("Coming soon");
   const tabs = ["Overview", "Donor Report", "Board Report"];
-
   const displayName = role === "Admin" ? "System Admin" : "Sarah Botha";
   const displayRole = role === "Admin" ? "Admin" : "Manager";
   const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
+  const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
+  const primary =
+    "w-full md:w-auto md:px-10 py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-lg hover:bg-orange-500 active:scale-[0.98] transition";
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
@@ -23,8 +25,8 @@ function Reports({ role = "Manager" }) {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">🔔</button>
-            <button onClick={() => navigate(settingsPath)} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">⚙️</button>
+            <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
+            <button onClick={() => navigate(settingsPath)} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">⚙️</button>
           </div>
         </div>
       </div>
@@ -35,14 +37,14 @@ function Reports({ role = "Manager" }) {
           <p className="text-sm text-gray-500">Analytics & PDF exports</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-md border border-gray-100 flex gap-1">
+        <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-lg border border-gray-200 flex gap-1">
           {tabs.map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`flex-1 py-2.5 rounded-xl text-xs font-semibold transition active:scale-[0.97] ${
                 activeTab === tab
-                  ? "bg-orange-400 text-white shadow-sm"
+                  ? "bg-orange-400 text-white shadow-md"
                   : "bg-transparent text-gray-500 hover:bg-orange-50 hover:text-orange-500"
               }`}
             >
@@ -54,26 +56,26 @@ function Reports({ role = "Manager" }) {
         {activeTab === "Overview" && (
           <div className="space-y-5">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 text-center">
+              <div className={`${card} text-center`}>
                 <p className="text-2xl font-bold text-orange-500">6</p>
                 <p className="text-xs text-gray-500 mt-1">Total Learners</p>
               </div>
-              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 text-center">
+              <div className={`${card} text-center`}>
                 <p className="text-2xl font-bold text-green-500">92%</p>
                 <p className="text-xs text-gray-500 mt-1">Avg Attendance</p>
               </div>
-              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 text-center">
+              <div className={`${card} text-center`}>
                 <p className="text-2xl font-bold text-purple-500">8</p>
                 <p className="text-xs text-gray-500 mt-1">Observations</p>
               </div>
-              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 text-center">
+              <div className={`${card} text-center`}>
                 <p className="text-2xl font-bold text-sky-500">4</p>
                 <p className="text-xs text-gray-500 mt-1">Classes</p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+              <div className={card}>
                 <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2"><span>📅</span> Weekly Attendance</h3>
                 <div className="flex justify-between items-end h-24 px-2">
                   {[
@@ -91,7 +93,7 @@ function Reports({ role = "Manager" }) {
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+              <div className={card}>
                 <h3 className="font-semibold text-gray-900 mb-3">Attendance by Class</h3>
                 <div className="space-y-3">
                   {[
@@ -114,7 +116,7 @@ function Reports({ role = "Manager" }) {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+            <div className={card}>
               <h3 className="font-semibold text-gray-900 mb-3">Development Categories</h3>
               <div className="space-y-3">
                 {[
@@ -134,20 +136,18 @@ function Reports({ role = "Manager" }) {
               </div>
             </div>
 
-            <button onClick={comingSoon} className="w-full md:w-auto md:px-10 py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition">
-              📄 Export as PDF
-            </button>
+            <button onClick={comingSoon} className={primary}>📄 Export as PDF</button>
           </div>
         )}
 
         {activeTab === "Donor Report" && (
           <div className="space-y-5 max-w-3xl">
-            <div className="bg-purple-50 rounded-2xl p-5 text-center shadow-md border border-purple-100">
+            <div className="bg-purple-50 rounded-2xl p-5 text-center shadow-lg border border-purple-200">
               <span className="text-3xl">💼</span>
               <h2 className="font-bold text-purple-700 text-lg mt-2">Donor Impact Report</h2>
               <p className="text-sm text-gray-500">Q3 2025 · July</p>
             </div>
-            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+            <div className={card}>
               <h3 className="font-semibold text-gray-900 mb-3">Key Impact Metrics</h3>
               <div className="space-y-3 text-sm">
                 <div className="flex justify-between"><span className="text-gray-600">🎒 Learners served this quarter</span><span className="font-semibold">6</span></div>
@@ -157,27 +157,25 @@ function Reports({ role = "Manager" }) {
                 <div className="flex justify-between"><span className="text-gray-600">📅 Days of aftercare delivered</span><span className="font-semibold">22</span></div>
               </div>
             </div>
-            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+            <div className={card}>
               <h3 className="font-semibold text-gray-900 mb-2">Narrative Summary</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
                 During Q3 2025, the Imizamo Yethu Learning Hub successfully provided aftercare services to 6 registered learners across 4 class groups. The programme maintained a strong 92% average attendance rate, demonstrating consistent learner engagement and parental trust in our services.
               </p>
             </div>
-            <button onClick={comingSoon} className="w-full md:w-auto md:px-10 py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition">
-              📄 Export as PDF
-            </button>
+            <button onClick={comingSoon} className={primary}>📄 Export as PDF</button>
           </div>
         )}
 
         {activeTab === "Board Report" && (
           <div className="space-y-5">
-            <div className="bg-orange-50 rounded-2xl p-5 text-center shadow-md border border-orange-100">
+            <div className="bg-orange-50 rounded-2xl p-5 text-center shadow-lg border border-orange-200">
               <span className="text-3xl">📋</span>
               <h2 className="font-bold text-orange-600 text-lg mt-2">Board Report</h2>
               <p className="text-sm text-gray-500">July 2025 · Monthly Overview</p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+              <div className={card}>
                 <h3 className="font-semibold text-gray-900 mb-3">Enrolment</h3>
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-center gap-2"><span className="text-orange-400">●</span> 6 active learners</li>
@@ -186,7 +184,7 @@ function Reports({ role = "Manager" }) {
                   <li className="flex items-center gap-2"><span className="text-orange-400">●</span> 1 new enrolment (July)</li>
                 </ul>
               </div>
-              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+              <div className={card}>
                 <h3 className="font-semibold text-gray-900 mb-3">Operations</h3>
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-center gap-2"><span className="text-orange-400">●</span> Digital attendance: 100% compliance</li>
@@ -195,7 +193,7 @@ function Reports({ role = "Manager" }) {
                   <li className="flex items-center gap-2"><span className="text-orange-400">●</span> 0 safety incidents</li>
                 </ul>
               </div>
-              <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+              <div className={card}>
                 <h3 className="font-semibold text-gray-900 mb-3">Wellbeing</h3>
                 <ul className="space-y-2 text-sm text-gray-700">
                   <li className="flex items-center gap-2"><span className="text-orange-400">●</span> 8 teacher observations</li>
@@ -205,9 +203,7 @@ function Reports({ role = "Manager" }) {
                 </ul>
               </div>
             </div>
-            <button onClick={comingSoon} className="w-full md:w-auto md:px-10 py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition">
-              📄 Export as PDF
-            </button>
+            <button onClick={comingSoon} className={primary}>📄 Export as PDF</button>
           </div>
         )}
       </div>

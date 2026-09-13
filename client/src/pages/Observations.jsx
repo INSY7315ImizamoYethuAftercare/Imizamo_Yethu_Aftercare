@@ -8,6 +8,7 @@ function Observations({ role = "Teacher" }) {
   const [selectedCategory, setSelectedCategory] = useState("Academic");
   const [note, setNote] = useState("");
   const comingSoon = () => alert("Coming soon");
+  const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
 
   const displayName =
     role === "Admin" ? "System Admin" :
@@ -22,20 +23,8 @@ function Observations({ role = "Teacher" }) {
     role === "Manager" ? "/manager/learners" : "/learners";
 
   const [observations, setObservations] = useState([
-    {
-      id: 1,
-      category: "Social",
-      date: "2025-07-15",
-      note: "Showed great leadership during group activity today.",
-      teacher: "Ms Nkosi",
-    },
-    {
-      id: 2,
-      category: "Academic",
-      date: "2025-07-08",
-      note: "Reading fluency improving significantly. Completed level 3 book.",
-      teacher: "Ms Nkosi",
-    },
+    { id: 1, category: "Social", date: "2025-07-15", note: "Showed great leadership during group activity today.", teacher: "Ms Nkosi" },
+    { id: 2, category: "Academic", date: "2025-07-08", note: "Reading fluency improving significantly. Completed level 3 book.", teacher: "Ms Nkosi" },
   ]);
 
   const categories = ["Academic", "Social", "Wellbeing", "Creative", "Physical"];
@@ -64,14 +53,16 @@ function Observations({ role = "Teacher" }) {
 
   const handleSave = () => {
     if (!note.trim()) return;
-    const newObservation = {
-      id: Date.now(),
-      category: selectedCategory,
-      date: new Date().toISOString().split("T")[0],
-      note: note,
-      teacher: displayName,
-    };
-    setObservations([newObservation, ...observations]);
+    setObservations([
+      {
+        id: Date.now(),
+        category: selectedCategory,
+        date: new Date().toISOString().split("T")[0],
+        note,
+        teacher: displayName,
+      },
+      ...observations,
+    ]);
     setNote("");
     setSelectedCategory("Academic");
     setShowForm(false);
@@ -88,33 +79,32 @@ function Observations({ role = "Teacher" }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">🔔</button>
-          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">⋮</button>
+          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
+          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">⋮</button>
         </div>
       </div>
 
       <div className="bg-yellow-300 px-4 py-4">
-        <button
-          onClick={() => navigate(backPath)}
-          className="text-sm text-gray-700 mb-2 flex items-center gap-1 font-medium active:scale-95 transition"
-        >
-          ← Back
-        </button>
-        <h1 className="text-xl font-bold text-gray-900">Aisha Petersen</h1>
-        <p className="text-sm text-gray-700">Grade 2 • Yellow</p>
+        <div className="max-w-lg mx-auto">
+          <button onClick={() => navigate(backPath)} className="text-sm text-gray-700 mb-2 flex items-center gap-1 font-medium active:scale-95 transition">
+            ← Back
+          </button>
+          <h1 className="text-xl font-bold text-gray-900">Aisha Petersen</h1>
+          <p className="text-sm text-gray-700">Grade 2 • Yellow</p>
+        </div>
       </div>
 
-      <div className="flex-1 px-4 pt-4 pb-32">
+      <div className="flex-1 px-4 pt-4 pb-32 max-w-lg mx-auto w-full">
         <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="bg-white rounded-xl p-3 text-center shadow-md border border-gray-100">
+          <div className={`${card} text-center`}>
             <p className="text-xl font-bold text-green-500">94%</p>
             <p className="text-xs text-gray-500">Attendance</p>
           </div>
-          <div className="bg-white rounded-xl p-3 text-center shadow-md border border-gray-100">
+          <div className={`${card} text-center`}>
             <p className="text-xl font-bold text-gray-800">7 yrs</p>
             <p className="text-xs text-gray-500">Age</p>
           </div>
-          <div className="bg-white rounded-xl p-3 text-center shadow-md border border-gray-100">
+          <div className={`${card} text-center`}>
             <p className="text-xl font-bold text-orange-500">{observations.length}</p>
             <p className="text-xs text-gray-500">Observations</p>
           </div>
@@ -125,15 +115,13 @@ function Observations({ role = "Teacher" }) {
           <span className="px-3 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full">Art</span>
         </div>
 
-        <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-md border border-gray-100 flex gap-1">
+        <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-lg border border-gray-200 flex gap-1">
           {["Profile", "Observations", "Attendance"].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition active:scale-[0.97] ${
-                activeTab === tab
-                  ? "bg-yellow-300 text-gray-800 shadow-sm"
-                  : "text-gray-500 hover:bg-yellow-50 hover:text-yellow-700"
+                activeTab === tab ? "bg-yellow-300 text-gray-800 shadow-md" : "text-gray-500"
               }`}
             >
               {tab}
@@ -143,36 +131,25 @@ function Observations({ role = "Teacher" }) {
 
         {activeTab === "Profile" && (
           <div className="space-y-4">
-            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-lg">👤</span>
-                <h3 className="font-semibold text-gray-900">Parent / Guardian</h3>
-              </div>
+            <div className={card}>
+              <h3 className="font-semibold text-gray-900 mb-3">Parent / Guardian</h3>
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-gray-500">Name</span><span className="text-gray-800 font-medium">Fatima Petersen</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Phone</span><span className="text-gray-800 font-medium">072 345 6789</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Email</span><span className="text-gray-800 font-medium">fatima.petersen@gmail.com</span></div>
-                <div className="flex justify-between"><span className="text-gray-500">Address</span><span className="text-gray-800 font-medium text-right">14 Kloof Street, Hout Bay</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Name</span><span className="font-medium">Fatima Petersen</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Phone</span><span className="font-medium">072 345 6789</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Email</span><span className="font-medium">fatima.petersen@gmail.com</span></div>
+                <div className="flex justify-between"><span className="text-gray-500">Address</span><span className="font-medium text-right">14 Kloof Street, Hout Bay</span></div>
               </div>
             </div>
-
-            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-green-500">✓</span>
-                <h3 className="font-semibold text-gray-900">Authorised Pickups</h3>
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm text-gray-800"><span>👤</span> Fatima Petersen</div>
-                <div className="flex items-center gap-2 text-sm text-gray-800"><span>👤</span> Ahmed Petersen</div>
-                <div className="flex items-center gap-2 text-sm text-gray-800"><span>👤</span> Zainab Hendricks</div>
+            <div className={card}>
+              <h3 className="font-semibold text-gray-900 mb-3">Authorised Pickups</h3>
+              <div className="space-y-2 text-sm text-gray-800">
+                <p>👤 Fatima Petersen</p>
+                <p>👤 Ahmed Petersen</p>
+                <p>👤 Zainab Hendricks</p>
               </div>
             </div>
-
-            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
-              <div className="flex items-center gap-2 mb-2">
-                <span>📌</span>
-                <h3 className="font-semibold text-gray-900">Notes</h3>
-              </div>
+            <div className={card}>
+              <h3 className="font-semibold text-gray-900 mb-2">Notes</h3>
               <p className="text-sm text-gray-700">Loves reading. Mild peanut allergy.</p>
             </div>
           </div>
@@ -183,22 +160,21 @@ function Observations({ role = "Teacher" }) {
             {!showForm && (
               <button
                 onClick={() => setShowForm(true)}
-                className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base mb-6 shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition"
+                className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold mb-6 shadow-lg hover:bg-orange-500 active:scale-[0.98] transition"
               >
                 + Add Observation
               </button>
             )}
-
             {showForm && (
-              <div className="bg-white rounded-2xl p-4 mb-6 shadow-md border border-gray-100">
+              <div className={`${card} mb-6`}>
                 <h2 className="font-semibold text-gray-900 mb-3">New Observation</h2>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {categories.map((cat) => (
                     <button
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium shadow-sm active:scale-95 transition ${
-                        selectedCategory === cat ? getCategoryBg(cat) : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium shadow-md active:scale-95 transition ${
+                        selectedCategory === cat ? getCategoryBg(cat) : "bg-gray-100 text-gray-500"
                       }`}
                     >
                       {cat}
@@ -209,28 +185,21 @@ function Observations({ role = "Teacher" }) {
                   value={note}
                   onChange={(e) => setNote(e.target.value)}
                   placeholder="Write your observation here..."
-                  className="w-full h-28 p-3 border border-gray-200 rounded-xl text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none mb-4 shadow-sm"
+                  className="w-full h-28 p-3 border border-gray-200 rounded-xl text-sm mb-4 shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"
                 />
                 <div className="flex gap-3">
-                  <button
-                    onClick={() => { setShowForm(false); setNote(""); }}
-                    className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium text-sm border border-gray-200 shadow-sm hover:bg-gray-50 active:scale-[0.98] transition"
-                  >
+                  <button onClick={() => { setShowForm(false); setNote(""); }} className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium text-sm border border-gray-200 shadow-lg active:scale-[0.98] transition">
                     Cancel
                   </button>
-                  <button
-                    onClick={handleSave}
-                    className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-semibold text-sm shadow-md hover:bg-orange-500 active:scale-[0.98] transition"
-                  >
+                  <button onClick={handleSave} className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-semibold text-sm shadow-lg active:scale-[0.98] transition">
                     Save
                   </button>
                 </div>
               </div>
             )}
-
             <div className="space-y-4">
               {observations.map((obs) => (
-                <div key={obs.id} className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+                <div key={obs.id} className={card}>
                   <div className="flex items-center justify-between mb-2">
                     <span className={`text-sm font-semibold ${getCategoryColour(obs.category)}`}>{obs.category}</span>
                     <span className="text-xs text-gray-400">{obs.date}</span>
@@ -244,7 +213,7 @@ function Observations({ role = "Teacher" }) {
         )}
 
         {activeTab === "Attendance" && (
-          <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+          <div className={card}>
             <h3 className="font-semibold text-gray-900 mb-4">This Week</h3>
             <div className="space-y-3">
               {[

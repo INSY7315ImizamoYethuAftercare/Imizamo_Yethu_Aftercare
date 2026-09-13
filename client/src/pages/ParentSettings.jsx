@@ -3,10 +3,27 @@ import { useNavigate } from "react-router-dom";
 
 function ParentSettings() {
   const navigate = useNavigate();
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const comingSoon = () => alert("Coming soon");
+  const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [message, setMessage] = useState("");
+
+  const handlePassword = (e) => {
+    e.preventDefault();
+    if (!current || !next || !confirm) {
+      setMessage("Please fill in all fields.");
+      return;
+    }
+    if (next !== confirm) {
+      setMessage("New passwords do not match.");
+      return;
+    }
+    setMessage("Password updated.");
+    setCurrent("");
+    setNext("");
+    setConfirm("");
+  };
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
@@ -18,54 +35,36 @@ function ParentSettings() {
             <p className="text-xs text-gray-500">Parent</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">🔔</button>
-          <button className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">⚙️</button>
-        </div>
+        <button onClick={() => navigate("/parent")} className="text-sm font-medium text-gray-600">← Back</button>
       </div>
 
-      <div className="flex-1 px-4 pt-5 pb-32">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Settings ⚙️</h1>
-          <p className="text-sm text-gray-500">Manage your account</p>
-        </div>
+      <div className="flex-1 px-4 pt-5 pb-32 max-w-lg mx-auto w-full space-y-4">
+        <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
 
-        <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 mb-5">
-          <p className="text-xs font-medium text-gray-400 mb-3">PROFILE</p>
-          <p className="text-lg font-semibold text-gray-900">Fatima Petersen</p>
-          <span className="inline-block mt-1 px-2.5 py-0.5 bg-orange-50 text-orange-500 text-xs font-medium rounded-full">
-            Parent
-          </span>
-        </div>
-
-        <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 mb-5">
-          <p className="text-xs font-medium text-gray-400 mb-4">UPDATE PASSWORD</p>
-          <div className="space-y-3 mb-4">
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">CURRENT PASSWORD</label>
-              <input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">NEW PASSWORD</label>
-              <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300" />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-gray-500 mb-1 block">CONFIRM PASSWORD</label>
-              <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300" />
-            </div>
+        <div className={card}>
+          <h2 className="font-semibold text-gray-900 mb-3">Profile</h2>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between"><span className="text-gray-500">Name</span><span className="font-medium">Fatima Petersen</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Child</span><span className="font-medium">Aisha Petersen</span></div>
+            <div className="flex justify-between"><span className="text-gray-500">Phone</span><span className="font-medium">072 345 6789</span></div>
           </div>
-          <button onClick={comingSoon} className="w-full py-3 rounded-full bg-orange-400 text-white font-semibold text-sm shadow-md hover:bg-orange-500 active:scale-[0.98] transition">
-            Update Password
-          </button>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
-          <p className="text-xs font-medium text-gray-400 mb-3">ACCOUNT</p>
-          <button
-            onClick={() => navigate("/")}
-            className="w-full py-3 rounded-xl bg-red-50 text-red-500 font-medium text-sm flex items-center justify-center gap-2 shadow-sm hover:bg-red-100 active:scale-[0.98] transition"
-          >
-            🚪 Sign Out
+        <form onSubmit={handlePassword} className={card}>
+          <h2 className="font-semibold text-gray-900 mb-3">Change password</h2>
+          <input type="password" placeholder="Current password" value={current} onChange={(e) => setCurrent(e.target.value)} className="w-full mb-2 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md" />
+          <input type="password" placeholder="New password" value={next} onChange={(e) => setNext(e.target.value)} className="w-full mb-2 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md" />
+          <input type="password" placeholder="Confirm new password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="w-full mb-3 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md" />
+          {message && <p className="text-xs text-gray-600 mb-3">{message}</p>}
+          <button type="submit" className="w-full py-3 rounded-full bg-orange-400 text-white font-semibold shadow-lg active:scale-[0.98] transition">
+            Update password
+          </button>
+        </form>
+
+        <div className={card}>
+          <h2 className="font-semibold text-gray-900 mb-3">Account</h2>
+          <button onClick={() => navigate("/")} className="w-full py-3 rounded-full bg-white text-red-500 font-semibold border border-red-200 shadow-lg active:scale-[0.98] transition">
+            Log out
           </button>
         </div>
       </div>

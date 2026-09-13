@@ -4,6 +4,10 @@ function ManagerHome() {
   const navigate = useNavigate();
   const comingSoon = () => alert("Coming soon");
 
+  const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
+  const action =
+    "bg-white rounded-2xl p-4 shadow-lg border border-gray-200 flex flex-col items-center gap-2 hover:shadow-xl hover:border-orange-300 active:scale-[0.97] transition";
+
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
       <div className="bg-white">
@@ -16,21 +20,21 @@ function ManagerHome() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 hover:bg-gray-100 active:scale-95 transition shadow-sm">🔔</button>
-            <button onClick={() => navigate("/settings")} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 hover:bg-gray-100 active:scale-95 transition shadow-sm">⚙️</button>
+            <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
+            <button onClick={() => navigate("/settings")} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">⚙️</button>
           </div>
         </div>
       </div>
 
       <div className="flex-1 px-4 pt-5 pb-32 max-w-5xl mx-auto w-full">
-        <div className="bg-gradient-to-r from-orange-400 to-orange-300 rounded-2xl p-5 mb-5 text-white shadow-md">
+        <div className="bg-gradient-to-r from-orange-400 to-orange-300 rounded-2xl p-5 mb-5 text-white shadow-lg">
           <p className="text-sm opacity-90">Wednesday, 29 July</p>
           <h1 className="text-xl font-bold mt-1">Good afternoon, Sarah! 👋</h1>
           <p className="text-sm mt-1 opacity-90">5 of 6 learners present today</p>
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-          <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+          <div className={card}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-lg">⭐</span>
               <p className="text-2xl font-bold text-gray-900">5</p>
@@ -40,7 +44,7 @@ function ManagerHome() {
               <div className="h-full bg-green-400 rounded-full" style={{ width: "83%" }}></div>
             </div>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
+          <div className={card}>
             <div className="flex items-center gap-2 mb-2">
               <span className="text-lg">🏠</span>
               <p className="text-2xl font-bold text-gray-900">5</p>
@@ -50,7 +54,7 @@ function ManagerHome() {
               <div className="h-full bg-purple-400 rounded-full" style={{ width: "83%" }}></div>
             </div>
           </div>
-          <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 col-span-2 md:col-span-1">
+          <div className={`${card} col-span-2 md:col-span-1`}>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">🎒</span>
               <p className="text-2xl font-bold text-gray-900">6</p>
@@ -61,19 +65,19 @@ function ManagerHome() {
 
         <h2 className="font-semibold text-gray-900 mb-3">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <button onClick={() => navigate("/manager/attendance")} className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 flex flex-col items-center gap-2 hover:shadow-lg hover:border-orange-200 active:scale-[0.97] transition">
+          <button onClick={() => navigate("/manager/attendance")} className={action}>
             <span className="text-2xl text-green-500">✓</span>
             <span className="text-sm font-semibold text-gray-800">Mark Attendance</span>
           </button>
-          <button onClick={() => navigate("/manager/learners")} className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 flex flex-col items-center gap-2 hover:shadow-lg hover:border-orange-200 active:scale-[0.97] transition">
+          <button onClick={() => navigate("/manager/learners")} className={action}>
             <span className="text-2xl">🎒</span>
             <span className="text-sm font-semibold text-gray-800">View Learners</span>
           </button>
-          <button onClick={() => navigate("/manager/signout")} className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 flex flex-col items-center gap-2 hover:shadow-lg hover:border-orange-200 active:scale-[0.97] transition">
+          <button onClick={() => navigate("/manager/signout")} className={action}>
             <span className="text-2xl">🚪</span>
             <span className="text-sm font-semibold text-gray-800">Sign-Out</span>
           </button>
-          <button onClick={() => navigate("/reports")} className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 flex flex-col items-center gap-2 hover:shadow-lg hover:border-orange-200 active:scale-[0.97] transition">
+          <button onClick={() => navigate("/reports")} className={action}>
             <span className="text-2xl">📊</span>
             <span className="text-sm font-semibold text-gray-800">Reports</span>
           </button>
@@ -82,7 +86,7 @@ function ManagerHome() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div>
             <h2 className="font-semibold text-gray-900 mb-3">Class Overview</h2>
-            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 space-y-4">
+            <div className={`${card} space-y-4`}>
               {[
                 { name: "Yellow", value: "2/2", width: "100%", colour: "bg-yellow-400", text: "text-yellow-600" },
                 { name: "Green", value: "2/2", width: "100%", colour: "bg-green-400", text: "text-green-600" },
@@ -104,7 +108,7 @@ function ManagerHome() {
 
           <div>
             <h2 className="font-semibold text-gray-900 mb-3">Recent Activity</h2>
-            <div className="bg-white rounded-2xl shadow-md border border-gray-100 divide-y divide-gray-100">
+            <div className="bg-white rounded-2xl shadow-lg border border-gray-200 divide-y divide-gray-100">
               {[
                 { icon: "🚪", title: "Zoe Ntombela signed out", sub: "Ms Williams", time: "17:45", colour: "text-orange-400" },
                 { icon: "📝", title: "Liam van der Berg — observation added", sub: "Mr Dlamini", time: "17:30", colour: "" },
