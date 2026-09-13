@@ -5,6 +5,8 @@ import Register from "./pages/Register";
 import Home from "./pages/Home";
 import ManagerHome from "./pages/ManagerHome";
 import AdminHome from "./pages/AdminHome";
+import ParentHome from "./pages/ParentHome";
+import ParentSettings from "./pages/ParentSettings";
 import Attendance from "./pages/Attendance";
 import Learners from "./pages/Learners";
 import Classes from "./pages/Classes";
@@ -18,7 +20,6 @@ const navBtn = (active, activeColor = "text-orange-500") =>
     active ? activeColor : "text-gray-400 hover:text-gray-600"
   }`;
 
-// ---------- TEACHER BOTTOM NAV ----------
 function TeacherBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -52,7 +53,6 @@ function TeacherBottomNav() {
   );
 }
 
-// ---------- MANAGER BOTTOM NAV ----------
 function ManagerBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -90,7 +90,6 @@ function ManagerBottomNav() {
   );
 }
 
-// ---------- ADMIN BOTTOM NAV ----------
 function AdminBottomNav() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -114,6 +113,23 @@ function AdminBottomNav() {
         <button onClick={() => navigate("/admin/reports")} className={navBtn(isActive("/admin/reports"))}>
           <span className="text-lg">📊</span>
           <span className={`text-[10px] ${isActive("/admin/reports") ? "font-semibold" : ""}`}>Reports</span>
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ParentBottomNav() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const isActive = location.pathname.startsWith("/parent");
+
+  return (
+    <div className="fixed bottom-4 left-4 right-4 z-40">
+      <div className="bg-white rounded-2xl shadow-lg border border-gray-100 px-3 py-2.5 flex justify-center items-center">
+        <button onClick={() => navigate("/parent")} className={navBtn(isActive, "text-orange-500")}>
+          <span className="text-lg">💛</span>
+          <span className={`text-[10px] ${isActive ? "font-semibold" : ""}`}>My Child</span>
         </button>
       </div>
     </div>
@@ -147,15 +163,22 @@ function AdminLayout({ children }) {
   );
 }
 
+function ParentLayout({ children }) {
+  return (
+    <div>
+      {children}
+      <ParentBottomNav />
+    </div>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Auth */}
         <Route path="/" element={<Login />} />
         <Route path="/register" element={<Register />} />
 
-        {/* ========== TEACHER ========== */}
         <Route path="/home" element={<TeacherLayout><Home /></TeacherLayout>} />
         <Route path="/attendance" element={<TeacherLayout><Attendance /></TeacherLayout>} />
         <Route path="/learners" element={<TeacherLayout><Learners /></TeacherLayout>} />
@@ -163,7 +186,6 @@ function App() {
         <Route path="/signout" element={<TeacherLayout><SignOut /></TeacherLayout>} />
         <Route path="/observations" element={<TeacherLayout><Observations /></TeacherLayout>} />
 
-        {/* ========== MANAGER ========== */}
         <Route path="/manager" element={<ManagerLayout><ManagerHome /></ManagerLayout>} />
         <Route path="/manager/attendance" element={<ManagerLayout><Attendance role="Manager" /></ManagerLayout>} />
         <Route path="/manager/learners" element={<ManagerLayout><Learners role="Manager" /></ManagerLayout>} />
@@ -172,13 +194,15 @@ function App() {
         <Route path="/reports" element={<ManagerLayout><Reports /></ManagerLayout>} />
         <Route path="/settings" element={<ManagerLayout><Settings /></ManagerLayout>} />
 
-        {/* ========== ADMIN ========== */}
         <Route path="/admin" element={<AdminLayout><AdminHome /></AdminLayout>} />
         <Route path="/admin/attendance" element={<AdminLayout><Attendance role="Admin" /></AdminLayout>} />
         <Route path="/admin/learners" element={<AdminLayout><Learners role="Admin" /></AdminLayout>} />
         <Route path="/admin/reports" element={<AdminLayout><Reports role="Admin" /></AdminLayout>} />
         <Route path="/admin/settings" element={<AdminLayout><Settings role="Admin" /></AdminLayout>} />
         <Route path="/admin/observations" element={<AdminLayout><Observations role="Admin" /></AdminLayout>} />
+
+        <Route path="/parent" element={<ParentLayout><ParentHome /></ParentLayout>} />
+        <Route path="/parent/settings" element={<ParentLayout><ParentSettings /></ParentLayout>} />
 
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
