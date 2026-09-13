@@ -52,7 +52,7 @@ function ManagerHome() {
         </div>
 
         <h2 className="font-semibold text-gray-900 mb-3">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
           <button onClick={() => navigate("/manager/attendance")} className={action}>
             <span className="text-2xl text-green-500">✓</span>
             <span className="text-sm font-semibold text-gray-800">Attendance</span>
@@ -69,6 +69,10 @@ function ManagerHome() {
             <span className="absolute top-2 right-2 text-[10px] bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center">3</span>
             <span className="text-2xl">🚨</span>
             <span className="text-sm font-semibold text-gray-800">Queue</span>
+          </button>
+          <button onClick={() => navigate("/manager/staff")} className={action}>
+            <span className="text-2xl">👥</span>
+            <span className="text-sm font-semibold text-gray-800">Staff</span>
           </button>
           <button onClick={() => navigate("/reports")} className={action}>
             <span className="text-2xl">📊</span>
@@ -98,6 +102,7 @@ function ManagerHome() {
               ))}
             </div>
           </div>
+
           <div>
             <h2 className="font-semibold text-gray-900 mb-3">Recent Activity</h2>
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 divide-y divide-gray-100">

@@ -11,7 +11,7 @@ function Escalations() {
       learner: "Zoe Ntombela",
       group: "Red",
       reason: "Unknown collector",
-      detail: "Teacher entered “Thabo Mokoena”. Name is not on the authorised list.",
+      detail: "Teacher entered Thabo Mokoena. Name is not on the authorised list.",
       teacher: "Ms Williams",
       time: "17:42",
       status: "open",
@@ -31,7 +31,7 @@ function Escalations() {
       learner: "Liam van der Berg",
       group: "Green",
       reason: "Name mismatch",
-      detail: "Collector typed “Johan van der Berg”. Authorised list has “Johan van der Bergh”.",
+      detail: "Collector typed Johan van der Berg. Authorised list has Johan van der Bergh.",
       teacher: "Mr Dlamini",
       time: "16:55",
       status: "open",
@@ -39,21 +39,22 @@ function Escalations() {
   ]);
 
   const [banner, setBanner] = useState("");
-
   const openItems = items.filter((i) => i.status === "open");
   const closedItems = items.filter((i) => i.status !== "open");
 
   const resolve = (id, action) => {
     setItems((prev) =>
       prev.map((i) =>
-        i.id === id ? { ...i, status: action, resolvedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) } : i
+        i.id === id
+          ? { ...i, status: action, resolvedAt: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) }
+          : i
       )
     );
     const row = items.find((i) => i.id === id);
     setBanner(
       action === "resolved"
-        ? `${row.learner} — collection approved by manager`
-        : `${row.learner} — escalation dismissed`
+        ? row.learner + " — collection approved by manager"
+        : row.learner + " — escalation dismissed"
     );
     setTimeout(() => setBanner(""), 2500);
   };
@@ -69,13 +70,18 @@ function Escalations() {
               <p className="text-xs text-gray-500">Manager</p>
             </div>
           </div>
-          <button onClick={() => navigate("/manager")} className="text-sm font-medium text-gray-600">← Home</button>
+          <button
+            onClick={() => navigate("/manager")}
+            className="px-3 py-1.5 rounded-full text-sm font-medium text-gray-600 bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition"
+          >
+            ← Home
+          </button>
         </div>
       </div>
 
       <div className="flex-1 px-4 pt-5 pb-32 max-w-5xl mx-auto w-full">
         <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Sign-out queue <span>🚨</span></h1>
+          <h1 className="text-2xl font-bold text-gray-900">Sign-out queue</h1>
           <p className="text-sm text-gray-500 mt-1">Collections that need a manager before the learner leaves</p>
         </div>
 
@@ -104,7 +110,7 @@ function Escalations() {
 
         <div className="space-y-3 mb-8">
           {openItems.map((item) => (
-            <div key={item.id} className={card}>
+            <div key={item.id} className={`${card} hover:shadow-xl hover:border-orange-300 transition`}>
               <div className="flex items-start justify-between gap-3 mb-2">
                 <div>
                   <p className="font-semibold text-gray-900">{item.learner}</p>
@@ -118,13 +124,13 @@ function Escalations() {
               <div className="flex gap-2">
                 <button
                   onClick={() => resolve(item.id, "resolved")}
-                  className="flex-1 py-2.5 rounded-full bg-orange-400 text-white text-sm font-semibold shadow-lg active:scale-[0.98] transition"
+                  className="flex-1 py-2.5 rounded-full bg-orange-400 text-white text-sm font-semibold shadow-lg hover:bg-orange-500 active:scale-[0.98] transition"
                 >
                   Approve collection
                 </button>
                 <button
                   onClick={() => resolve(item.id, "dismissed")}
-                  className="flex-1 py-2.5 rounded-full bg-white text-gray-600 text-sm font-semibold border border-gray-200 shadow-lg active:scale-[0.98] transition"
+                  className="flex-1 py-2.5 rounded-full bg-white text-gray-600 text-sm font-semibold border border-gray-200 shadow-lg hover:border-orange-300 hover:shadow-xl active:scale-[0.98] transition"
                 >
                   Dismiss
                 </button>
