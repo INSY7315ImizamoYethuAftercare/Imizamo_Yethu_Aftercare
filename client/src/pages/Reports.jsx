@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import WeeklyChart from "../components/WeeklyChart";
 import TrendChart from "../components/TrendChart";
 import { exportChart } from "../utils/charts";
+import { generatePDF } from "../utils/pdf";
 
 function Reports({ role = "Manager" }) {
   const [activeTab, setActiveTab] = useState("Overview");
@@ -19,11 +20,67 @@ function Reports({ role = "Manager" }) {
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
   const classRows = [
-    { name: "Yellow", thisWeek: 97, lastWeek: 94, present: 10, absent: 0, learners: 2 },
-    { name: "Green", thisWeek: 90, lastWeek: 88, present: 9, absent: 1, learners: 2 },
-    { name: "Red", thisWeek: 85, lastWeek: 90, present: 4, absent: 1, learners: 1 },
-    { name: "Blue", thisWeek: 97, lastWeek: 80, present: 5, absent: 0, learners: 1 },
+    { name: "Yellow", thisWeek: 97, lastWeek: 94 },
+    { name: "Green", thisWeek: 90, lastWeek: 88 },
+    { name: "Red", thisWeek: 85, lastWeek: 90 },
+    { name: "Blue", thisWeek: 97, lastWeek: 80 },
   ];
+
+  const overviewRows = [
+    { label: "Total learners", value: "6" },
+    { label: "Organisation attendance", value: "92%" },
+    { label: "Observations", value: "8" },
+    { label: "Class groups", value: "4" },
+  ];
+
+  const donorRows = [
+    { label: "Learners served this quarter", value: "6" },
+    { label: "Average attendance rate", value: "92%" },
+    { label: "Safe collections this month", value: "48" },
+    { label: "Days of aftercare delivered", value: "22" },
+  ];
+
+  const boardRows = [
+    { label: "Active learners", value: "6" },
+    { label: "Organisation attendance", value: "92%" },
+    { label: "Teachers", value: "4" },
+    { label: "Safety incidents", value: "0" },
+  ];
+
+  const exportOverview = () =>
+    generatePDF({
+      filename: "overview-report",
+      title: "Overview Report",
+      period: "July 2025",
+      rows: overviewRows,
+    });
+
+  const exportTrends = () =>
+    generatePDF({
+      filename: "trends-report",
+      title: "Attendance Trends",
+      period: "This week vs last week",
+      rows: classRows.map((c) => ({
+        label: c.name,
+        value: c.thisWeek + "% this week / " + c.lastWeek + "% last week",
+      })),
+    });
+
+  const exportDonor = () =>
+    generatePDF({
+      filename: "donor-report",
+      title: "Donor Impact Report",
+      period: "Q3 2025",
+      rows: donorRows,
+    });
+
+  const exportBoard = () =>
+    generatePDF({
+      filename: "board-report",
+      title: "Board Report",
+      period: "July 2025",
+      rows: boardRows,
+    });
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
@@ -46,7 +103,7 @@ function Reports({ role = "Manager" }) {
       <div className="flex-1 px-4 pt-5 pb-32 max-w-5xl mx-auto w-full">
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-gray-900">Reports</h1>
-          <p className="text-sm text-gray-500">Organisation attendance, trends, and exports</p>
+          <p className="text-sm text-gray-500">Organisation attendance, trends, and PDF exports</p>
         </div>
 
         <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-lg border border-gray-200 flex gap-1 overflow-x-auto">
@@ -66,40 +123,26 @@ function Reports({ role = "Manager" }) {
         {activeTab === "Overview" && (
           <div className="space-y-5">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className={`${card} text-center`}><p className="text-2xl font-bold text-orange-500">6</p><p className="text-xs text-gray-500 mt-1">Total Learners</p></div>
-              <div className={`${card} text-center`}><p className="text-2xl font-bold text-green-500">92%</p><p className="text-xs text-gray-500 mt-1">Org attendance</p></div>
-              <div className={`${card} text-center`}><p className="text-2xl font-bold text-purple-500">8</p><p className="text-xs text-gray-500 mt-1">Observations</p></div>
-              <div className={`${card} text-center`}><p className="text-2xl font-bold text-sky-500">4</p><p className="text-xs text-gray-500 mt-1">Classes</p></div>
+              {overviewRows.map((row) => (
+                <div key={row.label} className={`${card} text-center`}>
+                  <p className="text-2xl font-bold text-orange-500">{row.value}</p>
+                  <p className="text-xs text-gray-500 mt-1">{row.label}</p>
+                </div>
+              ))}
             </div>
             <div className={card}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-gray-900">Weekly Attendance</h3>
                 <button
                   onClick={() => exportChart("weekly-attendance")}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-orange-500 border border-gray-200 shadow-lg hover:border-orange-300 hover:shadow-xl active:scale-95 transition"
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-orange-500 border border-gray-200 shadow-lg hover:border-orange-300 active:scale-95 transition"
                 >
                   Export chart
                 </button>
               </div>
               <WeeklyChart />
             </div>
-            <div className={card}>
-              <h3 className="font-semibold text-gray-900 mb-3">Attendance by Class</h3>
-              <div className="space-y-3">
-                {classRows.map((cls) => (
-                  <div key={cls.name}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="font-medium text-gray-700">{cls.name}</span>
-                      <span className="text-gray-500">{cls.thisWeek}%</span>
-                    </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-orange-400 rounded-full" style={{ width: `${cls.thisWeek}%` }}></div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <button onClick={comingSoon} className={primary}>Export as PDF</button>
+            <button onClick={exportOverview} className={primary}>Export as PDF</button>
           </div>
         )}
 
@@ -110,7 +153,7 @@ function Reports({ role = "Manager" }) {
                 <h3 className="font-semibold text-gray-900">Organisation trend</h3>
                 <button
                   onClick={() => exportChart("org-trend")}
-                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-orange-500 border border-gray-200 shadow-lg hover:border-orange-300 hover:shadow-xl active:scale-95 transition"
+                  className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-orange-500 border border-gray-200 shadow-lg hover:border-orange-300 active:scale-95 transition"
                 >
                   Export chart
                 </button>
@@ -118,8 +161,7 @@ function Reports({ role = "Manager" }) {
               <TrendChart />
             </div>
             <div className={card}>
-              <h3 className="font-semibold text-gray-900 mb-1">Cross-class attendance</h3>
-              <p className="text-xs text-gray-500 mb-4">This week vs last week</p>
+              <h3 className="font-semibold text-gray-900 mb-3">Cross-class attendance</h3>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
@@ -127,28 +169,21 @@ function Reports({ role = "Manager" }) {
                       <th className="py-2 font-medium">Class</th>
                       <th className="py-2 font-medium">This week</th>
                       <th className="py-2 font-medium">Last week</th>
-                      <th className="py-2 font-medium">Change</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {classRows.map((cls) => {
-                      const diff = cls.thisWeek - cls.lastWeek;
-                      return (
-                        <tr key={cls.name} className="border-b border-gray-50">
-                          <td className="py-2 font-medium">{cls.name}</td>
-                          <td className="py-2">{cls.thisWeek}%</td>
-                          <td className="py-2">{cls.lastWeek}%</td>
-                          <td className={diff >= 0 ? "text-green-600 font-semibold" : "text-red-500 font-semibold"}>
-                            {diff >= 0 ? "+" : ""}{diff}%
-                          </td>
-                        </tr>
-                      );
-                    })}
+                    {classRows.map((cls) => (
+                      <tr key={cls.name} className="border-b border-gray-50">
+                        <td className="py-2 font-medium">{cls.name}</td>
+                        <td className="py-2">{cls.thisWeek}%</td>
+                        <td className="py-2">{cls.lastWeek}%</td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
             </div>
-            <button onClick={comingSoon} className={primary}>Export as PDF</button>
+            <button onClick={exportTrends} className={primary}>Export as PDF</button>
           </div>
         )}
 
@@ -159,10 +194,14 @@ function Reports({ role = "Manager" }) {
               <p className="text-sm text-gray-500">Q3 2025 · Organisation-wide</p>
             </div>
             <div className="grid grid-cols-2 gap-3">
-              <div className={`${card} text-center`}><p className="text-2xl font-bold text-orange-500">6</p><p className="text-xs text-gray-500 mt-1">Learners served</p></div>
-              <div className={`${card} text-center`}><p className="text-2xl font-bold text-green-500">92%</p><p className="text-xs text-gray-500 mt-1">Attendance rate</p></div>
+              {donorRows.slice(0, 2).map((row) => (
+                <div key={row.label} className={`${card} text-center`}>
+                  <p className="text-2xl font-bold text-orange-500">{row.value}</p>
+                  <p className="text-xs text-gray-500 mt-1">{row.label}</p>
+                </div>
+              ))}
             </div>
-            <button onClick={comingSoon} className={primary}>Export as PDF</button>
+            <button onClick={exportDonor} className={primary}>Export as PDF</button>
           </div>
         )}
 
@@ -173,12 +212,14 @@ function Reports({ role = "Manager" }) {
               <p className="text-sm text-gray-500">July 2025 · Organisation overview</p>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <div className={`${card} text-center`}><p className="text-2xl font-bold text-orange-500">6</p><p className="text-xs text-gray-500 mt-1">Active learners</p></div>
-              <div className={`${card} text-center`}><p className="text-2xl font-bold text-green-500">92%</p><p className="text-xs text-gray-500 mt-1">Org attendance</p></div>
-              <div className={`${card} text-center`}><p className="text-2xl font-bold text-gray-800">4</p><p className="text-xs text-gray-500 mt-1">Teachers</p></div>
-              <div className={`${card} text-center`}><p className="text-2xl font-bold text-red-500">0</p><p className="text-xs text-gray-500 mt-1">Safety incidents</p></div>
+              {boardRows.map((row) => (
+                <div key={row.label} className={`${card} text-center`}>
+                  <p className="text-2xl font-bold text-orange-500">{row.value}</p>
+                  <p className="text-xs text-gray-500 mt-1">{row.label}</p>
+                </div>
+              ))}
             </div>
-            <button onClick={comingSoon} className={primary}>Export as PDF</button>
+            <button onClick={exportBoard} className={primary}>Export as PDF</button>
           </div>
         )}
       </div>

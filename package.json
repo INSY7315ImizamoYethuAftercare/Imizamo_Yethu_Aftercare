@@ -16,6 +16,7 @@
   },
   "license": "UNLICENSED",
   "dependencies": {
+    "@react-pdf/renderer": "^4.9.0",
     "recharts": "^3.10.1"
   }
 }
