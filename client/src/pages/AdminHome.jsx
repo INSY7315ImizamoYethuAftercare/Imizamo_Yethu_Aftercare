@@ -6,41 +6,31 @@ function AdminHome() {
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
-      
-      {/* Header */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
-        <div className="flex items-center gap-2">
-          <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
-          <div>
-            <p className="text-sm font-semibold text-orange-500">System Admin</p>
-            <p className="text-xs text-gray-500">Admin</p>
+      <div className="bg-white">
+        <div className="max-w-5xl mx-auto flex items-center justify-between px-4 pt-4 pb-3">
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
+            <div>
+              <p className="text-sm font-semibold text-orange-500">System Admin</p>
+              <p className="text-xs text-gray-500">Admin</p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center gap-3">
-          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">
-            🔔
-          </button>
-          <button
-            onClick={() => navigate("/admin/settings")}
-            className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition"
-          >
-            ⚙️
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">🔔</button>
+            <button onClick={() => navigate("/admin/settings")} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-sm hover:bg-gray-100 active:scale-95 transition">⚙️</button>
+          </div>
         </div>
       </div>
 
-      <div className="flex-1 px-4 pt-5 pb-32">
-        
-        {/* Greeting */}
+      <div className="flex-1 px-4 pt-5 pb-32 max-w-5xl mx-auto w-full">
         <div className="bg-gradient-to-r from-orange-400 to-orange-300 rounded-2xl p-5 mb-5 text-white shadow-md">
           <p className="text-sm opacity-90">Wednesday, 29 July</p>
           <h1 className="text-xl font-bold mt-1">Good afternoon, System! 👋</h1>
           <p className="text-sm mt-1 opacity-90">5 of 6 learners present today</p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 gap-3 mb-6">
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+          <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-lg">⭐</span>
               <p className="text-2xl font-bold text-gray-900">5</p>
@@ -50,8 +40,7 @@ function AdminHome() {
               <div className="h-full bg-green-400 rounded-full" style={{ width: "83%" }}></div>
             </div>
           </div>
-
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
             <div className="flex items-center gap-2 mb-2">
               <span className="text-lg">🏠</span>
               <p className="text-2xl font-bold text-gray-900">5</p>
@@ -61,8 +50,7 @@ function AdminHome() {
               <div className="h-full bg-purple-400 rounded-full" style={{ width: "83%" }}></div>
             </div>
           </div>
-
-          <div className="bg-white rounded-2xl p-4 shadow-sm col-span-2">
+          <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 col-span-2 md:col-span-1">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-lg">🎒</span>
               <p className="text-2xl font-bold text-gray-900">6</p>
@@ -71,21 +59,24 @@ function AdminHome() {
           </div>
         </div>
 
-        {/* Quick Actions - Admin focused */}
         <h2 className="font-semibold text-gray-900 mb-3">Quick Actions</h2>
-        <div className="grid grid-cols-1 gap-3 mb-6">
-          <button
-            onClick={() => navigate("/admin/reports")}
-            className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 flex flex-col items-center gap-2 hover:shadow-lg hover:border-orange-200 active:scale-[0.97] transition"
-          >
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
+          <button onClick={() => navigate("/admin/reports")} className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 flex flex-col items-center gap-2 hover:shadow-lg hover:border-orange-200 active:scale-[0.97] transition">
             <span className="text-2xl">📊</span>
             <span className="text-sm font-semibold text-gray-800">Reports</span>
           </button>
+          <button onClick={() => navigate("/admin/learners")} className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 flex flex-col items-center gap-2 hover:shadow-lg hover:border-orange-200 active:scale-[0.97] transition">
+            <span className="text-2xl">🎒</span>
+            <span className="text-sm font-semibold text-gray-800">Learners</span>
+          </button>
+          <button onClick={() => navigate("/admin/attendance")} className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 flex flex-col items-center gap-2 hover:shadow-lg hover:border-orange-200 active:scale-[0.97] transition">
+            <span className="text-2xl text-green-500">✓</span>
+            <span className="text-sm font-semibold text-gray-800">Attendance</span>
+          </button>
         </div>
 
-        {/* Class Overview */}
         <h2 className="font-semibold text-gray-900 mb-3">Class Overview</h2>
-        <div className="bg-white rounded-2xl p-4 shadow-sm space-y-4">
+        <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 grid grid-cols-1 md:grid-cols-2 gap-4">
           {[
             { name: "Yellow", value: "2/2", width: "100%", colour: "bg-yellow-400", text: "text-yellow-600" },
             { name: "Green", value: "2/2", width: "100%", colour: "bg-green-400", text: "text-green-600" },
