@@ -14,6 +14,7 @@ import SignOut from "./pages/SignOut";
 import Observations from "./pages/Observations";
 import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
+import Escalations from "./pages/Escalations";
 
 const navBtn = (active, activeColor = "text-orange-500") =>
   `flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition active:scale-95 ${
@@ -197,6 +198,7 @@ function App() {
         <Route path="/manager/learners" element={<ManagerLayout><Learners role="Manager" /></ManagerLayout>} />
         <Route path="/manager/classes" element={<ManagerLayout><Classes role="Manager" /></ManagerLayout>} />
         <Route path="/manager/signout" element={<ManagerLayout><SignOut role="Manager" /></ManagerLayout>} />
+        <Route path="/manager/escalations" element={<ManagerLayout><Escalations /></ManagerLayout>} />
         <Route path="/reports" element={<ManagerLayout><Reports /></ManagerLayout>} />
         <Route path="/settings" element={<ManagerLayout><Settings /></ManagerLayout>} />
 
