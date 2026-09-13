@@ -33,7 +33,7 @@ function Settings({ role = "Manager" }) {
           <p className="text-sm text-gray-500">Manage your account</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm mb-5">
+        <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 mb-5">
           <p className="text-xs font-medium text-gray-400 mb-3">PROFILE</p>
           <p className="text-lg font-semibold text-gray-900">{displayName}</p>
           <span className="inline-block mt-1 px-2.5 py-0.5 bg-orange-50 text-orange-500 text-xs font-medium rounded-full">
@@ -41,7 +41,7 @@ function Settings({ role = "Manager" }) {
           </span>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm mb-5">
+        <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 mb-5">
           <p className="text-xs font-medium text-gray-400 mb-4">UPDATE PASSWORD</p>
           <div className="space-y-3 mb-4">
             <div>
@@ -57,12 +57,12 @@ function Settings({ role = "Manager" }) {
               <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300" />
             </div>
           </div>
-          <button onClick={comingSoon} className="w-full py-3 rounded-full bg-orange-400 text-white font-semibold text-sm shadow-md hover:bg-orange-500 active:scale-[0.98] transition">
+          <button onClick={comingSoon} className="w-full py-3 rounded-full bg-orange-400 text-white font-semibold text-sm shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition">
             Update Password
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl p-4 shadow-sm">
+        <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
           <p className="text-xs font-medium text-gray-400 mb-3">ACCOUNT</p>
           <button
             onClick={() => navigate("/")}

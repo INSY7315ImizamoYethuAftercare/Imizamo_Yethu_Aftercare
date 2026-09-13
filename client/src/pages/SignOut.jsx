@@ -89,7 +89,7 @@ function SignOut({ role = "Teacher" }) {
 
           <div className="space-y-3 mb-6">
             {filteredLearners.map((learner) => (
-              <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-sm">
+              <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-md border border-gray-100">
                 <div>
                   <p className="font-semibold text-gray-900">{learner.name}</p>
                   <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
@@ -100,7 +100,7 @@ function SignOut({ role = "Teacher" }) {
                     setSelectedLearner(learner);
                     setStep("verify");
                   }}
-                  className="px-4 py-1.5 rounded-full bg-orange-100 text-orange-500 text-sm font-semibold shadow-sm hover:bg-orange-200 active:scale-95 transition"
+                  className="px-4 py-1.5 rounded-full bg-orange-400 text-white text-sm font-semibold shadow-md hover:bg-orange-500 active:scale-95 transition"
                 >
                   Sign Out →
                 </button>
@@ -113,7 +113,7 @@ function SignOut({ role = "Teacher" }) {
               <p className="text-xs font-medium text-gray-400 mb-3 tracking-wide">ALREADY COLLECTED TODAY</p>
               <div className="space-y-2">
                 {collected.map((item) => (
-                  <div key={item.id} className="bg-gray-50 rounded-xl px-4 py-3 flex items-center justify-between">
+                  <div key={item.id} className="bg-white rounded-xl px-4 py-3 flex items-center justify-between shadow-sm border border-gray-100">
                     <p className="text-sm text-gray-600">{item.name}</p>
                     <p className="text-xs text-gray-400">✓ {item.time}</p>
                   </div>
@@ -136,13 +136,13 @@ function SignOut({ role = "Teacher" }) {
             <p className="text-sm text-gray-500 mt-1">{learners.length} learners still to be collected</p>
           </div>
 
-          <div className="bg-orange-50 rounded-2xl p-4 mb-5 shadow-sm">
+          <div className="bg-orange-50 rounded-2xl p-4 mb-5 shadow-md border border-orange-100">
             <p className="text-xs text-gray-500 mb-1">SIGNING OUT</p>
             <p className="font-bold text-gray-900 text-lg">{selectedLearner.name}</p>
             <p className="text-sm text-gray-600">{selectedLearner.grade} • {selectedLearner.group}</p>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 shadow-sm mb-6">
+          <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 mb-6">
             <div className="flex items-center gap-2 mb-3">
               <span>🔍</span>
               <h2 className="font-semibold text-gray-900">Verify Collector</h2>
@@ -200,7 +200,7 @@ function SignOut({ role = "Teacher" }) {
               onClick={() => {
                 if (collectorName.trim()) setStep("confirmed");
               }}
-              className="flex-1 py-3 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 active:scale-[0.98] transition"
+              className="flex-1 py-3 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition"
             >
               Verify ✓
             </button>
@@ -222,7 +222,7 @@ function SignOut({ role = "Teacher" }) {
             <p className="text-sm text-gray-500 mt-1">{learners.length} learners still to be collected</p>
           </div>
 
-          <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-5 text-center shadow-sm">
+          <div className="bg-green-50 border border-green-200 rounded-2xl p-5 mb-5 text-center shadow-md">
             <div className="text-3xl mb-2">✅</div>
             <p className="font-bold text-green-700 text-lg">Verified!</p>
             <p className="text-sm text-gray-600 mt-1">
@@ -230,7 +230,7 @@ function SignOut({ role = "Teacher" }) {
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl p-4 shadow-sm mb-6">
+          <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100 mb-6">
             <h3 className="font-semibold text-gray-900 mb-3">Sign-Out Summary</h3>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between"><span className="text-gray-500">Learner</span><span className="font-medium text-gray-900">{selectedLearner.name}</span></div>
@@ -242,7 +242,7 @@ function SignOut({ role = "Teacher" }) {
 
           <button
             onClick={handleConfirmSignOut}
-            className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 active:scale-[0.98] transition mb-3"
+            className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition mb-3"
           >
             Confirm Sign-Out 🚪
           </button>
@@ -259,7 +259,7 @@ function SignOut({ role = "Teacher" }) {
       <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
         <Header />
         <div className="flex-1 px-4 pt-5 pb-32 flex flex-col items-center justify-center">
-          <div className="bg-orange-50 rounded-2xl p-6 text-center mb-8 w-full shadow-sm">
+          <div className="bg-orange-50 rounded-2xl p-6 text-center mb-8 w-full shadow-md border border-orange-100">
             <div className="text-4xl mb-3">⭐</div>
             <p className="font-bold text-orange-600 text-xl mb-1">
               {selectedLearner.name.split(" ")[0]} is signed out!
@@ -271,7 +271,7 @@ function SignOut({ role = "Teacher" }) {
 
           <button
             onClick={resetFlow}
-            className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 active:scale-[0.98] transition"
+            className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition"
           >
             Sign Out Another Learner
           </button>
