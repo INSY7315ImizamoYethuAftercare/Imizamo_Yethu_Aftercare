@@ -79,8 +79,6 @@ function Observations({ role = "Teacher" }) {
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
-      
-      {/* Top Header */}
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
@@ -95,7 +93,6 @@ function Observations({ role = "Teacher" }) {
         </div>
       </div>
 
-      {/* Learner Header Banner */}
       <div className="bg-yellow-300 px-4 py-4">
         <button
           onClick={() => navigate(backPath)}
@@ -108,30 +105,26 @@ function Observations({ role = "Teacher" }) {
       </div>
 
       <div className="flex-1 px-4 pt-4 pb-32">
-        
-        {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mb-4">
-          <div className="bg-white rounded-xl p-3 text-center shadow-sm">
+          <div className="bg-white rounded-xl p-3 text-center shadow-md border border-gray-100">
             <p className="text-xl font-bold text-green-500">94%</p>
             <p className="text-xs text-gray-500">Attendance</p>
           </div>
-          <div className="bg-white rounded-xl p-3 text-center shadow-sm">
+          <div className="bg-white rounded-xl p-3 text-center shadow-md border border-gray-100">
             <p className="text-xl font-bold text-gray-800">7 yrs</p>
             <p className="text-xs text-gray-500">Age</p>
           </div>
-          <div className="bg-white rounded-xl p-3 text-center shadow-sm">
+          <div className="bg-white rounded-xl p-3 text-center shadow-md border border-gray-100">
             <p className="text-xl font-bold text-orange-500">{observations.length}</p>
             <p className="text-xs text-gray-500">Observations</p>
           </div>
         </div>
 
-        {/* Tags */}
         <div className="flex gap-2 mb-4">
           <span className="px-3 py-1 bg-pink-100 text-pink-600 text-xs font-medium rounded-full">Reading Club</span>
           <span className="px-3 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full">Art</span>
         </div>
 
-        {/* Tabs - stronger interactive style */}
         <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-md border border-gray-100 flex gap-1">
           {["Profile", "Observations", "Attendance"].map((tab) => (
             <button
@@ -148,10 +141,9 @@ function Observations({ role = "Teacher" }) {
           ))}
         </div>
 
-        {/* PROFILE TAB */}
         {activeTab === "Profile" && (
           <div className="space-y-4">
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">👤</span>
                 <h3 className="font-semibold text-gray-900">Parent / Guardian</h3>
@@ -164,7 +156,7 @@ function Observations({ role = "Teacher" }) {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-green-500">✓</span>
                 <h3 className="font-semibold text-gray-900">Authorised Pickups</h3>
@@ -176,7 +168,7 @@ function Observations({ role = "Teacher" }) {
               </div>
             </div>
 
-            <div className="bg-white rounded-2xl p-4 shadow-sm">
+            <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
               <div className="flex items-center gap-2 mb-2">
                 <span>📌</span>
                 <h3 className="font-semibold text-gray-900">Notes</h3>
@@ -186,20 +178,19 @@ function Observations({ role = "Teacher" }) {
           </div>
         )}
 
-        {/* OBSERVATIONS TAB */}
         {activeTab === "Observations" && (
           <>
             {!showForm && (
               <button
                 onClick={() => setShowForm(true)}
-                className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base mb-6 shadow-md hover:bg-orange-500 active:scale-[0.98] transition"
+                className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base mb-6 shadow-md hover:bg-orange-500 hover:shadow-lg active:scale-[0.98] transition"
               >
                 + Add Observation
               </button>
             )}
 
             {showForm && (
-              <div className="bg-white rounded-2xl p-4 mb-6 shadow-sm">
+              <div className="bg-white rounded-2xl p-4 mb-6 shadow-md border border-gray-100">
                 <h2 className="font-semibold text-gray-900 mb-3">New Observation</h2>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {categories.map((cat) => (
@@ -207,7 +198,7 @@ function Observations({ role = "Teacher" }) {
                       key={cat}
                       onClick={() => setSelectedCategory(cat)}
                       className={`px-3 py-1.5 rounded-full text-xs font-medium shadow-sm active:scale-95 transition ${
-                        selectedCategory === cat ? getCategoryBg(cat) : "bg-gray-100 text-gray-500"
+                        selectedCategory === cat ? getCategoryBg(cat) : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                       }`}
                     >
                       {cat}
@@ -239,7 +230,7 @@ function Observations({ role = "Teacher" }) {
 
             <div className="space-y-4">
               {observations.map((obs) => (
-                <div key={obs.id} className="bg-white rounded-2xl p-4 shadow-sm">
+                <div key={obs.id} className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
                   <div className="flex items-center justify-between mb-2">
                     <span className={`text-sm font-semibold ${getCategoryColour(obs.category)}`}>{obs.category}</span>
                     <span className="text-xs text-gray-400">{obs.date}</span>
@@ -252,46 +243,25 @@ function Observations({ role = "Teacher" }) {
           </>
         )}
 
-        {/* ATTENDANCE TAB */}
         {activeTab === "Attendance" && (
-          <div className="bg-white rounded-2xl p-4 shadow-sm">
+          <div className="bg-white rounded-2xl p-4 shadow-md border border-gray-100">
             <h3 className="font-semibold text-gray-900 mb-4">This Week</h3>
             <div className="space-y-3">
-              <div className="flex items-center gap-3 text-sm">
-                <span className="text-green-500">✓</span>
-                <div>
-                  <p className="text-gray-800 font-medium">2025-07-25</p>
-                  <p className="text-gray-500 text-xs">Signed out by Zainab Hendricks at 17:00</p>
+              {[
+                { date: "2025-07-25", detail: "Signed out by Zainab Hendricks at 17:00", ok: true },
+                { date: "2025-07-24", detail: "Signed out by Fatima Petersen at 17:15", ok: true },
+                { date: "2025-07-23", detail: "Absent", ok: false },
+                { date: "2025-07-22", detail: "Signed out by Ahmed Petersen at 17:45", ok: true },
+                { date: "2025-07-21", detail: "Signed out by Fatima Petersen at 17:30", ok: true },
+              ].map((row) => (
+                <div key={row.date} className="flex items-center gap-3 text-sm">
+                  <span className={row.ok ? "text-green-500" : "text-red-500"}>{row.ok ? "✓" : "✗"}</span>
+                  <div>
+                    <p className="text-gray-800 font-medium">{row.date}</p>
+                    <p className="text-gray-500 text-xs">{row.detail}</p>
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <span className="text-green-500">✓</span>
-                <div>
-                  <p className="text-gray-800 font-medium">2025-07-24</p>
-                  <p className="text-gray-500 text-xs">Signed out by Fatima Petersen at 17:15</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <span className="text-red-500">✗</span>
-                <div>
-                  <p className="text-gray-800 font-medium">2025-07-23</p>
-                  <p className="text-gray-500 text-xs">Absent</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <span className="text-green-500">✓</span>
-                <div>
-                  <p className="text-gray-800 font-medium">2025-07-22</p>
-                  <p className="text-gray-500 text-xs">Signed out by Ahmed Petersen at 17:45</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3 text-sm">
-                <span className="text-green-500">✓</span>
-                <div>
-                  <p className="text-gray-800 font-medium">2025-07-21</p>
-                  <p className="text-gray-500 text-xs">Signed out by Fatima Petersen at 17:30</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
         )}
