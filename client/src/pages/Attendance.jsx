@@ -1,4 +1,5 @@
 import { useState } from "react";
+import MoreMenu from "../components/MoreMenu";
 
 function Attendance({ role = "Teacher" }) {
   const comingSoon = () => alert("Coming soon");
@@ -55,7 +56,7 @@ function Attendance({ role = "Teacher" }) {
         </div>
         <div className="flex items-center gap-3">
           <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
-          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">⋮</button>
+          <MoreMenu />
         </div>
       </div>
 
