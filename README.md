@@ -107,7 +107,7 @@ against your local PostgreSQL to create all tables.
 
 Add PostgreSQL's `bin` folder to your PATH, or call it directly:
 ```powershell
-& "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -d imizamo_dev -f database/schema.sql
+& "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -d imizamo_dev -f server/src/db/schema.sql
 ```
 
 ### Keeping schema.sql up to date
@@ -116,7 +116,7 @@ If you change the database structure locally (e.g. add a column or table),
 re-export it and commit the updated file so the rest of the team stays in
 sync:
 ```powershell
-pg_dump.exe -U postgres -d imizamo_dev --schema-only -f database/schema.sql
+pg_dump.exe -U postgres -d imizamo_dev --schema-only -f server/src/db/schema.sql
 ```
 Flag the change to the team (in WhatsApp) so everyone knows to re-run
 step 2 above against their own local database.
