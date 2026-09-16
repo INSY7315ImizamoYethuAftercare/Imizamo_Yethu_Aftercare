@@ -44,7 +44,7 @@ function Classes({ role = "Teacher" }) {
           {visible.map((cls) => (
             <button
               key={cls.name}
-              onClick={() => navigate(learnersPath)}
+              onClick={() => navigate(`${learnersPath}?group=${cls.name}`)}
               className="w-full bg-white rounded-2xl px-4 py-4 flex items-center justify-between shadow-lg border border-gray-200 text-left hover:border-orange-300 active:scale-[0.98] transition"
             >
               <div className="flex items-center gap-3">

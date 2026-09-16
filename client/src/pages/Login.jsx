@@ -22,7 +22,7 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col items-center justify-start px-4 pt-10 pb-8 overflow-y-auto">
       <div className="text-center mb-8">
         <div className="w-24 h-24 mx-auto mb-4 bg-white rounded-2xl shadow-md flex items-center justify-center p-3">
           <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
