@@ -74,16 +74,16 @@ class UserRepository {
     /**
      * Updates the role on an existing user record.
      *
-     * @param {number} userID - The unique identifier of the user to update.
+     * @param {number} userId - The unique identifier of the user to update.
      * @param {string} role - The user's role.
      * @returns {Promise<Object|null>} The updated user record, or null if the user does not exist.
      */
-    async updateRole(userID, role) {
+    async updateRole(userId, role) {
         const result = await this.pool.query(
         `UPDATE users SET "role" = $2
         WHERE "user_id" =  $1
         RETURNING "user_id", "email", "role", "password_hash", "full_name"`,
-        [userID, role]
+        [userId, role]
         );
         return result.rows[0] || null;
     }

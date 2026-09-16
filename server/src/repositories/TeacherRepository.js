@@ -25,7 +25,7 @@ class TeacherRepository {
     /**
      * Retrieves a single teacher full profile by their unique identifier.
      * 
-     * @param {number} teacherId - The unique identifier of the learner.
+     * @param {number} teacherId - The unique identifier of the teacher.
      * @returns {Promise<Object|null>} The teacher's profile, or null if no teacher exists with the given ID.
      */
     async findById(teacherId) {
