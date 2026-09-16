@@ -99,7 +99,7 @@ class LearnerRepository {
      */
   async delete(learnerId) {
     const result = await this.pool.query(
-      'DELETE FROM learners WHERE "learner_id" = $1 RETURNING "learner_id"',
+      `DELETE FROM learners WHERE "learner_id" = $1 RETURNING "learner_id"`,
       [learnerId]
     );
     return result.rowCount > 0;

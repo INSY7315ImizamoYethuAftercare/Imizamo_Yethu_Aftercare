@@ -87,4 +87,5 @@ class AttendanceRepository {
         return result.rows[0];
     }
 }
+
 module.exports = AttendanceRepository;
