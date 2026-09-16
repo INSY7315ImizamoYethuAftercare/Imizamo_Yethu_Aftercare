@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 function Learners({ role = "Teacher" }) {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const comingSoon = () => alert("Coming soon");
 
   const displayName =
@@ -16,8 +17,9 @@ function Learners({ role = "Teacher" }) {
   const observationsPath =
     role === "Admin" ? "/admin/observations" : "/observations";
 
+  const startGroup = searchParams.get("group") || "All";
   const [search, setSearch] = useState("");
-  const [selectedClass, setSelectedClass] = useState("All");
+  const [selectedClass, setSelectedClass] = useState(startGroup);
 
   const learners = [
     { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow" },
@@ -68,7 +70,7 @@ function Learners({ role = "Teacher" }) {
           className="w-full mt-4 mb-4 px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
         />
 
-        <div className="flex gap-2 mb-5 overflow-x-auto">
+        <div className="flex gap-2 mb-5 overflow-x-auto py-2">
           {classes.map((cls) => (
             <button
               key={cls}

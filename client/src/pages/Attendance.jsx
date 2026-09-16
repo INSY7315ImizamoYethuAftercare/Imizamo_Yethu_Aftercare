@@ -65,7 +65,7 @@ function Attendance({ role = "Teacher" }) {
           <p className="text-sm text-gray-500 mt-1">{filtered.length} learners</p>
         </div>
 
-        <div className="flex gap-2 mt-4 mb-5 overflow-x-auto">
+        <div className="flex gap-2 mt-4 mb-5 overflow-x-auto py-2">
           {classes.map((cls) => (
             <button
               key={cls}
