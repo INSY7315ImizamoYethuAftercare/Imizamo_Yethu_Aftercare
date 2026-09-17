@@ -35,7 +35,8 @@ class LearnerRepository {
     const result = await this.pool.query(
       `SELECT "learner_id", "first_name", "last_name", "can_walk_home_alone" 
       FROM learners 
-      WHERE "class_id" = $1 ORDER BY "last_name", "first_name"`,
+      WHERE "class_id" = $1 
+      ORDER BY "last_name", "first_name"`,
       [classId]
     );
     return result.rows;
@@ -63,8 +64,8 @@ class LearnerRepository {
   }
 
     /**
-     * Updates one or more fields on an existing learner record. Only
-     * columns in the allowed whitelist can be modified, preventing callers
+     * Updates one or more fields on an existing learner record. 
+     * Only columns in the allowed whitelist can be modified, preventing callers
      * from injecting arbitrary column names into the update.
      *
      * @param {number} learnerId - The unique identifier of the learner to update.
