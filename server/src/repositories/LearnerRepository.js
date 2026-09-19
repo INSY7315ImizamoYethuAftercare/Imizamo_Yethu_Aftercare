@@ -107,4 +107,4 @@ class LearnerRepository {
   }
 }
 
-module.exports = LearnerRepository;
+export default LearnerRepository;

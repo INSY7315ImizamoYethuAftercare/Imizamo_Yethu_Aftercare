@@ -88,4 +88,4 @@ class TeacherRepository {
 
 }
 
-module.exports = TeacherRepository;
+export default TeacherRepository;

@@ -74,4 +74,4 @@ class ManagerRepository {
     }
 }
 
-module.exports = ManagerRepository;
+export default ManagerRepository;

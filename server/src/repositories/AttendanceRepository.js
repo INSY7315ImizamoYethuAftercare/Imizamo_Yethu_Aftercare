@@ -88,4 +88,4 @@ class AttendanceRepository {
     }
 }
 
-module.exports = AttendanceRepository;
+export default AttendanceRepository;
