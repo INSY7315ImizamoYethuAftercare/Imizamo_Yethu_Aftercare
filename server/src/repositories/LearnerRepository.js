@@ -22,6 +22,25 @@ class LearnerRepository {
         return result.rows[0] || null;
     }
 
+      /**
+   * Retrieves all learners a guardian is linked to via pickup permissions.
+   * Used to restrict guardian accounts to their own children only.
+   *
+   * @param {number} guardianId - The unique identifier of the guardian.
+   * @returns {Promise<Array<Object>>} The learners linked to this guardian.
+   */
+  async findByGuardianId(guardianId) {
+    const result = await this.pool.query(
+      `SELECT l."learner_id", l."class_id", l."first_name", l."last_name",
+              l."date_of_birth", l."can_walk_home_alone"
+       FROM learners l
+       INNER JOIN pickup_permissions p ON p."learner_id" = l."learner_id"
+       WHERE p."guardian_id" = $1`,
+      [guardianId]
+    );
+    return result.rows;
+  }
+
     /**
      * Retrieves a roster of learners enrolled in a specific class, sorted
      * alphabetically by surname. Excludes dateOfBirth, since this method is
