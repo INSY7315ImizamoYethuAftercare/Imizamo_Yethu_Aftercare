@@ -1,0 +1,22 @@
+{
+  "name": "imizamo-yethu-aftercare",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Imizamo Yethu Aftercare Management System (INSY7315 Part 2 Prototype)",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev:client": "npm run dev --workspace client",
+    "dev:server": "npm run dev --workspace server",
+    "build:client": "npm run build --workspace client",
+    "start:server": "npm run start --workspace server",
+    "test": "npm run test --workspaces --if-present"
+  },
+  "license": "UNLICENSED",
+  "dependencies": {
+    "@react-pdf/renderer": "^4.9.0",
+    "recharts": "^3.10.1"
+  }
+}
