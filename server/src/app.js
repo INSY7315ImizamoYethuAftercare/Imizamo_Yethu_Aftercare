@@ -13,6 +13,10 @@ import { attendanceRouter } from './routes/attendance.routes.js'
 import { signOutRouter } from './routes/signout.routes.js'
 import { guardianRouter } from './routes/guardian.routes.js'
 
+import { schoolClassRouter } from './routes/schoolClass.routes.js'
+import { observationRouter } from './routes/observation.routes.js'
+import { learnerRouter } from './routes/learner.routes.js'
+
 export function createApp() {
   const app = express()
 
@@ -39,6 +43,7 @@ export function createApp() {
   app.use('/api/attendance', attendanceRouter)
   app.use('/api/signout', signOutRouter)
   app.use('/api/guardian', guardianRouter)
+  app.use('/api/observations', observationRouter)
 
   // Future routers mount like this, e.g.:
   // app.use('/api/auth', authRouter)
