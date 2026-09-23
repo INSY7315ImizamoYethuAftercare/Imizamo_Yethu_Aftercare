@@ -104,4 +104,4 @@ class ObservationRepository {
     return result.rowCount > 0;
   }
 }
-module.exports = ObservationRepository
+export default ObservationRepository

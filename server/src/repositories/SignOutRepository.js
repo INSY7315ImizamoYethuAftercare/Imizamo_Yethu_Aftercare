@@ -60,3 +60,5 @@ class SignOutRepository {
     return result.rows[0];
   }
 }
+
+export default SignOutRepository;
