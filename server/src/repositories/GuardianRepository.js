@@ -88,4 +88,4 @@ class GuardianRepository {
   }
 }
 
-module.exports = GuardianRepository;
+export default GuardianRepository;

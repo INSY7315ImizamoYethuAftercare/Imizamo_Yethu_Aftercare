@@ -60,4 +60,4 @@ class ReportRepository {
   }
 }
 
-module.exports = ReportRepository;
+export default ReportRepository;

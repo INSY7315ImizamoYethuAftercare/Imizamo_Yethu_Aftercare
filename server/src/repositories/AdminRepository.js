@@ -88,3 +88,5 @@ class AdminRepository {
     return result.rows[0] || null;
   }
 }
+
+export default AdminRepository;

@@ -75,3 +75,5 @@ class PickupPermissionRepository {
   }
     
 }
+
+export default PickupPermissionRepository;

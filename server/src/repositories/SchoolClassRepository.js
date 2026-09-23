@@ -101,4 +101,4 @@ class SchoolClassRepository {
   }
 }
 
-module.exports = SchoolClassRepository;
+export default SchoolClassRepository;
