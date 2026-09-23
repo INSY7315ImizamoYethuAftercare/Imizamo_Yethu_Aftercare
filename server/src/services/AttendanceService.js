@@ -24,15 +24,24 @@ export class AttendanceService {
   async recordAttendance({ userId, classId, learnerId, status, timeIn, recordDate }) {
     const teacher = await this.#assertOwnsClass(userId, classId)
 
-    if (status === 'present') {
-      return this.attendanceRepository.markPresent({ learnerId, teacherId: teacher.teacher_id, recordDate, timeIn })
+    try {
+      if (status === 'present') {
+        return await this.attendanceRepository.markPresent({ learnerId, teacherId: teacher.teacher_id, recordDate, timeIn })
+      }
+      if (status === 'absent') {
+        return await this.attendanceRepository.markAbsent({ learnerId, teacherId: teacher.teacher_id, recordDate })
+      }
+      const err = new Error('status must be either "present" or "absent"')
+      err.status = 400
+      throw err
+    } catch (err) {
+      if (err.code === '23505') {
+        const conflict = new Error('Attendance has already been recorded for this learner today')
+        conflict.status = 409
+        throw conflict
+      }
+      throw err
     }
-    if (status === 'absent') {
-      return this.attendanceRepository.markAbsent({ learnerId, teacherId: teacher.teacher_id, recordDate })
-    }
-    const err = new Error('status must be either "present" or "absent"')
-    err.status = 400
-    throw err
   }
 
   async getClassAttendance({ userId, classId, date }) {
