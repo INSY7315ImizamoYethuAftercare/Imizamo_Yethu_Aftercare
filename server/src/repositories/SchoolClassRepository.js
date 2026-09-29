@@ -23,6 +23,19 @@ class SchoolClassRepository {
   }
 
   /**
+   * Find all classes
+   *
+   * @returns {Promise<Array<Object>>} All the classes, or an empty array
+   */
+  async findAll() {
+    const result = await this.pool.query(
+      `SELECT "class_id", "class_name", "grade_range"
+        FROM school_classes`
+    );
+    return result.rows;
+  }
+
+  /**
    * Find all classes for a given teacher
    *
    * @param {number} teacherId - The unique identifier of the teacher.
