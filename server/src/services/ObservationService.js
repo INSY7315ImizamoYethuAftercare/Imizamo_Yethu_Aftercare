@@ -1,9 +1,6 @@
 export class ObservationService {
-<<<<<<< Updated upstream
-=======
   
   //
->>>>>>> Stashed changes
   constructor({ observationRepository, learnerRepository, schoolClassRepository, teacherRepository }) {
     this.observationRepository = observationRepository
     this.learnerRepository = learnerRepository
@@ -11,54 +8,43 @@ export class ObservationService {
     this.teacherRepository = teacherRepository
   }
 
-<<<<<<< Updated upstream
-=======
+
   /**
    * 
    * @param {*} userId 
    * @param {*} learnerId 
    * @returns 
    */
->>>>>>> Stashed changes
   async #assertOwnsLearner(userId, learnerId) {
+
     const teacher = await this.teacherRepository.findByUserId(userId)
+
     if (!teacher) {
       const err = new Error('Only teachers can record observations')
       err.status = 403
       throw err
     }
+
     const learner = await this.learnerRepository.findById(learnerId)
+
     if (!learner) {
       const err = new Error('Learner not found')
       err.status = 404
       throw err
     }
+
     const schoolClass = await this.schoolClassRepository.findById(learner.class_id)
+
     if (!schoolClass || schoolClass.teacher_id !== teacher.teacher_id) {
       const err = new Error('You can only record observations for learners in your own class')
       err.status = 403
       throw err
     }
+
     return teacher
   }
 
-<<<<<<< Updated upstream
-  async addObservation({ userId, learnerId, category, rating, notes, recordDate }) {
-    const teacher = await this.#assertOwnsLearner(userId, learnerId)
-    return this.observationRepository.create({
-      learnerId, teacherId: teacher.teacher_id, recordDate, category, rating, notes,
-    })
-  }
 
-  async getLearnerObservations({ userId, learnerId }) {
-    await this.#assertOwnsLearner(userId, learnerId)
-    return this.observationRepository.findByLearnerId(learnerId)
-  }
-
-  async updateObservation({ userId, observationId, learnerId, fields }) {
-    await this.#assertOwnsLearner(userId, learnerId)
-    const updated = await this.observationRepository.update(observationId, fields)
-=======
   /**
    * 
    * @param {*} param0 
@@ -84,7 +70,6 @@ export class ObservationService {
     await this.#assertOwnsLearner(userId, learnerId)
 
     return this.observationRepository.findByLearnerId(learnerId)
-
   }
 
   /**
@@ -98,20 +83,24 @@ export class ObservationService {
 
     const updated = await this.observationRepository.update(observationId, fields)
 
->>>>>>> Stashed changes
     if (!updated) {
       const err = new Error('Observation not found')
       err.status = 404
       throw err
     }
-<<<<<<< Updated upstream
+    
     return updated
   }
 
+  /**
+   * 
+   * @param {*} param0 
+   */
   async deleteObservation({ userId, observationId, learnerId }) {
+
     await this.#assertOwnsLearner(userId, learnerId)
+
     const deleted = await this.observationRepository.delete(observationId)
-=======
 
     return updated
   }
@@ -126,7 +115,6 @@ export class ObservationService {
 
     const deleted = await this.observationRepository.delete(observationId)
 
->>>>>>> Stashed changes
     if (!deleted) {
       const err = new Error('Observation not found')
       err.status = 404
