@@ -193,5 +193,5 @@ export class SchoolClassService {
     
     return this.learnerRepository.findByClassId(classId)
   }
-  
+
 }
