@@ -4,7 +4,7 @@ import { env } from '../config/env.js'
 export function authenticate(req, res, next) {
     const token = req.cookies?.token
     if (!token) {
-        const err = new Error('Not aunthenticated')
+        const err = new Error('Not authenticated')
         err.status = 401
         return next(err)
     }
