@@ -14,9 +14,14 @@ const observationService = new ObservationService({
 
 export async function addObservation(req, res, next) {
   try {
-    const { learnerId, category, rating, notes } = req.body
-    if (!learnerId || !category || !rating) {
+   const { learnerId, category, rating, notes } = req.body
+    if (!learnerId || !category || rating === undefined) {
       const err = new Error('learnerId, category and rating are required')
+      err.status = 400
+      throw err
+    }
+    if (!Number.isInteger(rating) || rating < 1 || rating > 10) {
+      const err = new Error('rating must be a whole number from 1 to 10')
       err.status = 400
       throw err
     }

@@ -15,9 +15,30 @@ export class SchoolClassService {
     }
   }
 
+ async #assertManagerOrTeacher(userId) {
+    const manager = await this.managerRepository.findByUserId(userId)
+    const teacher = manager ? null : await this.teacherRepository.findByUserId(userId)
+    if (!manager && !teacher) {
+      const err = new Error('Only managers and teachers can view classes')
+      err.status = 403
+      throw err
+    }
+  }
+
   async listClasses({ userId }) {
-    await this.#assertIsManager(userId)
+    await this.#assertManagerOrTeacher(userId)
     return this.schoolClassRepository.findAll()
+  }
+
+  async getClass({ userId, classId }) {
+    await this.#assertManagerOrTeacher(userId)
+    const schoolClass = await this.schoolClassRepository.findById(classId)
+    if (!schoolClass) {
+      const err = new Error('Class not found')
+      err.status = 404
+      throw err
+    }
+    return schoolClass
   }
 
   async createClass({ userId, teacherId, className, gradeRange }) {

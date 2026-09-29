@@ -14,7 +14,7 @@ class UserRepository {
      */
     async findByEmail(email) {
          const result = await this.pool.query(
-            `SELECT "user_id", "email", "password_hash", "role", "full_name"
+            `SELECT "user_id", "email", "password_hash", "role", "full_name", "is_active"
             FROM users
             WHERE "email" = $1`,
             [email]

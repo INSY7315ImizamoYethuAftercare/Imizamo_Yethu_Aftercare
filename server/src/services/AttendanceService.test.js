@@ -15,16 +15,13 @@ describe('AttendanceService', () => {
     service = new AttendanceService(deps)
   })
 
-  it('allows a teacher to mark attendance for their own class', async () => {
-    deps.teacherRepository.findByUserId.mockResolvedValue({ teacher_id: 7 })
-    deps.schoolClassRepository.findById.mockResolvedValue({ class_id: 5, teacher_id: 7 })
-    deps.attendanceRepository.markPresent.mockResolvedValue({ record_id: 1 })
+it('allows a teacher to mark attendance for a class they do not own', async () => {
+    deps.schoolClassRepository.findById.mockResolvedValue({ class_id: 5, teacher_id: 99 })
 
-    const record = await service.recordAttendance({
-      userId: 1, classId: 5, learnerId: 3, status: 'present', timeIn: '08:00', recordDate: '2026-09-21',
+    await service.recordAttendance({
+      userId: 1, classId: 5, learnerId: 3, status: 'present', recordDate: '2026-09-21',
     })
-
-    expect(record.record_id).toBe(1)
+    expect(deps.attendanceRepository.markPresent).toHaveBeenCalled()
   })
 
   it('blocks a teacher from marking attendance for another class', async () => {

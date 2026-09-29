@@ -33,6 +33,11 @@ export class AuthService {
       err.status = 401
       throw err
     }
+    if (user.is_active === false) {
+     const err = new Error('This account has been deactivated')
+     err.status = 403
+     throw err
+    }
     const token = jwt.sign(
       { userId: user.user_id, role: user.role },
       env.jwtSecret,

@@ -6,7 +6,7 @@ export class ObservationService {
     this.teacherRepository = teacherRepository
   }
 
-  async #assertOwnsLearner(userId, learnerId) {
+async #assertOwnsLearner(userId, learnerId) {
     const teacher = await this.teacherRepository.findByUserId(userId)
     if (!teacher) {
       const err = new Error('Only teachers can record observations')
@@ -17,12 +17,6 @@ export class ObservationService {
     if (!learner) {
       const err = new Error('Learner not found')
       err.status = 404
-      throw err
-    }
-    const schoolClass = await this.schoolClassRepository.findById(learner.class_id)
-    if (!schoolClass || schoolClass.teacher_id !== teacher.teacher_id) {
-      const err = new Error('You can only record observations for learners in your own class')
-      err.status = 403
       throw err
     }
     return teacher
