@@ -60,12 +60,13 @@ export class SchoolClassService {
       throw err
     }
     const schoolClass = await this.schoolClassRepository.findById(classId)
-    if (!schoolClass || schoolClass.teacher_id !== teacher.teacher_id) {
-      const err = new Error('You can only view the roster for your own class')
-      err.status = 403
+    if (!schoolClass )
+    {
+      const err = new Error('Class not found')
+      err.status = 404
       throw err
     }
     return this.learnerRepository.findByClassId(classId)
   }
-  
+
 }
