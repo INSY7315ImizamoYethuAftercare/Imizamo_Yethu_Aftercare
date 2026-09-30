@@ -9,6 +9,6 @@ export const authRouter = Router()
 const loginLimiter = createRateLimiter({ windowMs: 15 * 60 * 1000, max: 5 })
 
 authRouter.post('/register', register)
-authRouter.post('/login', login)
+authRouter.post('/login', loginLimiter, login)
 authRouter.post('/logout', logout)
 authRouter.get('/me', authenticate, me)

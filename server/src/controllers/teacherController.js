@@ -21,13 +21,38 @@ export async function listTeachers(req, res, next) {
 export async function createTeacher(req, res, next) {
   try {
     const { email, password, fullName } = req.body
-    if (!email || !password || !fullName) {
-      const err = new Error('email, password and fullName are required')
+    if (!email || !password || !fullName || !contactEmail) {
+      const err = new Error('email, password and fullName and contactEmail are required')
       err.status = 400
       throw err
     }
-    const teacher = await service.createTeacher({ userId: req.user.userId, email, password, fullName })
+    const teacher = await service.createTeacher({ userId: req.user.userId, email, password, fullName, contactEmail })
     res.status(201).json(teacher)
+
+  } catch (err) {
+     next(err) 
+    }
+}
+
+export async function updateTeacher(req, res, next) {
+  try {
+    const { fullName, contactEmail } = req.body
+    const fields = {}
+    if (fullName !== undefined) fields.full_name = fullName
+    if (contactEmail !== undefined) fields.contact_email = contactEmail
+
+    if (Object.keys(fields).length === 0) {
+      const err = new Error('At least one of fullName or contactEmail is required')
+      err.status = 400
+      throw err
+    }
+
+    const teacher = await service.updateTeacher({
+      userId: req.user.userId,
+      teacherId: Number(req.params.teacherId),
+      fields,
+    })
+    res.json(teacher)
   } catch (err) { next(err) }
 }
 
