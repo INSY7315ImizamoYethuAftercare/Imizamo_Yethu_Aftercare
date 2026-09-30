@@ -5,7 +5,7 @@
 
 import 'dotenv/config'
 
-const required = ['PORT', 'CLIENT_ORIGIN']
+const required = ['PORT', 'CLIENT_ORIGIN', 'DATABASE_URL', 'JWT_SECRET']
 
 // DATABASE_URL / JWT_SECRET are intentionally not "required" yet — they
 // don't exist until the Database & Backend and Auth tasks are built.

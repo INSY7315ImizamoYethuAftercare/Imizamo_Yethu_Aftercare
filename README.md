@@ -23,7 +23,7 @@ setup only.
 │       ├── repositories/  Data access layer (Repository pattern, wraps PostgreSQL)
 │       ├── middleware/    Logger, auth, error handling, rate limiting
 │       ├── config/        Environment loading/validation
-│       └── db/            Migrations and seed scripts (added in Epic B)
+│       └── db/            Migrations and seed scripts 
 └── package.json       Root workspace config
 ```
 
@@ -81,7 +81,45 @@ In production, these are set via Azure App Service → Configuration, not commit
 | `npm run start:server` | Start the API without auto-reload (production mode) |
 | `npm test` | Run tests in every workspace that has them |
 
-## Contributing
+## Database Setup (Local Development - for now)
+
+The full database schema is committed at `database/schema.sql`. Run this once
+against your local PostgreSQL to create all tables.
+
+### Prerequisites
+- PostgreSQL installed locally (with `psql` available)
+- A local database named 'imizamo_dev'
+
+### Steps
+
+1. Create an empty local database (only needed once):
+```powershell
+   psql.exe -U postgres -c "CREATE DATABASE imizamo_dev;"
+```
+2. Run the schema file against it:
+```powershell
+   psql.exe -U postgres -d imizamo_dev -f database/schema.sql
+```
+3. Update your local `.env` file with your database connection details
+   (see `.env.example` for the required variables).
+
+### If `psql` isn't recognized
+
+Add PostgreSQL's `bin` folder to your PATH, or call it directly:
+```powershell
+& "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -d imizamo_dev -f server/src/db/schema.sql
+```
+
+### Keeping schema.sql up to date
+
+If you change the database structure locally (e.g. add a column or table),
+re-export it and commit the updated file so the rest of the team stays in
+sync:
+```powershell
+pg_dump.exe -U postgres -d imizamo_dev --schema-only -f server/src/db/schema.sql
+```
+Flag the change to the team (in WhatsApp) so everyone knows to re-run
+step 2 above against their own local database.
 
 ## Branching & team workflow
 
