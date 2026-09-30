@@ -143,6 +143,4 @@ class LearnerRepository {
   }
 }
 
-
-
 export default LearnerRepository;
