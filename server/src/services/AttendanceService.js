@@ -9,7 +9,7 @@ export class AttendanceService {
   /**
    * Ensures the caller is a teacher.
    * Product decision: any teacher may manage attendance for ANY class
-   * (same rule as class roster — teachers can access all classes after login).
+   * (same rule as class roster - teachers can access all classes after login).
    * The old "own class only" check was removed.
    *
    * @param {number} userId - users.user_id from the JWT
@@ -47,7 +47,7 @@ export class AttendanceService {
   }
 
   /**
-   * POST /api/attendance — create a present/absent record.
+   * POST /api/attendance - create a present/absent record.
    * Teachers may mark attendance for any class.
    *
    * @param {{ userId: number, classId: number, learnerId: number, status: string, timeIn?: string, recordDate: string }}
@@ -104,7 +104,7 @@ export class AttendanceService {
   }
 
   /**
-   * Task #27 — PATCH /api/attendance/:recordId
+   * PATCH /api/attendance/:recordId
    * markPresent() / markAbsent() on an existing AttendanceRecord.
    * Any teacher may update any class's attendance (no ownership check).
    *
