@@ -15,6 +15,10 @@
     "test": "npm run test --workspaces --if-present"
   },
   "license": "UNLICENSED",
+  "dependencies": {
+    "@react-pdf/renderer": "^4.9.0",
+    "recharts": "^3.10.1"
+  },
   "devDependencies": {
     "cross-env": "^10.1.0",
     "jest": "^30.5.2",
