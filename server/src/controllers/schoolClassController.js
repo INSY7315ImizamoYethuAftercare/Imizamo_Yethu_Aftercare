@@ -3,7 +3,7 @@ import SchoolClassRepository from '../repositories/SchoolClassRepository.js'
 import ManagerRepository from '../repositories/ManagerRepository.js'
 import TeacherRepository from '../repositories/TeacherRepository.js'
 import LearnerRepository from '../repositories/LearnerRepository.js'
-import { pool } from '../db/pool.js'
+import { pool } from '../db/postgresql/pool.js'
 
 const schoolClassService = new SchoolClassService({
   schoolClassRepository: new SchoolClassRepository(pool),

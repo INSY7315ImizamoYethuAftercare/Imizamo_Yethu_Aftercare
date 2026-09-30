@@ -40,22 +40,23 @@ export async function createLearner(req, res, next) {
 export async function updateLearner(req, res, next) {
   try {
     const { firstName, lastName, dateOfBirth, canWalkHomeAlone, classId } = req.body
+    const fields = {}
+    if (firstName !== undefined) fields.first_name = firstName
+    if (lastName !== undefined) fields.last_name = lastName
+    if (dateOfBirth !== undefined) fields.date_of_birth = dateOfBirth
+    if (canWalkHomeAlone !== undefined) fields.can_walk_home_alone = canWalkHomeAlone
+    if (classId !== undefined) fields.class_id = classId
+
     const updated = await learnerService.updateLearner({
       userId: req.user.userId,
       learnerId: Number(req.params.learnerId),
-      fields: {
-        first_name: firstName,
-        last_name: lastName,
-        date_of_birth: dateOfBirth,
-        can_walk_home_alone: canWalkHomeAlone,
-        class_id: classId,
-      },
+      fields,
     })
     res.json(updated)
   } catch (err) {
     next(err)
   }
-}
+} 
 
 export async function deleteLearner(req, res, next) {
   try {

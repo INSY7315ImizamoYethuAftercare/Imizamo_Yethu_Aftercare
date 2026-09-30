@@ -4,7 +4,7 @@ import { TeacherService } from '../services/TeacherService.js'
 import TeacherRepository from '../repositories/TeacherRepository.js'
 import ManagerRepository from '../repositories/ManagerRepository.js'
 import UserRepository from '../repositories/UserRepository.js'
-import { pool } from '../db/pool.js'
+import { pool } from '../db/postgresql/pool.js'
 
 const service = new TeacherService({
   teacherRepository: new TeacherRepository(pool),
