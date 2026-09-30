@@ -1,6 +1,5 @@
 import { Router } from 'express'
 import { authenticate, authorize } from '../middleware/auth.js'
-import { recordAttendance, getClassAttendance } from '../controllers/attendanceController.js'
 import { recordAttendance, getClassAttendance, updateAttendance } from '../controllers/attendanceController.js'
 
 export const attendanceRouter = Router()

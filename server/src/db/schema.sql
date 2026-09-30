@@ -1107,6 +1107,7 @@ CREATE INDEX idx_donor_reports_date_generated ON public.donor_reports USING btre
 ALTER TABLE ONLY public.donor_reports
     ADD CONSTRAINT donor_reports_manager_id_fkey FOREIGN KEY (manager_id) REFERENCES public.managers(manager_id) ON DELETE RESTRICT;
 
+-- Add a new column to the users table to indicate if the user is active
 ALTER TABLE users ADD COLUMN is_active boolean NOT NULL DEFAULT true;
 
 -- DOWN (rollback): DROP TABLE IF EXISTS public.donor_reports;
