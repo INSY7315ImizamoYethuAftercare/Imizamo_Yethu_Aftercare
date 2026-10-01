@@ -16,7 +16,8 @@ function Learners({ role = "Teacher" }) {
     role === "Manager" ? "Manager" : "Teacher • Yellow";
 
   const observationsPath =
-    role === "Admin" ? "/admin/observations" : "/observations";
+    role === "Admin" ? "/admin/observations" :
+    role === "Manager" ? "/manager/observations" : "/observations";
 
   const startGroup = searchParams.get("group") || "All";
   const [search, setSearch] = useState("");
@@ -91,7 +92,7 @@ function Learners({ role = "Teacher" }) {
           {filtered.map((learner) => (
             <button
               key={learner.id}
-              onClick={() => navigate(observationsPath)}
+              onClick={() => navigate(observationsPath, { state: { learner } })}
               className="w-full bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg border border-gray-200 text-left hover:border-orange-300 active:scale-[0.98] transition"
             >
               <div>

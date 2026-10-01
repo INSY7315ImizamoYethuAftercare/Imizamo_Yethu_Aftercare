@@ -1,5 +1,8 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
+import AddClassSheet from "./AddClassSheet";
+import { addClass, useClasses } from "./UseClasses";
 
 function Classes({ role = "Teacher" }) {
   const navigate = useNavigate();
@@ -10,14 +13,25 @@ function Classes({ role = "Teacher" }) {
   const learnersPath = isManager ? "/manager/learners" : "/learners";
   const shell = isManager ? "max-w-5xl mx-auto w-full" : "max-w-lg mx-auto w-full";
 
-  const classes = [
-    { name: "Yellow", teacher: "Ms Nkosi", present: "2/2", colour: "bg-yellow-300" },
-    { name: "Green", teacher: "Mr Dlamini", present: "2/2", colour: "bg-green-300" },
-    { name: "Red", teacher: "Ms Williams", present: "1/1", colour: "bg-red-300" },
-    { name: "Blue", teacher: "Mr Naidoo", present: "0/1", colour: "bg-sky-300" },
-  ];
+  const classes = useClasses();
+  const [showAdd, setShowAdd] = useState(false);
 
-  const visible = isManager ? classes : classes.filter((c) => c.name === "Yellow");
+  // Teachers see their own class plus any class they add; managers see all.
+  const visible = isManager
+    ? classes
+    : classes.filter((c) => c.name === "Yellow" || c.addedBy === "Teacher");
+
+  const handleAdd = ({ name, grade, colour }) => {
+    addClass({
+      name,
+      grade,
+      teacher: isManager ? "Unassigned" : displayName,
+      present: "0/0",
+      hex: colour.hex,
+      addedBy: role,
+    });
+    setShowAdd(false);
+  };
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
@@ -36,9 +50,17 @@ function Classes({ role = "Teacher" }) {
       </div>
 
       <div className={`flex-1 px-4 pt-5 pb-32 ${shell}`}>
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Classes <span>🏫</span></h1>
-          <p className="text-sm text-gray-500 mt-1">{visible.length} class group{visible.length === 1 ? "" : "s"}</p>
+        <div className="mb-4 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Classes <span>🏫</span></h1>
+            <p className="text-sm text-gray-500 mt-1">{visible.length} class group{visible.length === 1 ? "" : "s"}</p>
+          </div>
+          <button
+            onClick={() => setShowAdd(true)}
+            className="bg-orange-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md hover:bg-orange-600 active:scale-95 transition"
+          >
+            + Add Class
+          </button>
         </div>
 
         <div className="space-y-3">
@@ -49,10 +71,13 @@ function Classes({ role = "Teacher" }) {
               className="w-full bg-white rounded-2xl px-4 py-4 flex items-center justify-between shadow-lg border border-gray-200 text-left hover:border-orange-300 active:scale-[0.98] transition"
             >
               <div className="flex items-center gap-3">
-                <span className={`w-3 h-10 rounded-full ${cls.colour}`}></span>
+                <span
+                  className={`w-3 h-10 rounded-full ${cls.colour ?? "border border-gray-300"}`}
+                  style={cls.hex ? { backgroundColor: cls.hex } : undefined}
+                ></span>
                 <div>
                   <p className="font-semibold text-gray-900">{cls.name}</p>
-                  <p className="text-xs text-gray-500">{cls.teacher}</p>
+                  <p className="text-xs text-gray-500">{cls.grade} • {cls.teacher}</p>
                 </div>
               </div>
               <div className="text-right">
@@ -63,6 +88,14 @@ function Classes({ role = "Teacher" }) {
           ))}
         </div>
       </div>
+
+      {showAdd && (
+        <AddClassSheet
+          existingNames={classes.map((c) => c.name)}
+          onAdd={handleAdd}
+          onClose={() => setShowAdd(false)}
+        />
+      )}
     </div>
   );
 }

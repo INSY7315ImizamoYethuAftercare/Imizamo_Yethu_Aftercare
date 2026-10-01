@@ -200,6 +200,7 @@ function App() {
         <Route path="/manager/classes" element={<ManagerLayout><Classes role="Manager" /></ManagerLayout>} />
         <Route path="/manager/signout" element={<ManagerLayout><SignOut role="Manager" /></ManagerLayout>} />
         <Route path="/manager/escalations" element={<ManagerLayout><Escalations /></ManagerLayout>} />
+        <Route path="/manager/observations" element={<ManagerLayout><Observations role="Manager" /></ManagerLayout>} />
         <Route path="/manager/staff" element={<ManagerLayout><Staff /></ManagerLayout>} />
         <Route path="/reports" element={<ManagerLayout><Reports /></ManagerLayout>} />
         <Route path="/settings" element={<ManagerLayout><Settings /></ManagerLayout>} />
