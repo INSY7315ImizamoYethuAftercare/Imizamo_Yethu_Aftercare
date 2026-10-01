@@ -46,14 +46,16 @@ class GuardianRepository {
      * @param {string} params.fullName - The guardian's full name.
      * @param {string} params.contactNumber - The guardian's contact number.
      * @param {string} params.relationship - The guardian's relationship to the learner.
+     * @param {string} params.claimedLearnerName - name supplied at registration, for audit
+     * @param {string} params.claimedLearnerDob - DOB supplied at registration, for audit
      * @returns {Promise<Object>} The newly created guardian record.
      */
-  async create({ userId, fullName, contactNumber, relationship }) {
+  async create({ userId, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob }) {
     const result = await this.pool.query(
-      `INSERT INTO guardians ("user_id", "full_name", "contact_number", "relationship")
+      `INSERT INTO guardians ("user_id", "full_name", "contact_number", "relationship", "claimed_learner_name", "claimed_learner_dob")
        VALUES ($1, $2, $3, $4)
-       RETURNING "guardian_id", "user_id", "full_name", "contact_number", "relationship"`,
-      [userId, fullName, contactNumber, relationship]
+       RETURNING "guardian_id", "user_id", "full_name", "contact_number", "relationship", "claimed_learner_name", "claimed_learner_dob"`,
+      [userId, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob]
     );
     return result.rows[0];
   }

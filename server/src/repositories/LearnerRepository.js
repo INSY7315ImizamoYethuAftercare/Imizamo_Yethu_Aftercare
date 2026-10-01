@@ -84,7 +84,27 @@ class LearnerRepository {
     return result.rows;
   }
 
-    /**
+/**
+ * Finds a learner by full name and date of birth, for guardian
+ * self-registration matching (Part 2 — name+DOB match; Part 3 will
+ * replace this with something more secure).
+ *
+ * @param {string} fullName - e.g. "Thandiwe Mokoena"
+ * @param {string} dateOfBirth - YYYY-MM-DD
+ * @returns {Promise<Object|null>}
+ */
+async findByFullNameAndDob(fullName, dateOfBirth) {
+  const result = await this.pool.query(
+    `SELECT "learner_id", "class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone", "is_active"
+     FROM learners
+     WHERE LOWER(TRIM("first_name" || ' ' || "last_name")) = LOWER(TRIM($1))
+       AND "date_of_birth" = $2`,
+    [fullName, dateOfBirth]
+  );
+  return result.rows[0] || null;
+}
+
+  /**
    * Counts how many active learners are currently enrolled in a class.
    * Used by SchoolClassService to block deactivating a class that still
    * has active learners in it.

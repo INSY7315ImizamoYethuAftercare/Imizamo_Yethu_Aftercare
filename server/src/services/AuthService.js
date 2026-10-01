@@ -6,8 +6,11 @@ const SALT_ROUNDS = 10
 
 export class AuthService {
 
-  constructor(userRepository) {
+  constructor({ userRepository, guardianRepository, learnerRepository, pickupPermissionRepository }) {
     this.userRepository = userRepository
+    this.guardianRepository = guardianRepository
+    this.learnerRepository = learnerRepository
+    this.pickupPermissionRepository = pickupPermissionRepository
   }
 
   /**
@@ -15,7 +18,7 @@ export class AuthService {
    * @param {*} param0 
    * @returns 
    */
-  async register({ email, password, role, fullName }) {
+  async register({ email, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob }) {
 
     if (role === 'admin' || role === 'manager' || role === 'teacher') {
       const err = new Error('This role cannot self-register')
@@ -24,16 +27,51 @@ export class AuthService {
     }
 
     const existing = await this.userRepository.findByEmail(email)
-
     if (existing) {
       const err = new Error('An account with this email already exists')
       err.status = 409
       throw err
     }
 
+    let matchedLearner = null
+    if (role === 'guardian') {
+      if (!contactNumber || !relationship || !claimedLearnerName || !claimedLearnerDob) {
+        const err = new Error('contactNumber, relationship, claimedLearnerName and claimedLearnerDob are required to register as a guardian')
+        err.status = 400
+        throw err
+      }
+
+      matchedLearner = await this.learnerRepository.findByFullNameAndDob(claimedLearnerName, claimedLearnerDob)
+      if (!matchedLearner) {
+        const err = new Error('No learner found matching that name and date of birth')
+        err.status = 404
+        throw err
+      }
+    }
+
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS)
 
-    return this.userRepository.createUser({ email, role, passwordHash, fullName, isActive: true })
+     const user = await this.userRepository.createUser({ email, role, passwordHash, fullName, isActive: true })
+
+    if (role === 'guardian') {
+      const guardian = await this.guardianRepository.create({
+        userId: user.user_id,
+        fullName,
+        contactNumber,
+        relationship,
+        claimedLearnerName,
+        claimedLearnerDob,
+      })
+
+      await this.pickupPermissionRepository.create({
+        learnerId: matchedLearner.learner_id,
+        guardianId: guardian.guardian_id,
+        isPrimaryContact: true,
+        authorisedDate: new Date().toISOString().slice(0, 10),
+      })
+    }
+
+    return user
   }
 
   /**

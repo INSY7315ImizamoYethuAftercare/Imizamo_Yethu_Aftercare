@@ -7,10 +7,18 @@
  */
 import { AuthService } from '../services/AuthService.js'
 import UserRepository from '../repositories/UserRepository.js'
+import GuardianRepository from '../repositories/GuardianRepository.js'
+import LearnerRepository from '../repositories/LearnerRepository.js'
+import PickupPermissionRepository from '../repositories/PickupPermissionRepository.js'
 import { pool } from '../db/postgresql/pool.js'
 import { isProduction } from '../config/env.js'
 
-const authService = new AuthService(new UserRepository(pool))
+const authService = new AuthService({
+  userRepository: new UserRepository(pool),
+  guardianRepository: new GuardianRepository(pool),
+  learnerRepository: new LearnerRepository(pool),
+  pickupPermissionRepository: new PickupPermissionRepository(pool),
+})
 
 /**
  * Shared cookie settings for the session token.
@@ -28,14 +36,19 @@ const cookieOptions = {
 /** POST /api/auth/register */
 export async function register(req, res, next) {
   try {
-    const { email, password, role, fullName } = req.body
+
+    const { email, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob  } = req.body
     if (!email || !password || !role || !fullName) {
       const err = new Error('email, password, role and fullName are all required')
       err.status = 400
       throw err
     }
-    const user = await authService.register({ email, password, role, fullName })
+
+    const user = await authService.register({ 
+      email, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob, 
+    })
     res.status(201).json({ userId: user.user_id, email: user.email, role: user.role })
+
   } catch (err) {
     next(err)
   }
@@ -44,12 +57,14 @@ export async function register(req, res, next) {
 /** POST /api/auth/login */
 export async function login(req, res, next) {
   try {
+
     const { email, password } = req.body
     if (!email || !password) {
       const err = new Error('email and password are required')
       err.status = 400
       throw err
     }
+
     const { token, user } = await authService.login({ email, password })
     res.cookie('token', token, cookieOptions)
     res.json({ user })
@@ -64,7 +79,7 @@ export function logout(req, res) {
   res.json({ message: 'Logged out successfully' })
 }
 
-/** GET /api/auth/me — returns the identity of whoever the session cookie belongs to. */
+/** GET /api/auth/me - returns the identity of whoever the session cookie belongs to. */
 export function me(req, res) {
   res.json({ user: req.user })
 }
