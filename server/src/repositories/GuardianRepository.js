@@ -86,6 +86,27 @@ class GuardianRepository {
     );
     return result.rows[0] || null;
   }
+
+  /**
+   * Activates or deactivates a guardian's account.
+   * Deletion is not supported for
+   * accounts with dependent records (pickup permissions, sign-outs);
+   * deactivation is the only way to revoke a guardian's access.
+   *
+   * @param {number} guardianId
+   * @param {boolean} isActive
+   * @returns {Promise<Object|null>} { guardian_id, is_active }, or null if not found.
+   */
+  async setActive(guardianId, isActive) {
+    const result = await this.pool.query(
+      `UPDATE users u SET "is_active" = $2
+       FROM guardians g
+       WHERE g."user_id" = u."user_id" AND g."guardian_id" = $1
+       RETURNING g."guardian_id", u."is_active"`,
+      [guardianId, isActive],
+    )
+    return result.rows[0] || null
+  }
 }
 
 export default GuardianRepository;

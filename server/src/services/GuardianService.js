@@ -1,8 +1,8 @@
 /**
  * GuardianService
  *
- * Business logic for the Parent/Guardian portal. Implements US25: a
- * guardian must only ever be able to see information about their own
+ * Business logic for the Parent/Guardian portal. 
+ * A guardian must only ever be able to see information about their own
  * child or children, never another family's. Every method that returns
  * learner-specific data routes through #assertOwnsLearner, so this rule
  * cannot be accidentally skipped by a future method that forgets to check.
@@ -10,12 +10,23 @@
 export class GuardianService {
 
   //
-  constructor({ guardianRepository, learnerRepository, attendanceRepository, observationRepository }) {
+  constructor({ guardianRepository, learnerRepository, attendanceRepository, observationRepository, managerRepository }) {
     this.guardianRepository = guardianRepository
     this.learnerRepository = learnerRepository
     this.attendanceRepository = attendanceRepository
     this.observationRepository = observationRepository
+    this.managerRepository = managerRepository
   }
+
+async #assertIsManager(userId) {
+    const manager = await this.managerRepository.findByUserId(userId)
+    if (!manager) {
+      const err = new Error('Only managers can manage guardian accounts')
+      err.status = 403
+      throw err
+    }
+  }
+
 
   /**
    * Confirms the logged-in user has a real Guardian record.
@@ -96,5 +107,20 @@ export class GuardianService {
     await this.#assertOwnsLearner(userId, learnerId)
 
     return this.observationRepository.findByLearnerId(learnerId)
+  }
+
+  /**
+   * Activates or deactivates a guardian's account. Manager-only.
+   * Deletion is intentionally not supported.
+   */
+  async setGuardianActive({ userId, guardianId, isActive }) {
+    await this.#assertIsManager(userId)
+    const updated = await this.guardianRepository.setActive(guardianId, isActive)
+    if (!updated) {
+      const err = new Error('Guardian not found')
+      err.status = 404
+      throw err
+    }
+    return updated
   }
 }
