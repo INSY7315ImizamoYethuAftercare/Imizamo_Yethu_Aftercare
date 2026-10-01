@@ -1,5 +1,5 @@
 import pg from 'pg'
-import { env, isProduction } from '../../config/env.js'
+import { env, isProduction } from '../config/env.js'
 
 const { Pool } = pg
 

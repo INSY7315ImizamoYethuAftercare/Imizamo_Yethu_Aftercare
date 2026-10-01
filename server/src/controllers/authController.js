@@ -10,7 +10,7 @@ import UserRepository from '../repositories/UserRepository.js'
 import GuardianRepository from '../repositories/GuardianRepository.js'
 import LearnerRepository from '../repositories/LearnerRepository.js'
 import PickupPermissionRepository from '../repositories/PickupPermissionRepository.js'
-import { pool } from '../db/postgresql/pool.js'
+import { pool } from '../db/pool.js'
 import { isProduction } from '../config/env.js'
 
 const authService = new AuthService({
