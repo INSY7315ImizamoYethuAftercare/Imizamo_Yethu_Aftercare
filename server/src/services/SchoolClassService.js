@@ -90,18 +90,32 @@ export class SchoolClassService {
    * 
    * @returns {Promise<Object>} The new class record.
    */
-  async createClass({ userId, teacherId, className, gradeRange }) {
-
+    async createClass({ userId, teacherId, className, gradeRange }) {
     await this.#assertIsManager(userId)
 
-    const teacher = await this.teacherRepository.findById(teacherId)
+    let assignedTeacherId = null
+    if (teacherId) {
+      const teacher = await this.teacherRepository.findById(teacherId)
+      if (!teacher) {
+        const err = new Error('Teacher not found')
+        err.status = 404
+        throw err
+      }
+      assignedTeacherId = teacher.teacher_id
+    }
 
-    if (!teacher) {
-      const err = new Error('Teacher not found')
-      err.status = 404
+    try {
+      return await this.schoolClassRepository.create({
+        teacherId: assignedTeacherId, className, gradeRange,
+      })
+    } catch (err) {
+      if (err.code === '23505') {
+        const conflict = new Error('A class with that name already exists')
+        conflict.status = 409
+        throw conflict
+      }
       throw err
     }
-    return this.schoolClassRepository.create({ teacherId, className, gradeRange })
   }
 
   /**
@@ -142,29 +156,33 @@ export class SchoolClassService {
    * @throws {Error} 404 if no class exists with the given classId.
    * @throws {Error} 409 if the class still has learners enrolled.
    */
-  async deleteClass({ userId, classId }) {
-
+  async deactivateClass({ userId, classId }) {
     await this.#assertIsManager(userId)
 
-    try {
-        const deleted = await this.schoolClassRepository.delete(classId)
-
-        if (!deleted) {
-            const err = new Error('Class not found')
-            err.status = 404
-            throw err
-        }
-        return deleted
-
-    } catch (err) {
-         if (err.code === '23503') {
-            const conflictErr = new Error('Cant delete this class - there are learners enrolled in this class')
-            conflictErr.status = 409
-            throw conflictErr
-        }
-
-        throw err
+    const schoolClass = await this.schoolClassRepository.findById(classId)
+    if (!schoolClass || !schoolClass.is_active) {
+      const err = new Error('Class not found')
+      err.status = 404
+      throw err
     }
+
+    const count = await this.schoolClassRepository.countLearners(classId)
+    if (count > 0) {
+      const err = new Error(
+        `Can't remove this class - ${count} learner${count === 1 ? ' is' : 's are'} still in it. Move them to another class first.`,
+      )
+      err.status = 409
+      throw err
+    }
+
+    const done = await this.schoolClassRepository.deactivate(classId)
+    if (!done) {
+      // A learner was added between the check above and the update
+      const err = new Error("Can't remove this class - learners are still in it")
+      err.status = 409
+      throw err
+    }
+    return true
   }
 
   /** 
