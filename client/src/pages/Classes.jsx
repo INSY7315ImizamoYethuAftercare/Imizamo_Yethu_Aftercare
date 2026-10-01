@@ -9,6 +9,8 @@ function Classes({ role = "Teacher" }) {
   const displayRole = isManager ? "Manager" : "Teacher • Yellow";
   const learnersPath = isManager ? "/manager/learners" : "/learners";
   const shell = isManager ? "max-w-5xl mx-auto w-full" : "max-w-lg mx-auto w-full";
+  const iconBtn =
+    "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
   const classes = [
     { name: "Yellow", teacher: "Ms Nkosi", present: "2/2", colour: "bg-yellow-300" },
@@ -30,7 +32,10 @@ function Classes({ role = "Teacher" }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
+          <button onClick={comingSoon} className={iconBtn}>🔔</button>
+          {isManager && (
+            <button onClick={() => navigate("/settings")} className={iconBtn}>⚙️</button>
+          )}
           <MoreMenu />
         </div>
       </div>
