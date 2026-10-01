@@ -27,15 +27,6 @@ export class AttendanceService {
    * @param {number} userId - The user_id from the verified JWT.
    * @returns {Promise<number>} The teacher's teacher_id.
    */
-  async #getTeacherId(userId) {
-   * Ensures the caller is a teacher.
-   * Product decision: any teacher may manage attendance for ANY class
-   * (same rule as class roster - teachers can access all classes after login).
-   * The old "own class only" check was removed.
-   *
-   * @param {number} userId - users.user_id from the JWT
-   * @returns {Promise<Object>} teacher row
-   */
   async #assertIsTeacher(userId) {
     const teacher = await this.teacherRepository.findByUserId(userId)
     if (!teacher) {
@@ -58,7 +49,6 @@ export class AttendanceService {
    * @returns {Promise<Object>} The created attendance record.
    */
   async recordAttendance({ userId, learnerId, status, timeIn, recordDate }) {
-    const teacherId = await this.#getTeacherId(userId)
 
     if (status === 'present') {
       return this.attendanceRepository.markPresent({ learnerId, teacherId, recordDate, timeIn })
@@ -82,7 +72,7 @@ export class AttendanceService {
    * @returns {Promise<Array<Object>>} The attendance records for that class and date.
    */
   async getClassAttendance({ userId, classId, date }) {
-    await this.#getTeacherId(userId)
+    await this.#assertIsTeacher(userId)
     return teacher
   }
 
