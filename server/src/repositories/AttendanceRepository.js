@@ -96,7 +96,7 @@ class AttendanceRepository {
   }
 
   /**
-   * Task #27 — Updates status (and optional time_in) on an existing AttendanceRecord.
+   * Updates status (and optional time_in) on an existing AttendanceRecord.
    * Implements markPresent() / markAbsent() when correcting or flipping attendance.
    * Also records which teacher made the change via teacher_id.
    *
@@ -114,6 +114,27 @@ class AttendanceRepository {
       [status, timeIn ?? null, teacherId, recordId],
     )
     return result.rows[0] || null
+  }
+
+  /**
+   * Aggregates attendance counts across all learners for a date range.
+   * Used for donor reporting — does not identify individual learners.
+   *
+   * @param {string} periodStart - YYYY-MM-DD
+   * @param {string} periodEnd - YYYY-MM-DD
+   * @returns {Promise<{ total_present: string, total_absent: string, unique_learners: string }>}
+   */
+  async getAggregateByDateRange(periodStart, periodEnd) {
+    const result = await this.pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE "status" = 'present') AS total_present,
+         COUNT(*) FILTER (WHERE "status" = 'absent') AS total_absent,
+         COUNT(DISTINCT "learner_id") AS unique_learners
+       FROM attendance_records
+       WHERE "record_date" BETWEEN $1 AND $2`,
+      [periodStart, periodEnd],
+    )
+    return result.rows[0]
   }
 }
 
