@@ -14,7 +14,7 @@ class LearnerRepository {
      */
     async findById(learnerId) {
         const result = await this.pool.query(
-            `SELECT "learner_id", "class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone" 
+            `SELECT "learner_id", "class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone", "is_active" 
             FROM learners 
             WHERE "learner_id" = $1`,
             [learnerId]
@@ -22,17 +22,19 @@ class LearnerRepository {
         return result.rows[0] || null;
     }
 
-      /**
+  /**
    * Retrieves all learners a guardian is linked to via pickup permissions.
    * Used to restrict guardian accounts to their own children only.
-   *
+   * Not filtered by is_active — a guardian should still see a child's
+   * profile/history even if that child has since left (been deactivated).
+   * 
    * @param {number} guardianId - The unique identifier of the guardian.
    * @returns {Promise<Array<Object>>} The learners linked to this guardian.
    */
   async findByGuardianId(guardianId) {
     const result = await this.pool.query(
       `SELECT l."learner_id", l."class_id", l."first_name", l."last_name",
-              l."date_of_birth", l."can_walk_home_alone"
+              l."date_of_birth", l."can_walk_home_alone", 1. "is_active"
        FROM learners l
        INNER JOIN pickup_permissions p ON p."learner_id" = l."learner_id"
        WHERE p."guardian_id" = $1`,
@@ -43,14 +45,16 @@ class LearnerRepository {
 
     /**
    * Retrieves every learner across all classes, with their class name
-   * attached. Used for the manager's learner-management view.
+   * attached. 
+   * Used for the manager's learner-management view.
+   * Includes inactive learners so managers can see and reactivate them if needed.
    *
    * @returns {Promise<Array<Object>>} All learners, ordered by class then surname.
    */
   async findAll() {
     const result = await this.pool.query(
       `SELECT l."learner_id", l."class_id", l."first_name", l."last_name",
-              l."date_of_birth", l."can_walk_home_alone", c."class_name"
+              l."date_of_birth", l."can_walk_home_alone", 1. "is_active", c."class_name"
        FROM learners l
        JOIN school_classes c ON c."class_id" = l."class_id"
        ORDER BY c."class_name", l."last_name", l."first_name"`,
@@ -60,8 +64,10 @@ class LearnerRepository {
 
     /**
      * Retrieves a roster of learners enrolled in a specific class, sorted
-     * alphabetically by surname. Excludes dateOfBirth, since this method is
-     * intended for roster/attendance views that do not require it.
+     * alphabetically by surname. 
+     * Excludes dateOfBirth, since this method is intended for roster/attendance views that do not require it.
+     * Filtered to is_active - a deactivated/left learner should not appear
+     * on a teacher's daily attendance roster.
      * 
      * @param {number} classId - The unique identifier of the class. 
      * @returns {Promise<Array<Object>>} A list of learners enrolled in the 
@@ -71,15 +77,34 @@ class LearnerRepository {
     const result = await this.pool.query(
       `SELECT "learner_id", "first_name", "last_name", "can_walk_home_alone" 
       FROM learners 
-      WHERE "class_id" = $1 
+      WHERE "class_id" = $1 AND "is_active" = true
       ORDER BY "last_name", "first_name"`,
       [classId]
     );
     return result.rows;
   }
 
+    /**
+   * Counts how many active learners are currently enrolled in a class.
+   * Used by SchoolClassService to block deactivating a class that still
+   * has active learners in it.
+   *
+   * @param {number} classId
+   * @returns {Promise<number>} Number of active learners in the class.
+   */
+  async countActiveByClassId(classId) {
+    const result = await this.pool.query(
+      `SELECT COUNT(*) AS count
+       FROM learners
+       WHERE "class_id" = $1 AND "is_active" = true`,
+      [classId],
+    )
+    return Number(result.rows[0].count)
+  }
+
   /**
      * Creates a new learner record and enrolls them in the specified class.
+     * is_active defaults to true at the database level.
      *
      * @param {Object} params - The new learner's details.
      * @param {number} params.classId - The unique identifier of the class the learner is being enrolled in.
@@ -93,7 +118,7 @@ class LearnerRepository {
     const result = await this.pool.query(
       `INSERT INTO learners ("class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone")
        VALUES ($1, $2, $3, $4, $5)
-       RETURNING "learner_id", "class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone"`,
+       RETURNING "learner_id", "class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone", "is_active"`,
       [classId, firstName, lastName, dateOfBirth, canWalkHomeAlone]
     );
     return result.rows[0];
@@ -106,13 +131,13 @@ class LearnerRepository {
      *
      * @param {number} learnerId - The unique identifier of the learner to update.
      * @param {Object} fields - A partial object containing the fields to
-     * update (any of: firstName, lastName, dateOfBirth, canWalkHomeAlone, classID).
+     * update (any of: firstName, lastName, dateOfBirth, canWalkHomeAlone, classId, isActive).
      * @returns {Promise<Object|null>} The updated learner record, or the
      * unchanged record if no valid fields were provided, or null if the learner does not exist.
      */
   async update(learnerId, fields) {
     // Whitelist updatable columns so callers can't inject arbitrary column names
-    const allowed = ['first_name', 'last_name', 'date_of_birth', 'can_walk_home_alone', 'class_id'];
+    const allowed = ['first_name', 'last_name', 'date_of_birth', 'can_walk_home_alone', 'class_id', 'is_active'];
     const keys = Object.keys(fields).filter(k => allowed.includes(k));
     if (keys.length === 0) return this.findById(learnerId);
 
@@ -122,7 +147,7 @@ class LearnerRepository {
     const result = await this.pool.query(
       `UPDATE learners SET ${setClause} 
       WHERE "learner_id" = $${keys.length + 1} 
-      RETURNING "learner_id", "class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone"`,
+      RETURNING "learner_id", "class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone", "is_active"`,
       [...values, learnerId]
     );
     return result.rows[0] || null;

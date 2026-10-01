@@ -1107,6 +1107,55 @@ CREATE INDEX idx_donor_reports_date_generated ON public.donor_reports USING btre
 ALTER TABLE ONLY public.donor_reports
     ADD CONSTRAINT donor_reports_manager_id_fkey FOREIGN KEY (manager_id) REFERENCES public.managers(manager_id) ON DELETE RESTRICT;
 
+
+-- ===== alter for the class_management.sql =====
+
+-- Manager-created classes can start with no teacher (Unassigned)
+ALTER TABLE school_classes
+  ALTER COLUMN teacher_id DROP NOT NULL;
+
+-- Soft-deactivate flag
+ALTER TABLE school_classes
+  ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;
+
+-- One ACTIVE class per name (case-insensitive). A class's colour is its
+-- name, so this also means one active Blue, one active Yellow, and so on.
+CREATE UNIQUE INDEX uq_school_classes_active_name
+  ON school_classes (LOWER(class_name))
+  WHERE is_active;
+
+-- Seed the five real classes (teachers get assigned later).
+-- Grade ranges are placeholders: check them against the spreadsheet.
+INSERT INTO school_classes (class_name, grade_range, teacher_id)
+SELECT v.name, v.grade, NULL
+FROM (VALUES
+  ('Yellow', 'Gr 1-2'),
+  ('Green',  'Gr 3-4'),
+  ('Red',    'Gr 5-6'),
+  ('Blue',   'Gr 7'),
+  ('Orange', 'Gr R')
+) AS v(name, grade)
+WHERE NOT EXISTS (
+  SELECT 1 FROM school_classes c
+  WHERE LOWER(c.class_name) = LOWER(v.name) AND c.is_active
+);
+
+
+
+-- ===== alter for the guardian_learner_claim.sql =====
+
+-- What the parent typed at signup, so the manager knows which learner to
+-- link them to. Plain text only: NOT a foreign key and NOT access.
+-- Access still comes only from pickup_permissions.
+ALTER TABLE guardians
+  ADD COLUMN claimed_learner_name VARCHAR(200),
+  ADD COLUMN claimed_learner_dob  DATE;
+
+ALTER TABLE learners
+  ADD COLUMN is_active BOOLEAN NOT NULL DEFAULT TRUE;
+--Will only deactivate a class if there are no active learners in it
+
+
 -- DOWN (rollback): DROP TABLE IF EXISTS public.donor_reports;
 
 
