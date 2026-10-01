@@ -60,6 +60,16 @@ class SchoolClassRepository {
    * @param {string} params.gradeRange - The class's grande range.
    * @returns {Promise<Object>} The newly created class record.
    */
+
+  async findAll() {
+    const result = await this.pool.query(
+      `SELECT "class_id", "teacher_id", "class_name", "grade_range"
+       FROM school_classes
+       ORDER BY "class_name"`,
+    )
+    return result.rows
+  }
+  
   async create({ teacherId, className, gradeRange }) {
     const result = await this.pool.query(
       `INSERT INTO school_classes ("teacher_id", "class_name", "grade_range")
