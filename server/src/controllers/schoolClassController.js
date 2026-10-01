@@ -36,16 +36,13 @@ export async function getClass(req, res, next) {
 export async function createClass(req, res, next) {
   try {
     const { teacherId, className, gradeRange } = req.body
-    if (!className?.trim() || !gradeRange) {
-      const err = new Error('className and gradeRange are required')
+    if (!teacherId || !className || !gradeRange) {
+      const err = new Error('teacherId, className and gradeRange are required')
       err.status = 400
       throw err
     }
     const schoolClass = await schoolClassService.createClass({
-      userId: req.user.userId,
-      teacherId,
-      className: className.trim(),
-      gradeRange,
+      userId: req.user.userId, teacherId, className, gradeRange,
     })
     res.status(201).json(schoolClass)
   } catch (err) {

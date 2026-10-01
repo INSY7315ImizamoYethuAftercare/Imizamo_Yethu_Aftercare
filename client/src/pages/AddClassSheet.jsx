@@ -2,42 +2,29 @@ import { useState } from "react";
 
 export const GRADE_RANGES = ["Gr R", "Gr 1-2", "Gr 3-4", "Gr 5-6", "Gr 7"];
 
-// South African flag colours first, then extra options
-export const SA_FLAG_COLOURS = [
-  { name: "Gold", hex: "#FFB612" },
-  { name: "Green", hex: "#007749" },
-  { name: "Red", hex: "#DE3831" },
-  { name: "Blue", hex: "#002395" },
-  { name: "Black", hex: "#000000" },
-  { name: "White", hex: "#FFFFFF" },
+// A class's colour is the actual name of the class, so this list drives both both the colour and class name
+export const CLASS_COLOURS = [
+  { name: "Yellow", hex: "#FDE047" },
+  { name: "Green", hex: "#86EFAC" },
+  { name: "Red", hex: "#FCA5A5" },
+  { name: "Blue", hex: "#7DD3FC" },
+  { name: "Orange", hex: "#FDBA74" },
 ];
 
-export const EXTRA_COLOURS = [
-  { name: "Orange", hex: "#F97316" },
-  { name: "Purple", hex: "#9B5DE5" },
-  { name: "Pink", hex: "#F472B6" },
-  { name: "Teal", hex: "#14B8A6" },
-  { name: "Sky Blue", hex: "#38BDF8" },
-  { name: "Lime", hex: "#84CC16" },
-  { name: "Brown", hex: "#92400E" },
-  { name: "Grey", hex: "#9CA3AF" },
-];
-
-export const CLASS_COLOURS = [...SA_FLAG_COLOURS, ...EXTRA_COLOURS];
+export const colourForClass = (name) =>
+  CLASS_COLOURS.find((c) => c.name.toLowerCase() === name.toLowerCase())?.hex ?? "#9CA3AF";
 
 function AddClassSheet({ existingNames, onAdd, onClose }) {
-  const [name, setName] = useState("");
+  const taken = existingNames.map((n) => n.toLowerCase());
+  const available = CLASS_COLOURS.filter((c) => !taken.includes(c.name.toLowerCase()));
+
+  const [colour, setColour] = useState(available[0] ?? null);
   const [grade, setGrade] = useState("Gr 1-2");
-  const [colour, setColour] = useState(CLASS_COLOURS[0]);
   const [error, setError] = useState("");
 
   const submit = () => {
-    const trimmed = name.trim();
-    if (!trimmed) return setError("Please enter a class name.");
-    if (existingNames.some((n) => n.toLowerCase() === trimmed.toLowerCase())) {
-      return setError("A class with that name already exists.");
-    }
-    onAdd({ name: trimmed, grade, colour });
+    if (!colour) return setError("All five classes already exist.");
+    onAdd({ name: colour.name, grade });
   };
 
   return (
@@ -48,18 +35,33 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
       >
         <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4"></div>
         <h2 className="text-xl font-bold text-gray-900">Add New Classroom</h2>
-        <p className="text-xs text-gray-500 mb-4">Create a new class group for your learners</p>
+        <p className="text-xs text-gray-500 mb-4">Pick the class colour. It is also the class name.</p>
 
-        <label className="text-[11px] font-semibold text-gray-500 tracking-wide">CLASS NAME <span className="text-red-500">*</span></label>
-        <input
-          value={name}
-          onChange={(e) => { setName(e.target.value); setError(""); }}
-          placeholder="e.g. Ladybirds, Comets"
-          className="w-full mt-1 mb-1 px-4 py-3 rounded-xl bg-[#F5F0EA] text-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
-        />
-        {error && <p className="text-xs text-red-500 mb-2">{error}</p>}
+        <p className="text-[11px] font-semibold text-gray-500 tracking-wide mb-2">CLASS COLOUR <span className="text-red-500">*</span></p>
+        {available.length === 0 ? (
+          <p className="text-sm text-gray-500 mb-4">All five classes already exist.</p>
+        ) : (
+          <div className="flex flex-wrap gap-3 mb-4">
+            {available.map((c) => (
+              <button
+                key={c.name}
+                type="button"
+                onClick={() => { setColour(c); setError(""); }}
+                className="flex flex-col items-center gap-1 active:scale-95 transition"
+              >
+                <span
+                  style={{ backgroundColor: c.hex }}
+                  className={`w-12 h-12 rounded-2xl border border-gray-300 ${
+                    colour?.name === c.name ? "ring-2 ring-offset-2 ring-orange-400 scale-105" : ""
+                  }`}
+                ></span>
+                <span className="text-[11px] text-gray-500">{c.name}</span>
+              </button>
+            ))}
+          </div>
+        )}
 
-        <p className="text-[11px] font-semibold text-gray-500 tracking-wide mt-3 mb-2">GRADE RANGE <span className="text-red-500">*</span></p>
+        <p className="text-[11px] font-semibold text-gray-500 tracking-wide mb-2">GRADE RANGE <span className="text-red-500">*</span></p>
         <div className="flex flex-wrap gap-2 mb-4">
           {GRADE_RANGES.map((g) => (
             <button
@@ -75,31 +77,17 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
           ))}
         </div>
 
-        <p className="text-[11px] font-semibold text-gray-500 tracking-wide mb-2">CLASS COLOUR</p>
-        <div className="flex flex-wrap gap-3 mb-4">
-          {CLASS_COLOURS.map((c) => (
-            <button
-              key={c.hex}
-              type="button"
-              aria-label={c.name}
-              title={c.name}
-              onClick={() => setColour(c)}
-              style={{ backgroundColor: c.hex }}
-              className={`w-12 h-12 rounded-2xl border border-gray-300 transition active:scale-95 ${
-                colour.hex === c.hex ? "ring-2 ring-offset-2 ring-orange-400 scale-105" : ""
-              }`}
-            ></button>
-          ))}
-        </div>
-
-        <div className="flex items-center gap-3 bg-orange-50 border border-orange-100 rounded-2xl px-3 py-3 mb-5">
-          <span className="text-xl">🏫</span>
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">{name.trim() || "Class Name"}</p>
-            <p className="text-xs text-orange-400">{grade}</p>
+        {colour && (
+          <div className="flex items-center gap-3 bg-orange-50 border border-orange-100 rounded-2xl px-3 py-3 mb-4">
+            <span className="text-xl">🏫</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-gray-900 truncate">{colour.name}</p>
+              <p className="text-xs text-orange-400">{grade}</p>
+            </div>
+            <span className="w-2 h-8 rounded-full border border-gray-300" style={{ backgroundColor: colour.hex }}></span>
           </div>
-          <span className="w-2 h-8 rounded-full border border-gray-300" style={{ backgroundColor: colour.hex }}></span>
-        </div>
+        )}
+        {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
 
         <div className="flex gap-3">
           <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
