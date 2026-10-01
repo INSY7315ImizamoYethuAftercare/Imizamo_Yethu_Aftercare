@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
-import AddClassSheet, { colourForClass } from "./AddClassSheet";
-import { addClass, removeClass, learnerCount, useClasses } from "./UseClasses";
+import AddClassSheet, { colourForClass, UNASSIGNED_GRADE } from "./AddClassSheet";
+import EditClassSheet from "./EditClassSheet.jsx";
+import { addClass, removeClass, updateClassGrade, learnerCount, useClasses } from "./UseClasses";
 
 function Classes({ role = "Teacher" }) {
   const navigate = useNavigate();
@@ -17,12 +18,20 @@ function Classes({ role = "Teacher" }) {
   const classes = useClasses();
   const [showAdd, setShowAdd] = useState(false);
   const [toRemove, setToRemove] = useState(null);
+  const [toEdit, setToEdit] = useState(null);
   const blockedBy = toRemove ? learnerCount(toRemove) : 0;
 
   const handleAdd = ({ name, grade }) => {
     addClass({ name, grade, teacher: "Unassigned", present: "0/0" });
     setShowAdd(false);
   };
+
+  const handleEditGrade = (grade) => {
+    updateClassGrade(toEdit.name, grade);
+    setToEdit(null);
+  };
+
+  const gradeLabel = (grade) => (grade === UNASSIGNED_GRADE ? "No grade assigned" : grade);
 
   const confirmRemove = () => {
     removeClass(toRemove.name);
@@ -80,7 +89,7 @@ function Classes({ role = "Teacher" }) {
                   ></span>
                   <div>
                     <p className="font-semibold text-gray-900">{cls.name}</p>
-                    <p className="text-xs text-gray-500">{cls.grade} • {cls.teacher}</p>
+                    <p className="text-xs text-gray-500">{gradeLabel(cls.grade)} • {cls.teacher}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
@@ -88,6 +97,16 @@ function Classes({ role = "Teacher" }) {
                     <p className="text-sm font-semibold text-gray-800">{cls.present}</p>
                     <p className="text-xs text-gray-400">present</p>
                   </div>
+                  {isManager && (
+                    <button
+                      type="button"
+                      aria-label={`Edit ${cls.name}`}
+                      onClick={(e) => { e.stopPropagation(); setToEdit(cls); }}
+                      className="w-9 h-9 flex items-center justify-center rounded-xl bg-orange-50 text-orange-500 hover:bg-orange-100 active:scale-95 transition"
+                    >
+                      ✏️
+                    </button>
+                  )}
                   {isManager && (
                     <button
                       type="button"
@@ -110,6 +129,14 @@ function Classes({ role = "Teacher" }) {
           existingNames={classes.map((c) => c.name)}
           onAdd={handleAdd}
           onClose={() => setShowAdd(false)}
+        />
+      )}
+
+      {isManager && toEdit && (
+        <EditClassSheet
+          cls={toEdit}
+          onSave={handleEditGrade}
+          onClose={() => setToEdit(null)}
         />
       )}
 

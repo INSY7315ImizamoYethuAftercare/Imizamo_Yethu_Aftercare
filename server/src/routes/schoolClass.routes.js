@@ -1,7 +1,7 @@
 import { Router } from 'express'
 import { authenticate, authorize } from '../middleware/auth.js'
 import {
-  listClasses, getClass, createClass, updateClass, deleteClass, getClassRoster,
+  listClasses, getClass, createClass, updateClass, getClassRoster, deactivateClass, activateClass
 } from '../controllers/schoolClassController.js'
 
 export const schoolClassRouter = Router()

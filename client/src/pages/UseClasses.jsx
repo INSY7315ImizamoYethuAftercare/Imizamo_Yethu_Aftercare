@@ -24,6 +24,13 @@ export function addClass(cls) {
   listeners.forEach((fn) => fn());
 }
 
+// Change which grade a class is assigned to. Use "Unassigned" for no grade.
+// Backend equivalent: PATCH /classes/:classId with { gradeRange }.
+export function updateClassGrade(name, grade) {
+  classes = classes.map((c) => (c.name === name ? { ...c, grade } : c));
+  listeners.forEach((fn) => fn());
+}
+
 export function removeClass(name) {
   classes = classes.filter((c) => c.name !== name);
   listeners.forEach((fn) => fn());
@@ -35,6 +42,30 @@ export function removeClass(name) {
 export function learnerCount(cls) {
   if (typeof cls.learner_count === "number") return cls.learner_count;
   return getLearners().filter((l) => l.group === cls.name).length;
+}
+
+// Progress-bar colours for the dashboard "Class Overview" cards.
+const BAR_STYLES = {
+  yellow: { colour: "bg-yellow-400", text: "text-yellow-600" },
+  green: { colour: "bg-green-400", text: "text-green-600" },
+  red: { colour: "bg-red-400", text: "text-red-500" },
+  blue: { colour: "bg-sky-400", text: "text-sky-500" },
+  orange: { colour: "bg-orange-400", text: "text-orange-600" },
+};
+
+// Turns the shared class list into rows for the dashboard Class Overview,
+// so every class (including Orange) shows up.
+export function classOverviewRows(list) {
+  return list.map((c) => {
+    const [done, total] = String(c.present).split("/").map(Number);
+    const style = BAR_STYLES[c.name.toLowerCase()] ?? { colour: "bg-gray-400", text: "text-gray-600" };
+    return {
+      name: c.name,
+      value: c.present,
+      width: total > 0 ? `${Math.round((done / total) * 100)}%` : "0%",
+      ...style,
+    };
+  });
 }
 
 export function useClasses() {

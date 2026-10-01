@@ -1,5 +1,6 @@
 import { useState } from "react";
 import MoreMenu from "../components/MoreMenu";
+import { useClasses } from "./UseClasses";
 
 function Attendance({ role = "Teacher" }) {
   const comingSoon = () => alert("Coming soon");
@@ -23,7 +24,10 @@ function Attendance({ role = "Teacher" }) {
     { id: 6, name: "Sipho Dlamini", grade: "Grade 5", group: "Blue", status: null },
   ]);
 
-  const classes = ["All", "Yellow", "Green", "Red", "Blue"];
+  // Tabs come from the shared class list, so every class (including Orange)
+  // shows up for both teachers and managers.
+  const classList = useClasses();
+  const classes = ["All", ...classList.map((c) => c.name)];
 
   const filtered =
     selectedClass === "All"
@@ -94,6 +98,9 @@ function Attendance({ role = "Teacher" }) {
         </div>
 
         <div className="space-y-3 mb-6">
+          {filtered.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-6">No learners in this class yet.</p>
+          )}
           {filtered.map((learner) => (
             <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 shadow-lg border border-gray-200">
               <div className="flex items-center justify-between mb-3">
