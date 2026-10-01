@@ -40,6 +40,32 @@ export async function recordAttendance(req, res, next) {
 }
 
 /**
+ * 
+ * @param {*} req 
+ * @param {*} res 
+ * @param {*} next 
+ */
+export async function updateAttendance(req, res, next) {
+  try {
+    const { status, timeIn } = req.body
+    if (!status) {
+      const err = new Error('status is required')
+      err.status = 400
+      throw err
+    }
+    const record = await attendanceService.updateAttendanceStatus({
+      userId: req.user.userId,
+      recordId: Number(req.params.recordId),
+      status,
+      timeIn,
+    })
+    res.json(record)
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
  * GET /api/attendance/class/:classId
  * Retrieves attendance for a class on a given date (defaults to today
  * if ?date= is not supplied).
