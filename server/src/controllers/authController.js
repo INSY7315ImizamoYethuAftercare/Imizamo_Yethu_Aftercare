@@ -7,7 +7,7 @@
  */
 import { AuthService } from '../services/AuthService.js'
 import UserRepository from '../repositories/UserRepository.js'
-import { pool } from '../db/pool.js'
+import { pool } from '../db/postgresql/pool.js'
 import { isProduction } from '../config/env.js'
 
 const authService = new AuthService(new UserRepository(pool))

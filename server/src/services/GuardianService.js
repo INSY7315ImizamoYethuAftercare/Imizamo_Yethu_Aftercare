@@ -8,6 +8,8 @@
  * cannot be accidentally skipped by a future method that forgets to check.
  */
 export class GuardianService {
+
+  //
   constructor({ guardianRepository, learnerRepository, attendanceRepository, observationRepository }) {
     this.guardianRepository = guardianRepository
     this.learnerRepository = learnerRepository
@@ -22,12 +24,15 @@ export class GuardianService {
    * @returns {Promise<number>} The guardian's guardian_id.
    */
   async #getGuardianId(userId) {
+
     const guardian = await this.guardianRepository.findByUserId(userId)
+
     if (!guardian) {
       const err = new Error('Only guardians can perform this action')
       err.status = 403
       throw err
     }
+
     return guardian.guardian_id
   }
 
@@ -42,14 +47,19 @@ export class GuardianService {
    * @returns {Promise<number>} The guardian's guardian_id, for reuse by the caller.
    */
   async #assertOwnsLearner(userId, learnerId) {
+
     const guardianId = await this.#getGuardianId(userId)
+
     const children = await this.learnerRepository.findByGuardianId(guardianId)
+
     const owns = children.some((child) => child.learner_id === Number(learnerId))
+
     if (!owns) {
       const err = new Error('You can only view information for your own children')
       err.status = 403
       throw err
     }
+
     return guardianId
   }
 
@@ -60,7 +70,9 @@ export class GuardianService {
    * @returns {Promise<Array<Object>>} This guardian's own children.
    */
   async getMyChildren(userId) {
+
     const guardianId = await this.#getGuardianId(userId)
+
     return this.learnerRepository.findByGuardianId(guardianId)
   }
 
@@ -69,7 +81,9 @@ export class GuardianService {
    * actually that child's guardian.
    */
   async getChildProfile({ userId, learnerId }) {
+
     await this.#assertOwnsLearner(userId, learnerId)
+
     return this.learnerRepository.findById(learnerId)
   }
 
@@ -78,7 +92,9 @@ export class GuardianService {
    * requester is actually that child's guardian.
    */
   async getChildObservations({ userId, learnerId }) {
+
     await this.#assertOwnsLearner(userId, learnerId)
+
     return this.observationRepository.findByLearnerId(learnerId)
   }
 }

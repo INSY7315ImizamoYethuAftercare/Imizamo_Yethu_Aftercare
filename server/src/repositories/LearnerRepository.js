@@ -42,6 +42,23 @@ class LearnerRepository {
   }
 
     /**
+   * Retrieves every learner across all classes, with their class name
+   * attached. Used for the manager's learner-management view.
+   *
+   * @returns {Promise<Array<Object>>} All learners, ordered by class then surname.
+   */
+  async findAll() {
+    const result = await this.pool.query(
+      `SELECT l."learner_id", l."class_id", l."first_name", l."last_name",
+              l."date_of_birth", l."can_walk_home_alone", c."class_name"
+       FROM learners l
+       JOIN school_classes c ON c."class_id" = l."class_id"
+       ORDER BY c."class_name", l."last_name", l."first_name"`,
+    );
+    return result.rows;
+  }
+
+    /**
      * Retrieves a roster of learners enrolled in a specific class, sorted
      * alphabetically by surname. Excludes dateOfBirth, since this method is
      * intended for roster/attendance views that do not require it.

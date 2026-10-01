@@ -10,6 +10,8 @@
  * learner", which is enforced on every call.
  */
 export class SignOutService {
+
+  //
   constructor({ signOutRepository, pickupPermissionRepository, teacherRepository, learnerRepository }) {
     this.signOutRepository = signOutRepository
     this.pickupPermissionRepository = pickupPermissionRepository
@@ -24,12 +26,15 @@ export class SignOutService {
    * @returns {Promise<number>} The teacher's teacher_id.
    */
   async #getTeacherId(userId) {
+
     const teacher = await this.teacherRepository.findByUserId(userId)
+
     if (!teacher) {
       const err = new Error('Only teachers can sign learners out')
       err.status = 403
       throw err
     }
+
     return teacher.teacher_id
   }
 
@@ -47,9 +52,11 @@ export class SignOutService {
    * @returns {Promise<Object>} { authorised, learnerId, guardianId, canWalkHomeAlone, message }
    */
   async verifyGuardian({ userId, learnerId, guardianId }) {
+
     await this.#getTeacherId(userId)
 
     const learner = await this.learnerRepository.findById(learnerId)
+
     if (!learner) {
       const err = new Error('Learner not found')
       err.status = 404
@@ -84,9 +91,11 @@ export class SignOutService {
    * @returns {Promise<Object>} The created sign-out record.
    */
   async confirmSignOut({ userId, learnerId, guardianId, timeOut, recordDate }) {
+
     const teacherId = await this.#getTeacherId(userId)
 
     const authorised = await this.pickupPermissionRepository.verifyGuardian(learnerId, guardianId)
+    
     if (!authorised) {
       const err = new Error('This person is not authorised to collect this learner. Escalate to the manager.')
       err.status = 403
