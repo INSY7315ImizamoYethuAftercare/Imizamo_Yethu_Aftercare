@@ -16,7 +16,7 @@ import { guardianRouter } from './routes/guardian.routes.js'
 import { schoolClassRouter } from './routes/schoolClass.routes.js'
 import { observationRouter } from './routes/observation.routes.js'
 import { learnerRouter } from './routes/learner.routes.js'
-import { teacherAccountRouter } from './routes/teacherAccount.routes.js'
+import { teacherRouter } from './routes/teacher.routes.js'
 
 
 
