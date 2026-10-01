@@ -29,15 +29,17 @@ class UserRepository {
     * @param {string} params.email - The user's email address.
     * @param {string} params.role - The user's role.
     * @param {string} params.passwordHash - The user's password hashed.
-    * @param {boolean} params.fullName - The user's full name.
+    * @param {string} params.fullName - The user's full name.
+    * @param {boolean} params.isActive - If the user's account is active or not
+    * 
     * @returns {Promise<Object>} The newly created user record.
     */
-    async createUser({ email, role, passwordHash, fullName }) {
+    async createUser({ email, role, passwordHash, fullName, isActive }) {
          const result = await this.pool.query(
-            `INSERT INTO users ("email", "role", "password_hash", "full_name")
-             VALUES ($1, $2, $3, $4)
-             RETURNING "user_id", "email", "role", "full_name"`,
-             [email, role, passwordHash, fullName]
+            `INSERT INTO users ("email", "role", "password_hash", "full_name", "is_active")
+             VALUES ($1, $2, $3, $4, $5)
+             RETURNING "user_id", "email", "role", "full_name", "is_active"`,
+             [email, role, passwordHash, fullName, isActive]
     );
         return result.rows[0];
     }

@@ -1,18 +1,38 @@
+/**
+ * GuardianService
+ *
+ * Business logic for the Parent/Guardian portal. 
+ * A guardian must only ever be able to see information about their own
+ * child or children, never another family's. Every method that returns
+ * learner-specific data routes through #assertOwnsLearner, so this rule
+ * cannot be accidentally skipped by a future method that forgets to check.
+ */
 export class GuardianService {
 
   //
-  constructor({ guardianRepository, learnerRepository, attendanceRepository, observationRepository }) {
+  constructor({ guardianRepository, learnerRepository, attendanceRepository, observationRepository, managerRepository }) {
     this.guardianRepository = guardianRepository
     this.learnerRepository = learnerRepository
     this.attendanceRepository = attendanceRepository
     this.observationRepository = observationRepository
+    this.managerRepository = managerRepository
   }
 
+async #assertIsManager(userId) {
+    const manager = await this.managerRepository.findByUserId(userId)
+    if (!manager) {
+      const err = new Error('Only managers can manage guardian accounts')
+      err.status = 403
+      throw err
+    }
+  }
+
+
   /**
-   * 
-   * @param {*} userId 
-   * 
-   * @returns 
+   * Confirms the logged-in user has a real Guardian record.
+   *
+   * @param {number} userId - The user_id from the verified JWT.
+   * @returns {Promise<number>} The guardian's guardian_id.
    */
   async #getGuardianId(userId) {
 
@@ -28,13 +48,14 @@ export class GuardianService {
   }
 
   /**
-   * Every guardian request goes through this, so a
-   * Guardian can never read data about a learner who is not their own child.
-   * 
-   * @param {*} userId 
-   * @param {*} learnerId 
-   * 
-   * @returns 
+   * Central guard for US25. Confirms the requested learner is actually
+   * one of this guardian's own children (via their pickup permissions)
+   * before any child-specific data is returned. Every guardian-facing
+   * method below calls this first.
+   *
+   * @param {number} userId
+   * @param {number} learnerId - The learner being requested.
+   * @returns {Promise<number>} The guardian's guardian_id, for reuse by the caller.
    */
   async #assertOwnsLearner(userId, learnerId) {
 
@@ -54,9 +75,10 @@ export class GuardianService {
   }
 
   /**
-   * 
-   * @param {*} userId 
-   * @returns 
+   * Lists all learners linked to the logged-in guardian.
+   *
+   * @param {number} userId
+   * @returns {Promise<Array<Object>>} This guardian's own children.
    */
   async getMyChildren(userId) {
 
@@ -66,9 +88,8 @@ export class GuardianService {
   }
 
   /**
-   * 
-   * @param {*} param0 
-   * @returns 
+   * Retrieves one child's profile, after confirming the requester is
+   * actually that child's guardian.
    */
   async getChildProfile({ userId, learnerId }) {
 
@@ -78,14 +99,28 @@ export class GuardianService {
   }
 
   /**
-   * 
-   * @param {*} param0 
-   * @returns 
+   * Retrieves one child's development observations, after confirming the
+   * requester is actually that child's guardian.
    */
   async getChildObservations({ userId, learnerId }) {
 
     await this.#assertOwnsLearner(userId, learnerId)
 
     return this.observationRepository.findByLearnerId(learnerId)
+  }
+
+  /**
+   * Activates or deactivates a guardian's account. Manager-only.
+   * Deletion is intentionally not supported.
+   */
+  async setGuardianActive({ userId, guardianId, isActive }) {
+    await this.#assertIsManager(userId)
+    const updated = await this.guardianRepository.setActive(guardianId, isActive)
+    if (!updated) {
+      const err = new Error('Guardian not found')
+      err.status = 404
+      throw err
+    }
+    return updated
   }
 }

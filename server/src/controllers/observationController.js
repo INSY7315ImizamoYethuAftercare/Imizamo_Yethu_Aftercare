@@ -49,36 +49,31 @@ export async function getLearnerObservations(req, res, next) {
 
 export async function updateObservation(req, res, next) {
   try {
-    const { learnerId, category, rating, notes } = req.body
-    if (!learnerId) {
-      const err = new Error('learnerId is required')
-      err.status = 400
-      throw err
-    }
+
+    const { category, rating, notes } = req.body
+
+    const fields = {}
+    if (category !== undefined) fields.category = category
+    if (rating !== undefined) fields.rating = rating
+    if (notes !== undefined) fields.notes = note
+
     const updated = await observationService.updateObservation({
       userId: req.user.userId,
       observationId: Number(req.params.observationId),
-      learnerId,
       fields: { category, rating, notes },
     })
     res.json(updated)
-  } catch (err) {
+  } 
+  catch (err) {
     next(err)
   }
 }
 
 export async function deleteObservation(req, res, next) {
   try {
-    const { learnerId } = req.body
-    if (!learnerId) {
-      const err = new Error('learnerId is required')
-      err.status = 400
-      throw err
-    }
     await observationService.deleteObservation({
       userId: req.user.userId,
       observationId: Number(req.params.observationId),
-      learnerId,
     })
     res.status(204).send()
   } catch (err) {

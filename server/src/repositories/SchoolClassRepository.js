@@ -14,7 +14,7 @@ class SchoolClassRepository {
    */
   async findById(classId) {
     const result = await this.pool.query(
-      `SELECT "class_id", "teacher_id", "class_name", "grade_range"
+      `SELECT "class_id", "teacher_id", "class_name", "grade_range", "is_active"
             FROM school_classes 
             WHERE "class_id" = $1`,
       [classId],
@@ -29,7 +29,7 @@ class SchoolClassRepository {
    */
   async findAll() {
     const result = await this.pool.query(
-      `SELECT "class_id", "class_name", "grade_range"
+      `SELECT "class_id", "class_name", "grade_range", "is_active"
         FROM school_classes`
     );
     return result.rows;
@@ -43,7 +43,7 @@ class SchoolClassRepository {
    */
   async findByTeacherId(teacherId) {
     const result = await this.pool.query(
-      `SELECT "class_id", "class_name", "grade_range"
+      `SELECT "class_id", "class_name", "grade_range", "is_active"
         FROM school_classes 
         WHERE "teacher_id" = $1`,
       [teacherId],
@@ -74,7 +74,7 @@ class SchoolClassRepository {
     const result = await this.pool.query(
       `INSERT INTO school_classes ("teacher_id", "class_name", "grade_range")
        VALUES ($1, $2, $3)
-       RETURNING "class_id", "teacher_id", "class_name", "grade_range"`,
+       RETURNING "class_id", "teacher_id", "class_name", "grade_range", "is_active"`,
       [teacherId, className, gradeRange],
     );
     return result.rows[0];
@@ -103,24 +103,29 @@ class SchoolClassRepository {
     const result = await this.pool.query(
       `UPDATE school_classes SET ${setClause} 
         WHERE "class_id" = $${keys.length + 1} 
-        RETURNING "class_id", "teacher_id", "class_name", "grade_range"`,
+        RETURNING "class_id", "teacher_id", "class_name", "grade_range", "is_active"`,
       [...values, classId],
     );
     return result.rows[0] || null;
   }
 
-  /**
-   * Permanently deletes a class record.
+    /**
+   * Activates or deactivates a class. Unlike Teacher/Guardian, this
+   * updates school_classes directly. There's no backing users row to
+   * join through.
    *
-   * @param {number} classId - The unique identifier of the class to delete.
-   * @returns {Promise<boolean>} True if a class was deleted, false if no matching class was found.
+   * @param {number} classId
+   * @param {boolean} isActive
+   * @returns {Promise<Object|null>} { class_id, is_active }, or null if not found.
    */
-  async delete(classId) {
+  async setActive(classId, isActive) {
     const result = await this.pool.query(
-      'DELETE FROM school_classes WHERE "class_id" = $1 RETURNING "class_id"',
-      [classId],
+      `UPDATE school_classes SET "is_active" = $2
+       WHERE "class_id" = $1
+       RETURNING "class_id", "is_active"`,
+      [classId, isActive],
     );
-    return result.rowCount > 0;
+    return result.rows[0] || null;
   }
 }
 

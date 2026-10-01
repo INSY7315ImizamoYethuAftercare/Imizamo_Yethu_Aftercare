@@ -94,14 +94,25 @@ export class SchoolClassService {
 
     await this.#assertIsManager(userId)
 
-    const teacher = await this.teacherRepository.findById(teacherId)
+    if (teacherId !== undefined && teacherId !== null) {
+      const teacher = await this.teacherRepository.findById(teacherId)
+      if (!teacher) {
+        const err = new Error('Teacher not found')
+        err.status = 404
+        throw err
+      }
+    }
 
-    if (!teacher) {
-      const err = new Error('Teacher not found')
-      err.status = 404
+    try {
+      return await this.schoolClassRepository.create({ teacherId: teacherId ?? null, className, gradeRange })
+    } catch (err) {
+      if (err.code === '23505') {
+        const conflictErr = new Error('An active class with this name already exists')
+        conflictErr.status = 409
+        throw conflictErr
+      }
       throw err
     }
-    return this.schoolClassRepository.create({ teacherId, className, gradeRange })
   }
 
   /**
@@ -126,45 +137,6 @@ export class SchoolClassService {
       throw err
     }
     return updated
-  }
-
-  /**
-   * This method deletes a school class.
-   * It enforces manager-only accesss.
-   * Returns 409 status code when learners are still enrolled in the class.
-   * 
-   * @param {Object} params - The deleted detials
-   * @param {number} params.userId - The unique identifier of the user making the delete request.
-   * @param {number} params.classId -  The unique identifier of the class which is requested to be deleted.
-   * 
-   * @returns {Promise<boolean>} - Returns true if the class was deleted successfully.
-   * 
-   * @throws {Error} 404 if no class exists with the given classId.
-   * @throws {Error} 409 if the class still has learners enrolled.
-   */
-  async deleteClass({ userId, classId }) {
-
-    await this.#assertIsManager(userId)
-
-    try {
-        const deleted = await this.schoolClassRepository.delete(classId)
-
-        if (!deleted) {
-            const err = new Error('Class not found')
-            err.status = 404
-            throw err
-        }
-        return deleted
-
-    } catch (err) {
-         if (err.code === '23503') {
-            const conflictErr = new Error('Cant delete this class - there are learners enrolled in this class')
-            conflictErr.status = 409
-            throw conflictErr
-        }
-
-        throw err
-    }
   }
 
   /** 
@@ -194,4 +166,56 @@ export class SchoolClassService {
     return this.learnerRepository.findByClassId(classId)
   }
 
+  /**
+   * Deactivates a class. Blocked if any active learners are still
+   * enrolled in it — unlike Teacher/Guardian, this is an application-level
+   * check, not a database FK constraint (deactivating a class never
+   * touches the learners table).
+   */
+  async deactivateClass({ userId, classId }) {
+
+    await this.#assertIsManager(userId)
+
+    const schoolClass = await this.schoolClassRepository.findById(classId)
+    if (!schoolClass) {
+      const err = new Error('Class not found')
+      err.status = 404
+      throw err
+    }
+
+    const activeLearnerCount = await this.learnerRepository.countActiveByClassId(classId)
+    if (activeLearnerCount > 0) {
+      const err = new Error('Cannot deactivate this class - there are active learners enrolled in it')
+      err.status = 409
+      throw err
+    }
+
+    return this.schoolClassRepository.setActive(classId, false)
+  }
+
+  /**
+   * Reactivates a class. Can fail if another active class already holds
+   * this name (uq_school_classes_active_name).
+   */
+  async activateClass({ userId, classId }) {
+
+    await this.#assertIsManager(userId)
+
+    try {
+      const updated = await this.schoolClassRepository.setActive(classId, true)
+      if (!updated) {
+        const err = new Error('Class not found')
+        err.status = 404
+        throw err
+      }
+      return updated
+    } catch (err) {
+      if (err.code === '23505') {
+        const conflictErr = new Error('Cannot reactivate this class - another active class already has this name')
+        conflictErr.status = 409
+        throw conflictErr
+      }
+      throw err
+    }
+  }
 }

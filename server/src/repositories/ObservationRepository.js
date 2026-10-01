@@ -103,5 +103,26 @@ class ObservationRepository {
     );
     return result.rowCount > 0;
   }
+
+  /**
+   * Aggregates development observations across all learners for a date
+   * range, broken down by category. Used for donor reporting.
+   *
+   * @param {string} periodStart - YYYY-MM-DD
+   * @param {string} periodEnd - YYYY-MM-DD
+   * @returns {Promise<Array<{ category: string, observation_count: string, average_rating: string }>>}
+   */
+  async getAggregateByDateRange(periodStart, periodEnd) {
+    const result = await this.pool.query(
+      `SELECT "category",
+              COUNT(*) AS observation_count,
+              AVG("rating") AS average_rating
+       FROM development_observations
+       WHERE "record_date" BETWEEN $1 AND $2
+       GROUP BY "category"`,
+      [periodStart, periodEnd],
+    )
+    return result.rows
+  }
 }
 export default ObservationRepository
