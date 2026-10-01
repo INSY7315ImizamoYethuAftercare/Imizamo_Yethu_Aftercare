@@ -1,3 +1,8 @@
+/**
+ * Guardian routes: /api/guardian/*
+ * Every route here requires an authenticated Guardian — enforced once at
+ * the router level rather than repeated per-route.
+ */
 import { Router } from 'express'
 import { authenticate, authorize } from '../middleware/auth.js'
 import { getMyChildren, getChildProfile, getChildObservations } from '../controllers/guardianController.js'

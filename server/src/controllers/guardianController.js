@@ -1,3 +1,10 @@
+/**
+ * Guardian controller
+ *
+ * Thin HTTP layer for the Parent/Guardian portal endpoints. Every method
+ * here trusts GuardianService to enforce US25 (own children only) — the
+ * controller itself does no authorisation logic.
+ */
 import { GuardianService } from '../services/GuardianService.js'
 import GuardianRepository from '../repositories/GuardianRepository.js'
 import LearnerRepository from '../repositories/LearnerRepository.js'
@@ -12,6 +19,7 @@ const guardianService = new GuardianService({
   observationRepository: new ObservationRepository(pool),
 })
 
+/** GET /api/guardian/children — lists the logged-in guardian's own children. */
 export async function getMyChildren(req, res, next) {
   try {
     const children = await guardianService.getMyChildren(req.user.userId)
@@ -21,6 +29,7 @@ export async function getMyChildren(req, res, next) {
   }
 }
 
+/** GET /api/guardian/children/:learnerId — one child's profile. */
 export async function getChildProfile(req, res, next) {
   try {
     const profile = await guardianService.getChildProfile({
@@ -32,6 +41,7 @@ export async function getChildProfile(req, res, next) {
   }
 }
 
+/** GET /api/guardian/children/:learnerId/observations — one child's development notes. */
 export async function getChildObservations(req, res, next) {
   try {
     const observations = await guardianService.getChildObservations({

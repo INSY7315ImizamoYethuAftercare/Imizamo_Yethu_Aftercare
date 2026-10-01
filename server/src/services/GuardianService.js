@@ -1,3 +1,12 @@
+/**
+ * GuardianService
+ *
+ * Business logic for the Parent/Guardian portal. Implements US25: a
+ * guardian must only ever be able to see information about their own
+ * child or children, never another family's. Every method that returns
+ * learner-specific data routes through #assertOwnsLearner, so this rule
+ * cannot be accidentally skipped by a future method that forgets to check.
+ */
 export class GuardianService {
 
   //
@@ -9,10 +18,10 @@ export class GuardianService {
   }
 
   /**
-   * 
-   * @param {*} userId 
-   * 
-   * @returns 
+   * Confirms the logged-in user has a real Guardian record.
+   *
+   * @param {number} userId - The user_id from the verified JWT.
+   * @returns {Promise<number>} The guardian's guardian_id.
    */
   async #getGuardianId(userId) {
 
@@ -28,13 +37,14 @@ export class GuardianService {
   }
 
   /**
-   * Every guardian request goes through this, so a
-   * Guardian can never read data about a learner who is not their own child.
-   * 
-   * @param {*} userId 
-   * @param {*} learnerId 
-   * 
-   * @returns 
+   * Central guard for US25. Confirms the requested learner is actually
+   * one of this guardian's own children (via their pickup permissions)
+   * before any child-specific data is returned. Every guardian-facing
+   * method below calls this first.
+   *
+   * @param {number} userId
+   * @param {number} learnerId - The learner being requested.
+   * @returns {Promise<number>} The guardian's guardian_id, for reuse by the caller.
    */
   async #assertOwnsLearner(userId, learnerId) {
 
@@ -54,9 +64,10 @@ export class GuardianService {
   }
 
   /**
-   * 
-   * @param {*} userId 
-   * @returns 
+   * Lists all learners linked to the logged-in guardian.
+   *
+   * @param {number} userId
+   * @returns {Promise<Array<Object>>} This guardian's own children.
    */
   async getMyChildren(userId) {
 
@@ -66,9 +77,8 @@ export class GuardianService {
   }
 
   /**
-   * 
-   * @param {*} param0 
-   * @returns 
+   * Retrieves one child's profile, after confirming the requester is
+   * actually that child's guardian.
    */
   async getChildProfile({ userId, learnerId }) {
 
@@ -78,9 +88,8 @@ export class GuardianService {
   }
 
   /**
-   * 
-   * @param {*} param0 
-   * @returns 
+   * Retrieves one child's development observations, after confirming the
+   * requester is actually that child's guardian.
    */
   async getChildObservations({ userId, learnerId }) {
 
