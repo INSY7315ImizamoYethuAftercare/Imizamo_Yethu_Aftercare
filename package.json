@@ -14,9 +14,5 @@
     "start:server": "npm run start --workspace server",
     "test": "npm run test --workspaces --if-present"
   },
-  "license": "UNLICENSED",
-  "dependencies": {
-    "@react-pdf/renderer": "^4.9.0",
-    "recharts": "^3.10.1"
-  }
+  "license": "UNLICENSED"
 }
