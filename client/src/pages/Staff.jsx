@@ -2,8 +2,10 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStaff, setStaffStatus } from "./UseTeachers";
 import { useClasses } from "./UseClasses";
+import { useHeader } from "./UseHeader";
 
 function Staff() {
+  const { displayName, displayRole } = useHeader();
   const navigate = useNavigate();
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const [banner, setBanner] = useState("");
@@ -29,8 +31,8 @@ function Staff() {
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
             <div>
-              <p className="text-sm font-semibold text-orange-500">Sarah Botha</p>
-              <p className="text-xs text-gray-500">Manager</p>
+              <p className="text-sm font-semibold text-orange-500">{displayName}</p>
+              <p className="text-xs text-gray-500">{displayRole}</p>
             </div>
           </div>
           <button

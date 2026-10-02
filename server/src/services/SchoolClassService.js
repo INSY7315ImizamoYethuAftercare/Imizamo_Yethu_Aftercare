@@ -71,11 +71,11 @@ export class SchoolClassService {
    * 
    * @returns {Promise<Array<Object>>} - A list of all classes
    */
-  async listClasses({ userId }) {
+  async listClasses({ userId, includeInactive = false }) {
 
     await this.#assertIsTeacherOrManager(userId)
 
-    return this.schoolClassRepository.findAll()
+    return this.schoolClassRepository.findAll({ includeInactive })
   }
 
   /**
@@ -129,7 +129,27 @@ export class SchoolClassService {
 
     await this.#assertIsManager(userId)
 
-    const updated = await this.schoolClassRepository.update(classId, fields)
+    // Assigning a teacher: make sure they exist (null just clears the assignment).
+    if (fields.teacher_id !== undefined && fields.teacher_id !== null) {
+      const teacher = await this.teacherRepository.findById(fields.teacher_id)
+      if (!teacher) {
+        const err = new Error('Teacher not found')
+        err.status = 404
+        throw err
+      }
+    }
+
+    let updated
+    try {
+      updated = await this.schoolClassRepository.update(classId, fields)
+    } catch (err) {
+      if (err.code === '23505') {
+        const conflictErr = new Error('An active class with this name already exists')
+        conflictErr.status = 409
+        throw conflictErr
+      }
+      throw err
+    }
 
     if (!updated) {
       const err = new Error('Class not found')

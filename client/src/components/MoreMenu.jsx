@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { logout } from "../services/session";
 
 function MoreMenu() {
   const navigate = useNavigate();
@@ -25,7 +26,7 @@ function MoreMenu() {
           <div className="absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-lg border border-gray-200 z-50 overflow-hidden">
             <button
               type="button"
-              onClick={() => navigate("/")}
+              onClick={async () => { await logout(); navigate("/", { replace: true }); }}
               className="w-full text-left px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50"
             >
               Log out

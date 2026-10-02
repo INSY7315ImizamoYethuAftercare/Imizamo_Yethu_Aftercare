@@ -2,12 +2,14 @@ import { LearnerService } from '../services/LearnerService.js'
 import LearnerRepository from '../repositories/LearnerRepository.js'
 import SchoolClassRepository from '../repositories/SchoolClassRepository.js'
 import ManagerRepository from '../repositories/ManagerRepository.js'
+import TeacherRepository from '../repositories/TeacherRepository.js'
 import { pool } from '../db/pool.js'
 
 const learnerService = new LearnerService({
   learnerRepository: new LearnerRepository(pool),
   schoolClassRepository: new SchoolClassRepository(pool),
   managerRepository: new ManagerRepository(pool),
+  teacherRepository: new TeacherRepository(pool),
 })
 
 export async function listLearners(req, res, next) {
@@ -22,8 +24,9 @@ export async function listLearners(req, res, next) {
 export async function createLearner(req, res, next) {
   try {
     const { classId, firstName, lastName, dateOfBirth, canWalkHomeAlone } = req.body
-    if (!classId || !firstName || !lastName || !dateOfBirth) {
-      const err = new Error('classId, firstName, lastName and dateOfBirth are required')
+    // dateOfBirth is optional: learners imported from the Hub list have none yet.
+    if (!classId || !firstName || !lastName) {
+      const err = new Error('classId, firstName and lastName are required')
       err.status = 400
       throw err
     }
@@ -39,13 +42,14 @@ export async function createLearner(req, res, next) {
 
 export async function updateLearner(req, res, next) {
   try {
-    const { firstName, lastName, dateOfBirth, canWalkHomeAlone, classId } = req.body
+    const { firstName, lastName, dateOfBirth, canWalkHomeAlone, classId, isActive } = req.body
     const fields = {}
     if (firstName !== undefined) fields.first_name = firstName
     if (lastName !== undefined) fields.last_name = lastName
     if (dateOfBirth !== undefined) fields.date_of_birth = dateOfBirth
     if (canWalkHomeAlone !== undefined) fields.can_walk_home_alone = canWalkHomeAlone
     if (classId !== undefined) fields.class_id = classId
+    if (isActive !== undefined) fields.is_active = Boolean(isActive)
 
     const updated = await learnerService.updateLearner({
       userId: req.user.userId,

@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
+import { useHeader } from "./UseHeader";
 
 function SignOut({ role = "Teacher" }) {
   const navigate = useNavigate();
   const isManager = role === "Manager";
-  const displayName = isManager ? "Sarah Botha" : "Ms Nkosi";
-  const displayRole = isManager ? "Manager" : "Teacher • Yellow";
+  const { displayName, displayRole } = useHeader();
   const comingSoon = () => alert("Coming soon");
   const shell = isManager ? "max-w-5xl mx-auto w-full" : "max-w-lg mx-auto w-full";
   const iconBtn =

@@ -22,18 +22,6 @@ class SchoolClassRepository {
     return result.rows[0] || null;
   }
 
-  /**
-   * Find all classes
-   *
-   * @returns {Promise<Array<Object>>} All the classes, or an empty array
-   */
-  async findAll() {
-    const result = await this.pool.query(
-      `SELECT "class_id", "class_name", "grade_range", "is_active"
-        FROM school_classes`
-    );
-    return result.rows;
-  }
 
   /**
    * Find all classes for a given teacher
@@ -52,6 +40,36 @@ class SchoolClassRepository {
   }
 
   /**
+   * Lists classes with everything the UI needs in one query: the teacher's
+   * name, how many learners are enrolled (all / active) and how many are
+   * marked present today (South African date).
+   *
+   * @param {Object} [options]
+   * @param {boolean} [options.includeInactive=false] - also return deactivated classes.
+   */
+  async findAll({ includeInactive = false } = {}) {
+    const result = await this.pool.query(
+      `SELECT c."class_id", c."teacher_id", c."class_name", c."grade_range", c."is_active",
+              t."full_name" AS "teacher_name",
+              (SELECT COUNT(*) FROM learners l
+                 WHERE l."class_id" = c."class_id")::int AS "learner_count",
+              (SELECT COUNT(*) FROM learners l
+                 WHERE l."class_id" = c."class_id" AND l."is_active")::int AS "active_learner_count",
+              (SELECT COUNT(*) FROM attendance_records a
+                 JOIN learners l ON l."learner_id" = a."learner_id"
+                 WHERE l."class_id" = c."class_id"
+                   AND a."status" = 'present'
+                   AND a."record_date" = (now() AT TIME ZONE 'Africa/Johannesburg')::date)::int AS "present_today"
+       FROM school_classes c
+       LEFT JOIN teachers t ON t."teacher_id" = c."teacher_id"
+       WHERE ($1::boolean OR c."is_active")
+       ORDER BY c."class_name"`,
+      [includeInactive],
+    );
+    return result.rows;
+  }
+
+  /**
    * Creates a new class record.
    *
    * @param {Object} params - The new class details.
@@ -61,14 +79,6 @@ class SchoolClassRepository {
    * @returns {Promise<Object>} The newly created class record.
    */
 
-  async findAll() {
-    const result = await this.pool.query(
-      `SELECT "class_id", "teacher_id", "class_name", "grade_range"
-       FROM school_classes
-       ORDER BY "class_name"`,
-    )
-    return result.rows
-  }
   
   async create({ teacherId, className, gradeRange }) {
     const result = await this.pool.query(
@@ -93,7 +103,7 @@ class SchoolClassRepository {
    */
   async update(classId, fields) {
     // Whitelist updatable columns so callers can't inject arbitrary column names
-    const allowed = ["class_name", "grade_range"];
+    const allowed = ["class_name", "grade_range", "teacher_id"];
     const keys = Object.keys(fields).filter((k) => allowed.includes(k));
     if (keys.length === 0) return this.findById(classId);
 

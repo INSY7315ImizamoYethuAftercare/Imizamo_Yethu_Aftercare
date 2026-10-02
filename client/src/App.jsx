@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { restoreSession, homePathFor, useSession } from "./services/session";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -144,39 +146,59 @@ function ParentBottomNav() {
   );
 }
 
+// Only lets the right kind of logged-in user through. Asks the server once
+// per page load whether the session cookie is still valid.
+function Protected({ role, children }) {
+  const { user, status } = useSession();
+  useEffect(() => {
+    restoreSession();
+  }, []);
+
+  if (status === "unknown") {
+    return (
+      <div className="min-h-screen bg-[#FFFBF5] flex items-center justify-center">
+        <p className="text-sm text-gray-400">Loading...</p>
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/" replace />;
+  if (user.role !== role) return <Navigate to={homePathFor(user.role)} replace />;
+  return children;
+}
+
 function TeacherLayout({ children }) {
   return (
-    <div>
+    <Protected role="teacher">
       {children}
       <TeacherBottomNav />
-    </div>
+    </Protected>
   );
 }
 
 function ManagerLayout({ children }) {
   return (
-    <div>
+    <Protected role="manager">
       {children}
       <ManagerBottomNav />
-    </div>
+    </Protected>
   );
 }
 
 function AdminLayout({ children }) {
   return (
-    <div>
+    <Protected role="admin">
       {children}
       <AdminBottomNav />
-    </div>
+    </Protected>
   );
 }
 
 function ParentLayout({ children }) {
   return (
-    <div>
+    <Protected role="guardian">
       {children}
       <ParentBottomNav />
-    </div>
+    </Protected>
   );
 }
 

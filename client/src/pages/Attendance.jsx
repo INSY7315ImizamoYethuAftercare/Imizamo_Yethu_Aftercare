@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
 import { useClasses } from "./UseClasses";
+import { useHeader } from "./UseHeader";
 
 function Attendance({ role = "Teacher" }) {
   const navigate = useNavigate();
@@ -11,13 +12,7 @@ function Attendance({ role = "Teacher" }) {
   const iconBtn =
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
-  const displayName =
-    role === "Admin" ? "System Admin" :
-    role === "Manager" ? "Sarah Botha" : "Ms Nkosi";
-
-  const displayRole =
-    role === "Admin" ? "Admin" :
-    role === "Manager" ? "Manager" : "Teacher • Yellow";
+  const { displayName, displayRole } = useHeader();
 
   const [selectedClass, setSelectedClass] = useState("Yellow");
   const [showSuccess, setShowSuccess] = useState(false);

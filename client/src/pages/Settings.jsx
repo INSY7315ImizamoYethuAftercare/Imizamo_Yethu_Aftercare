@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClasses } from "./UseClasses";
+import { useHeader } from "./UseHeader";
 
 function Settings({ role = "Manager" }) {
   const navigate = useNavigate();
   const isAdmin = role === "Admin";
   const homePath = isAdmin ? "/admin" : "/manager";
-  const displayName = isAdmin ? "System Admin" : "Sarah Botha";
-  const displayRole = isAdmin ? "Admin" : "Manager";
+  const { displayName, displayRole } = useHeader();
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const primary = "w-full py-3 rounded-full bg-orange-400 text-white font-semibold shadow-lg hover:bg-orange-500 active:scale-[0.98] transition";
   const input = "w-full px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md bg-white focus:outline-none focus:ring-2 focus:ring-orange-300";

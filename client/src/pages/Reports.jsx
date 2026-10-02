@@ -5,6 +5,7 @@ import TrendChart from "../components/TrendChart";
 import { exportChart } from "../utils/charts";
 import { generatePDF } from "../utils/pdf";
 import { useClasses } from "./UseClasses";
+import { useHeader } from "./UseHeader";
 
 function Reports({ role = "Manager" }) {
   const [activeTab, setActiveTab] = useState("Overview");
@@ -12,8 +13,7 @@ function Reports({ role = "Manager" }) {
   const classList = useClasses();
   const comingSoon = () => alert("Coming soon");
   const tabs = ["Overview", "Trends", "Donor Report", "Board Report"];
-  const displayName = role === "Admin" ? "System Admin" : "Sarah Botha";
-  const displayRole = role === "Admin" ? "Admin" : "Manager";
+  const { displayName, displayRole } = useHeader();
   const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const primary =

@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import { useClasses, classOverviewRows } from "./UseClasses";
+import { useHeader } from "./UseHeader";
 
 function ManagerHome() {
+  const { displayName, displayRole } = useHeader();
   const navigate = useNavigate();
   const classOverview = classOverviewRows(useClasses());
   const comingSoon = () => alert("Coming soon");
@@ -16,8 +18,8 @@ function ManagerHome() {
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Imizamo Yethu Learning Hub" className="w-9 h-9 object-contain" />
             <div>
-              <p className="text-sm font-semibold text-orange-500">Sarah Botha</p>
-              <p className="text-xs text-gray-500">Manager</p>
+              <p className="text-sm font-semibold text-orange-500">{displayName}</p>
+              <p className="text-xs text-gray-500">{displayRole}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">

@@ -3,14 +3,14 @@ import { useNavigate } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
 import AddClassSheet, { colourForClass, UNASSIGNED_GRADE } from "./AddClassSheet";
 import EditClassSheet from "./EditClassSheet.jsx";
-import { addClass, removeClass, updateClassGrade, assignTeacher, learnerCount, useClasses } from "./UseClasses";
+import { addClass, removeClass, updateClassGrade, assignTeacher, learnerCount, useClasses, useClassesLoading } from "./UseClasses";
+import { useHeader } from "./UseHeader";
 
 function Classes({ role = "Teacher" }) {
   const navigate = useNavigate();
   const comingSoon = () => alert("Coming soon");
   const isManager = role === "Manager";
-  const displayName = isManager ? "Sarah Botha" : "Ms Nkosi";
-  const displayRole = isManager ? "Manager" : "Teacher • Yellow";
+  const { displayName, displayRole } = useHeader();
   const learnersPath = isManager ? "/manager/learners" : "/learners";
   const shell = isManager ? "max-w-5xl mx-auto w-full" : "max-w-lg mx-auto w-full";
   const iconBtn =
@@ -18,6 +18,7 @@ function Classes({ role = "Teacher" }) {
 
   // Both teacher and manager see every class but only managers can add or remove them.
   const classes = useClasses();
+  const loadingClasses = useClassesLoading();
   const [showAdd, setShowAdd] = useState(false);
   const [toRemove, setToRemove] = useState(null);
   const [toEdit, setToEdit] = useState(null);
@@ -75,6 +76,10 @@ function Classes({ role = "Teacher" }) {
             </button>
           )}
         </div>
+
+        {loadingClasses && classes.length === 0 && (
+          <p className="text-sm text-gray-400 text-center py-6">Loading classes...</p>
+        )}
 
         <div className="space-y-3">
           {classes.map((cls) => {

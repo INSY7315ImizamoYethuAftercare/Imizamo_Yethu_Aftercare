@@ -83,29 +83,25 @@ export class AuthService {
 
     const user = await this.userRepository.findByEmail(email)
 
-    if (!user) {
-      const err = new Error('No account at all')
-      err.status = 401
-      throw err
-    }
-
-    const passwordMatches = await bcrypt.compare(password, user.password_hash)
-
-    if (!passwordMatches) {
+    // Same message for "no such account" and "wrong password" so the login
+    // form can't be used to find out which emails are registered.
+    const invalid = () => {
       const err = new Error('Invalid email or password')
       err.status = 401
-      return next(err)
+      return err
     }
 
-    if(!user.is_active) {
-      const err = new Error('User not active')
+    if (!user) throw invalid()
+
+    const passwordMatches = await bcrypt.compare(password, user.password_hash)
+    if (!passwordMatches) throw invalid()
+
+    // `is_active` can be undefined on older rows/mocks; only an explicit
+    // false means the account has been deactivated.
+    if (user.is_active === false) {
+      const err = new Error('This account has been deactivated')
       err.status = 403
       throw err
-    }
-    if (user.is_active === false) {
-     const err = new Error('This account has been deactivated')
-     err.status = 403
-     throw err
     }
     const token = jwt.sign(
       { userId: user.user_id, role: user.role },
