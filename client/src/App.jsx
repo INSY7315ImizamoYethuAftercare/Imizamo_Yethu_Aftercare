@@ -194,6 +194,7 @@ function App() {
         <Route path="/signout" element={<TeacherLayout><SignOut /></TeacherLayout>} />
         <Route path="/observations" element={<TeacherLayout><Observations /></TeacherLayout>} />
 
+        <Route path="/manager/observations" element={<ManagerLayout><Observations role="Manager" /></ManagerLayout>} />
         <Route path="/manager" element={<ManagerLayout><ManagerHome /></ManagerLayout>} />
         <Route path="/manager/attendance" element={<ManagerLayout><Attendance role="Manager" /></ManagerLayout>} />
         <Route path="/manager/learners" element={<ManagerLayout><Learners role="Manager" /></ManagerLayout>} />
