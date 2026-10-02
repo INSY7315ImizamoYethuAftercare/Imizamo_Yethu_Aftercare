@@ -32,17 +32,6 @@ export class AuthService {
    * Creates a new Guardian account via public self-registration, after
    * verifying the claimed learner actually exists. Staff roles must be
    * created by a Manager/Admin through their own service, not here.
-   *
-   * @param {Object} params
-   * @param {string} params.email
-   * @param {string} params.password - Plaintext, hashed before storage.
-   * @param {string} params.role - Must be 'guardian'.
-   * @param {string} params.fullName
-   * @param {string} params.contactNumber
-   * @param {string} params.relationship
-   * @param {string} params.claimedLearnerName - Used to verify a real link to an enrolled learner.
-   * @param {string} params.claimedLearnerDob
-   * @returns {Promise<Object>} The created user record.
    */
   async register({ email, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob }) {
     if (role === 'admin' || role === 'manager' || role === 'teacher') {
@@ -96,15 +85,9 @@ export class AuthService {
   /**
    * Verifies credentials and issues a session token. Rejects unknown
    * emails, wrong passwords, and deactivated accounts.
-   *
-   * @param {Object} params
-   * @param {string} params.email
-   * @param {string} params.password
-   * @returns {Promise<{ token: string, user: Object }>}
    */
   async login({ email, password }) {
     const user = await this.userRepository.findByEmail(email)
-    if (!user) {
 
     // Same message for "no such account" and "wrong password" so the login
     // form can't be used to find out which emails are registered.
@@ -114,14 +97,6 @@ export class AuthService {
       return err
     }
 
-    const passwordMatches = await bcrypt.compare(password, user.password_hash)
-    if (!passwordMatches) {
-      const err = new Error('Invalid email or password')
-      err.status = 401
-      throw err
-    }
-
-    if (!user.is_active) {
     if (!user) throw invalid()
 
     const passwordMatches = await bcrypt.compare(password, user.password_hash)
@@ -146,5 +121,3 @@ export class AuthService {
     }
   }
     }
-  }
-}
