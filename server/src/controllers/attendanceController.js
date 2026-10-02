@@ -8,30 +8,34 @@
  */
 import { AttendanceService } from '../services/AttendanceService.js'
 import AttendanceRepository from '../repositories/AttendanceRepository.js'
+import SchoolClassRepository from '../repositories/SchoolClassRepository.js'
 import TeacherRepository from '../repositories/TeacherRepository.js'
+import LearnerRepository from '../repositories/LearnerRepository.js'
 import { pool } from '../db/pool.js'
 
 const attendanceService = new AttendanceService({
   attendanceRepository: new AttendanceRepository(pool),
+  schoolClassRepository: new SchoolClassRepository(pool),
   teacherRepository: new TeacherRepository(pool),
+  learnerRepository: new LearnerRepository(pool),
 })
 
 /**
  * POST /api/attendance
- * Records a learner as present or absent. Requires an authenticated
- * Teacher account (enforced by the attendanceRouter middleware).
+ * Records a learner as present or absent, within a given class. Requires
+ * an authenticated Teacher account (enforced by attendanceRouter).
  */
 export async function recordAttendance(req, res, next) {
   try {
-    const { learnerId, status, timeIn } = req.body
-    if (!learnerId || !status) {
-      const err = new Error('learnerId and status are required')
+    const { classId, learnerId, status, timeIn } = req.body
+    if (!classId || !learnerId || !status) {
+      const err = new Error('classId, learnerId and status are required')
       err.status = 400
       throw err
     }
     const recordDate = new Date().toISOString().slice(0, 10)
     const record = await attendanceService.recordAttendance({
-      userId: req.user.userId, learnerId, status, timeIn, recordDate,
+      userId: req.user.userId, classId: Number(classId), learnerId, status, timeIn, recordDate,
     })
     res.status(201).json(record)
   } catch (err) {
@@ -40,10 +44,8 @@ export async function recordAttendance(req, res, next) {
 }
 
 /**
- * 
- * @param {*} req 
- * @param {*} res 
- * @param {*} next 
+ * PATCH /api/attendance/:recordId
+ * Updates an existing attendance record's status.
  */
 export async function updateAttendance(req, res, next) {
   try {
@@ -54,10 +56,7 @@ export async function updateAttendance(req, res, next) {
       throw err
     }
     const record = await attendanceService.updateAttendanceStatus({
-      userId: req.user.userId,
-      recordId: Number(req.params.recordId),
-      status,
-      timeIn,
+      userId: req.user.userId, recordId: Number(req.params.recordId), status, timeIn,
     })
     res.json(record)
   } catch (err) {
