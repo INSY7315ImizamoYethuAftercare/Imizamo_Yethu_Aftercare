@@ -42,6 +42,10 @@ function Observations({ role = "Teacher" }) {
   const [selectedCategory, setSelectedCategory] = useState("Academic");
   const [note, setNote] = useState("");
   const comingSoon = () => alert("Coming soon");
+  const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
+  const showSettings = role === "Manager" || role === "Admin";
+  const iconBtn =
+    "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
 
   const displayName =
@@ -113,7 +117,10 @@ function Observations({ role = "Teacher" }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
+          <button onClick={comingSoon} className={iconBtn}>🔔</button>
+          {showSettings && (
+            <button onClick={() => navigate(settingsPath)} className={iconBtn}>⚙️</button>
+          )}
           <MoreMenu />
         </div>
       </div>

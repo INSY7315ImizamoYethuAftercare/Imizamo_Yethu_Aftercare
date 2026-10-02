@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import MoreMenu from "../components/MoreMenu";
 
 function Escalations() {
   const navigate = useNavigate();
+  const comingSoon = () => alert("Coming soon");
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
+  const iconBtn =
+    "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
   const [items, setItems] = useState([
     {
@@ -70,12 +74,11 @@ function Escalations() {
               <p className="text-xs text-gray-500">Manager</p>
             </div>
           </div>
-          <button
-            onClick={() => navigate("/manager")}
-            className="px-3 py-1.5 rounded-full text-sm font-medium text-gray-600 bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition"
-          >
-            ← Home
-          </button>
+          <div className="flex items-center gap-3">
+            <button onClick={comingSoon} className={iconBtn}>🔔</button>
+            <button onClick={() => navigate("/settings")} className={iconBtn}>⚙️</button>
+            <MoreMenu />
+          </div>
         </div>
       </div>
 
