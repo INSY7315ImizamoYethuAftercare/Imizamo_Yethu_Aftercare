@@ -38,3 +38,7 @@ client/.vite/
 # --Node_modules and package-lock.json--
 node_modules/
 server/.env
+
+#Learner Data
+server/src/db/seed/learners.json
+
