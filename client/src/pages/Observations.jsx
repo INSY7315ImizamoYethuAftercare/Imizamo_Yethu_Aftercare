@@ -1,14 +1,48 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
+
+const learnerRecords = {
+  1: { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", dob: "2018-03-12" },
+  2: { id: 2, name: "Liam van der Berg", grade: "Grade 4", group: "Green", dob: "2016-09-04" },
+  3: { id: 3, name: "Zoe Ntombela", grade: "Grade 6", group: "Red", dob: "2014-01-22" },
+  4: { id: 4, name: "Keanu Abrahams", grade: "Grade 3", group: "Green", dob: "2017-11-08" },
+  5: { id: 5, name: "Amara Okoye", grade: "Grade 1", group: "Yellow", dob: "2019-06-30" },
+  6: { id: 6, name: "Sipho Dlamini", grade: "Grade 5", group: "Blue", dob: "2015-04-17" },
+};
+
+function ageFromDob(dob) {
+  if (!dob) return "—";
+  const born = new Date(dob);
+  if (Number.isNaN(born.getTime())) return "—";
+  const today = new Date();
+  let age = today.getFullYear() - born.getFullYear();
+  const hadBirthday =
+    today.getMonth() > born.getMonth() ||
+    (today.getMonth() === born.getMonth() && today.getDate() >= born.getDate());
+  if (!hadBirthday) age -= 1;
+  return age + " yrs";
+}
 
 function Observations({ role = "Teacher" }) {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("Observations");
+  const [searchParams] = useSearchParams();
+  const learnerId = searchParams.get("id") || "1";
+  const starting = learnerRecords[learnerId] || learnerRecords[1];
+
+  const [activeTab, setActiveTab] = useState("Profile");
   const [showForm, setShowForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Academic");
   const [note, setNote] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [saveError, setSaveError] = useState("");
+  const [savedBanner, setSavedBanner] = useState("");
+  const [learner, setLearner] = useState(starting);
+  const [draftName, setDraftName] = useState(starting.name);
+  const [draftDob, setDraftDob] = useState(starting.dob);
+
   const comingSoon = () => alert("Coming soon");
+  const canEdit = role === "Manager";
   const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
   const showSettings = role === "Manager" || role === "Admin";
   const iconBtn =
@@ -73,6 +107,37 @@ function Observations({ role = "Teacher" }) {
     setShowForm(false);
   };
 
+  const startEdit = () => {
+    setDraftName(learner.name);
+    setDraftDob(learner.dob);
+    setSaveError("");
+    setEditing(true);
+  };
+
+  const cancelEdit = () => {
+    setDraftName(learner.name);
+    setDraftDob(learner.dob);
+    setSaveError("");
+    setEditing(false);
+  };
+
+  const saveDetails = () => {
+    const name = draftName.trim();
+    if (!name) {
+      setSaveError("Enter the learner's name.");
+      return;
+    }
+    if (!draftDob) {
+      setSaveError("Enter the date of birth.");
+      return;
+    }
+    setLearner({ ...learner, name, dob: draftDob });
+    setSaveError("");
+    setEditing(false);
+    setSavedBanner("Learner details saved");
+    setTimeout(() => setSavedBanner(""), 2200);
+  };
+
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
@@ -97,19 +162,25 @@ function Observations({ role = "Teacher" }) {
           <button onClick={() => navigate(backPath)} className="text-sm text-gray-700 mb-2 flex items-center gap-1 font-medium active:scale-95 transition">
             ← Back
           </button>
-          <h1 className="text-xl font-bold text-gray-900">Aisha Petersen</h1>
-          <p className="text-sm text-gray-700">Grade 2 • Yellow</p>
+          <h1 className="text-xl font-bold text-gray-900">{learner.name}</h1>
+          <p className="text-sm text-gray-700">{learner.grade} • {learner.group}</p>
         </div>
       </div>
 
       <div className="flex-1 px-4 pt-4 pb-32 max-w-lg mx-auto w-full">
+        {savedBanner && (
+          <div className="mb-4 bg-green-50 border border-green-200 text-green-700 text-sm font-medium rounded-2xl px-4 py-3 text-center shadow-lg">
+            {savedBanner}
+          </div>
+        )}
+
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className={`${card} text-center`}>
             <p className="text-xl font-bold text-green-500">94%</p>
             <p className="text-xs text-gray-500">Attendance</p>
           </div>
           <div className={`${card} text-center`}>
-            <p className="text-xl font-bold text-gray-800">7 yrs</p>
+            <p className="text-xl font-bold text-gray-800">{ageFromDob(learner.dob)}</p>
             <p className="text-xs text-gray-500">Age</p>
           </div>
           <div className={`${card} text-center`}>
@@ -139,6 +210,65 @@ function Observations({ role = "Teacher" }) {
 
         {activeTab === "Profile" && (
           <div className="space-y-4">
+            <div className={card}>
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-gray-900">Learner details</h3>
+                {canEdit && !editing && (
+                  <button
+                    type="button"
+                    onClick={startEdit}
+                    className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-orange-500 border border-gray-200 shadow-lg hover:border-orange-300 active:scale-95 transition"
+                  >
+                    Edit details
+                  </button>
+                )}
+              </div>
+
+              {!editing && (
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between gap-3"><span className="text-gray-500">Name</span><span className="font-medium text-right">{learner.name}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-gray-500">Date of birth</span><span className="font-medium">{learner.dob}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-gray-500">Age</span><span className="font-medium">{ageFromDob(learner.dob)}</span></div>
+                </div>
+              )}
+
+              {editing && (
+                <div className="space-y-3">
+                  <label className="block text-sm">
+                    <span className="text-gray-500">Name</span>
+                    <input
+                      type="text"
+                      value={draftName}
+                      onChange={(e) => setDraftName(e.target.value)}
+                      className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="text-gray-500">Date of birth</span>
+                    <input
+                      type="date"
+                      value={draftDob}
+                      onChange={(e) => setDraftDob(e.target.value)}
+                      className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    />
+                  </label>
+                  {saveError && (
+                    <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-3 py-2">
+                      {saveError}
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <button type="button" onClick={cancelEdit} className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium text-sm border border-gray-200 shadow-lg">
+                      Cancel
+                    </button>
+                    <button type="button" onClick={saveDetails} className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-semibold text-sm shadow-lg">
+                      Save
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div className={card}>
               <h3 className="font-semibold text-gray-900 mb-3">Parent / Guardian</h3>
               <div className="space-y-2 text-sm">
