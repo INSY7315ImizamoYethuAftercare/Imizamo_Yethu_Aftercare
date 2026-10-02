@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
+import { useHeader } from "./UseHeader";
 
 const CLASS_THEMES = {
   Yellow: {
@@ -23,6 +24,11 @@ const CLASS_THEMES = {
     tabActive: "bg-sky-300",
     back: "bg-sky-500 border-sky-700 text-white",
   },
+  Orange: {
+    banner: "bg-orange-300",
+    tabActive: "bg-orange-300",
+    back: "bg-orange-500 border-orange-700 text-white",
+  },
 };
 
 const DEFAULT_LEARNER = { name: "Aisha Petersen", grade: "Grade 2", group: "Yellow" };
@@ -37,15 +43,13 @@ function Observations({ role = "Teacher" }) {
   const [selectedCategory, setSelectedCategory] = useState("Academic");
   const [note, setNote] = useState("");
   const comingSoon = () => alert("Coming soon");
+  const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
+  const showSettings = role === "Manager" || role === "Admin";
+  const iconBtn =
+    "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
 
-  const displayName =
-    role === "Admin" ? "System Admin" :
-    role === "Manager" ? "Sarah Botha" : "Ms Nkosi";
-
-  const displayRole =
-    role === "Admin" ? "Admin" :
-    role === "Manager" ? "Manager" : "Teacher • Yellow";
+  const { displayName, displayRole } = useHeader();
 
   const backPath =
     role === "Admin" ? "/admin/learners" :
@@ -108,7 +112,10 @@ function Observations({ role = "Teacher" }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
+          <button onClick={comingSoon} className={iconBtn}>🔔</button>
+          {showSettings && (
+            <button onClick={() => navigate(settingsPath)} className={iconBtn}>⚙️</button>
+          )}
           <MoreMenu />
         </div>
       </div>

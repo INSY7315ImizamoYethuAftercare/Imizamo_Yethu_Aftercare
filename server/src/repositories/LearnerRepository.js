@@ -34,7 +34,7 @@ class LearnerRepository {
   async findByGuardianId(guardianId) {
     const result = await this.pool.query(
       `SELECT l."learner_id", l."class_id", l."first_name", l."last_name",
-              l."date_of_birth", l."can_walk_home_alone", 1. "is_active"
+              l."date_of_birth", l."can_walk_home_alone", l."is_active"
        FROM learners l
        INNER JOIN pickup_permissions p ON p."learner_id" = l."learner_id"
        WHERE p."guardian_id" = $1`,
@@ -54,7 +54,7 @@ class LearnerRepository {
   async findAll() {
     const result = await this.pool.query(
       `SELECT l."learner_id", l."class_id", l."first_name", l."last_name",
-              l."date_of_birth", l."can_walk_home_alone", 1. "is_active", c."class_name"
+              l."date_of_birth", l."can_walk_home_alone", l."is_active", c."class_name", c."grade_range"
        FROM learners l
        JOIN school_classes c ON c."class_id" = l."class_id"
        ORDER BY c."class_name", l."last_name", l."first_name"`,
@@ -139,7 +139,7 @@ async findByFullNameAndDob(fullName, dateOfBirth) {
       `INSERT INTO learners ("class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone")
        VALUES ($1, $2, $3, $4, $5)
        RETURNING "learner_id", "class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone", "is_active"`,
-      [classId, firstName, lastName, dateOfBirth, canWalkHomeAlone]
+      [classId, firstName, lastName, dateOfBirth ?? null, canWalkHomeAlone ?? false]
     );
     return result.rows[0];
   }
