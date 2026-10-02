@@ -1,6 +1,10 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
+import { useClasses } from "./UseClasses";
+import { useLearners, useLearnersLoading, addLearner, deleteLearner, setLearnerStatus } from "./UseLearners";
+import AddLearnerSheet from "./AddLearnerSheet";
+import { useHeader } from "./UseHeader";
 
 function Learners({ role = "Teacher" }) {
   const navigate = useNavigate();
@@ -11,13 +15,7 @@ function Learners({ role = "Teacher" }) {
   const iconBtn =
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
-  const displayName =
-    role === "Admin" ? "System Admin" :
-    role === "Manager" ? "Sarah Botha" : "Ms Nkosi";
-
-  const displayRole =
-    role === "Admin" ? "Admin" :
-    role === "Manager" ? "Manager" : "Teacher • Yellow";
+  const { displayName, displayRole } = useHeader();
 
   const observationsPath =
     role === "Admin" ? "/admin/observations" :
@@ -27,16 +25,14 @@ function Learners({ role = "Teacher" }) {
   const [search, setSearch] = useState("");
   const [selectedClass, setSelectedClass] = useState(startGroup);
 
-  const learners = [
-    { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow" },
-    { id: 2, name: "Liam van der Berg", grade: "Grade 4", group: "Green" },
-    { id: 3, name: "Zoe Ntombela", grade: "Grade 6", group: "Red" },
-    { id: 4, name: "Keanu Abrahams", grade: "Grade 3", group: "Green" },
-    { id: 5, name: "Amara Okoye", grade: "Grade 1", group: "Yellow" },
-    { id: 6, name: "Sipho Dlamini", grade: "Grade 5", group: "Blue" },
-  ];
+  const learners = useLearners();
+  const loadingLearners = useLearnersLoading();
+  const isManager = role === "Manager";
+  const [showAdd, setShowAdd] = useState(false);
+  const [pending, setPending] = useState(null); // { type: "delete" | "deactivate" | "reactivate", learner }
 
-  const classes = ["All", "Yellow", "Green", "Red", "Blue"];
+  const allClasses = useClasses();
+  const classes = ["All", ...allClasses.map((c) => c.name)];
 
   const filtered = learners.filter((l) => {
     const matchesSearch = l.name.toLowerCase().includes(search.toLowerCase());
@@ -66,9 +62,19 @@ function Learners({ role = "Teacher" }) {
       </div>
 
       <div className={`flex-1 px-4 pt-5 pb-32 ${shell}`}>
-        <div className="mb-1">
-          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Learners <span>🎒</span></h1>
-          <p className="text-sm text-gray-500 mt-1">{filtered.length} learners</p>
+        <div className="mb-1 flex items-start justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Learners <span>🎒</span></h1>
+            <p className="text-sm text-gray-500 mt-1">{filtered.length} learner{filtered.length === 1 ? "" : "s"} enrolled</p>
+          </div>
+          {isManager && (
+            <button
+              onClick={() => setShowAdd(true)}
+              className="bg-orange-500 text-white text-sm font-semibold px-4 py-2.5 rounded-xl shadow-md hover:bg-orange-600 active:scale-95 transition"
+            >
+              + Add
+            </button>
+          )}
         </div>
 
         <input
@@ -95,6 +101,10 @@ function Learners({ role = "Teacher" }) {
           ))}
         </div>
 
+        {loadingLearners && learners.length === 0 && (
+          <p className="text-sm text-gray-400 text-center py-6">Loading learners...</p>
+        )}
+
         <div className="space-y-3">
           {filtered.map((learner) => (
             <button
@@ -106,11 +116,64 @@ function Learners({ role = "Teacher" }) {
                 <p className="font-semibold text-gray-900">{learner.name}</p>
                 <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
               </div>
-              <span className="text-orange-400 font-semibold">→</span>
-            </button>
-          ))}
+            );
+          })}
         </div>
       </div>
+      {isManager && showAdd && (
+        <AddLearnerSheet
+          onAdd={(l) => { addLearner(l); setShowAdd(false); }}
+          onClose={() => setShowAdd(false)}
+        />
+      )}
+
+      {isManager && pending && (() => {
+        const copy = {
+          delete: {
+            title: "Delete Learner?",
+            body: "This permanently deletes the learner. They will no longer appear on any teacher's list.",
+            button: "🗑 Delete",
+            tint: "bg-red-50 border-red-100",
+            act: () => deleteLearner(pending.learner.id),
+          },
+          deactivate: {
+            title: "Deactivate Learner?",
+            body: "The learner will still show on the teachers' list, but greyed out and unable to be opened until you reactivate them.",
+            button: "Deactivate",
+            tint: "bg-orange-50 border-orange-100",
+            act: () => setLearnerStatus(pending.learner.id, "deactivated"),
+          },
+          reactivate: {
+            title: "Reactivate Learner?",
+            body: "The learner will be accessible to teachers again.",
+            button: "Reactivate",
+            tint: "bg-orange-50 border-orange-100",
+            act: () => setLearnerStatus(pending.learner.id, "active"),
+          },
+        }[pending.type];
+        return (
+          <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setPending(null)}>
+            <div className="w-full max-w-lg bg-white rounded-t-3xl px-5 pt-3 pb-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4"></div>
+              <h2 className="text-lg font-bold text-gray-900 text-center">{copy.title}</h2>
+              <div className={`border rounded-2xl px-4 py-3 my-4 ${copy.tint}`}>
+                <p className="text-sm font-semibold text-gray-900">{pending.learner.name}</p>
+                <p className="text-xs text-gray-500">{pending.learner.grade} • {pending.learner.group}</p>
+              </div>
+              <p className="text-sm text-gray-500 text-center mb-5">{copy.body}</p>
+              <div className="flex gap-3">
+                <button onClick={() => setPending(null)} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
+                <button
+                  onClick={() => { copy.act(); setPending(null); }}
+                  className="flex-1 py-3 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md active:scale-95 transition"
+                >
+                  {copy.button}
+                </button>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }

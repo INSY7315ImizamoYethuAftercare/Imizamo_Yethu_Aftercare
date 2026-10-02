@@ -5,7 +5,7 @@
 
 import 'dotenv/config'
 
-const required = ['PORT', 'CLIENT_ORIGIN']
+const required = ['PORT', 'CLIENT_ORIGIN', 'DATABASE_URL', 'JWT_SECRET']
 
 // DATABASE_URL / JWT_SECRET are intentionally not "required" yet — they
 // don't exist until the Database & Backend and Auth tasks are built.
@@ -24,6 +24,8 @@ export const env = {
   port: Number(process.env.PORT),
   clientOrigin: process.env.CLIENT_ORIGIN,
   databaseUrl: process.env.DATABASE_URL ?? null,
+  // Azure PostgreSQL needs SSL. Set DB_SSL=true when pointing a dev machine at Azure.
+  dbSsl: process.env.DB_SSL === 'true',
   jwtSecret: process.env.JWT_SECRET ?? null,
 }
 

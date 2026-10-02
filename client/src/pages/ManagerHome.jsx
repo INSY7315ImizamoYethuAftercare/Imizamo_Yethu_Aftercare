@@ -1,7 +1,11 @@
 import { useNavigate } from "react-router-dom";
+import { useClasses, classOverviewRows } from "./UseClasses";
+import { useHeader } from "./UseHeader";
 
 function ManagerHome() {
+  const { displayName, displayRole } = useHeader();
   const navigate = useNavigate();
+  const classOverview = classOverviewRows(useClasses());
   const comingSoon = () => alert("Coming soon");
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const action =
@@ -14,8 +18,8 @@ function ManagerHome() {
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Imizamo Yethu Learning Hub" className="w-9 h-9 object-contain" />
             <div>
-              <p className="text-sm font-semibold text-orange-500">Sarah Botha</p>
-              <p className="text-xs text-gray-500">Manager</p>
+              <p className="text-sm font-semibold text-orange-500">{displayName}</p>
+              <p className="text-xs text-gray-500">{displayRole}</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -84,12 +88,7 @@ function ManagerHome() {
           <div>
             <h2 className="font-semibold text-gray-900 mb-3">Class Overview</h2>
             <div className={`${card} space-y-4`}>
-              {[
-                { name: "Yellow", value: "2/2", width: "100%", colour: "bg-yellow-400", text: "text-yellow-600" },
-                { name: "Green", value: "2/2", width: "100%", colour: "bg-green-400", text: "text-green-600" },
-                { name: "Red", value: "1/1", width: "100%", colour: "bg-red-400", text: "text-red-500" },
-                { name: "Blue", value: "0/1", width: "0%", colour: "bg-sky-400", text: "text-sky-500" },
-              ].map((cls) => (
+              {classOverview.map((cls) => (
                 <div key={cls.name}>
                   <div className="flex justify-between text-sm mb-1">
                     <span className={`font-medium ${cls.text}`}>{cls.name}</span>

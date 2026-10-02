@@ -1,6 +1,37 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
+import { useHeader } from "./UseHeader";
+
+const CLASS_THEMES = {
+  Yellow: {
+    banner: "bg-yellow-300",
+    tabActive: "bg-yellow-300",
+    back: "bg-yellow-400 border-yellow-600 text-yellow-950",
+  },
+  Green: {
+    banner: "bg-green-300",
+    tabActive: "bg-green-300",
+    back: "bg-green-500 border-green-700 text-white",
+  },
+  Red: {
+    banner: "bg-red-300",
+    tabActive: "bg-red-300",
+    back: "bg-red-400 border-red-600 text-white",
+  },
+  Blue: {
+    banner: "bg-sky-300",
+    tabActive: "bg-sky-300",
+    back: "bg-sky-500 border-sky-700 text-white",
+  },
+  Orange: {
+    banner: "bg-orange-300",
+    tabActive: "bg-orange-300",
+    back: "bg-orange-500 border-orange-700 text-white",
+  },
+};
+
+const DEFAULT_LEARNER = { name: "Aisha Petersen", grade: "Grade 2", group: "Yellow" };
 
 const learnerRecords = {
   1: { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", dob: "2018-03-12" },
@@ -31,6 +62,10 @@ function Observations({ role = "Teacher" }) {
   const starting = learnerRecords[learnerId] || learnerRecords[1];
 
   const [activeTab, setActiveTab] = useState("Profile");
+  const location = useLocation();
+  const learner = location.state?.learner || DEFAULT_LEARNER;
+  const theme = CLASS_THEMES[learner.group] || CLASS_THEMES.Yellow;
+  const [activeTab, setActiveTab] = useState("Observations");
   const [showForm, setShowForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Academic");
   const [note, setNote] = useState("");
@@ -49,13 +84,7 @@ function Observations({ role = "Teacher" }) {
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
 
-  const displayName =
-    role === "Admin" ? "System Admin" :
-    role === "Manager" ? "Sarah Botha" : "Ms Nkosi";
-
-  const displayRole =
-    role === "Admin" ? "Admin" :
-    role === "Manager" ? "Manager" : "Teacher • Yellow";
+  const { displayName, displayRole } = useHeader();
 
   const backPath =
     role === "Admin" ? "/admin/learners" :
@@ -157,9 +186,12 @@ function Observations({ role = "Teacher" }) {
         </div>
       </div>
 
-      <div className="bg-yellow-300 px-4 py-4">
-        <div className="max-w-lg mx-auto">
-          <button onClick={() => navigate(backPath)} className="text-sm text-gray-700 mb-2 flex items-center gap-1 font-medium active:scale-95 transition">
+      <div className={`${theme.banner} px-4 pt-3 pb-12`}>
+        <div className="max-w-lg mx-auto relative flex items-center justify-center min-h-[48px]">
+          <button
+            onClick={() => navigate(backPath)}
+            className={`absolute left-0 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-full border-2 text-xs font-semibold shadow-md flex items-center gap-1 active:scale-95 transition ${theme.back}`}
+          >
             ← Back
           </button>
           <h1 className="text-xl font-bold text-gray-900">{learner.name}</h1>
@@ -183,7 +215,7 @@ function Observations({ role = "Teacher" }) {
             <p className="text-xl font-bold text-gray-800">{ageFromDob(learner.dob)}</p>
             <p className="text-xs text-gray-500">Age</p>
           </div>
-          <div className={`${card} text-center`}>
+          <div>
             <p className="text-xl font-bold text-orange-500">{observations.length}</p>
             <p className="text-xs text-gray-500">Observations</p>
           </div>
@@ -194,16 +226,20 @@ function Observations({ role = "Teacher" }) {
           <span className="px-3 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full">Art</span>
         </div>
 
-        <div className="bg-white rounded-2xl p-1.5 mb-5 shadow-lg border border-gray-200 flex gap-1">
-          {["Profile", "Observations", "Attendance"].map((tab) => (
+        <div className="flex gap-2 mb-5">
+          {[
+            { label: "Profile", icon: "👤" },
+            { label: "Observations", icon: "📝" },
+            { label: "Attendance", icon: "✅" },
+          ].map(({ label, icon }) => (
             <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition active:scale-[0.97] ${
-                activeTab === tab ? "bg-yellow-300 text-gray-800 shadow-md" : "text-gray-500"
+              key={label}
+              onClick={() => setActiveTab(label)}
+              className={`flex-1 py-2.5 rounded-xl text-xs font-semibold shadow-md transition active:scale-[0.97] ${
+                activeTab === label ? `${theme.tabActive} text-gray-800` : "bg-gray-100 text-gray-500"
               }`}
             >
-              {tab}
+              <span className="mr-1">{icon}</span>{label}
             </button>
           ))}
         </div>
