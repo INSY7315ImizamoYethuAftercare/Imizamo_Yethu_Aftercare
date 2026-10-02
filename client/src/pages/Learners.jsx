@@ -106,56 +106,15 @@ function Learners({ role = "Teacher" }) {
         )}
 
         <div className="space-y-3">
-          {filtered.map((learner) => {
-            const off = learner.status === "deactivated";
-            const open = () => { if (!off) navigate(observationsPath, { state: { learner } }); };
-            return (
-              <div
-                key={learner.id}
-                role="button"
-                tabIndex={off ? -1 : 0}
-                aria-disabled={off}
-                onClick={open}
-                onKeyDown={(e) => e.key === "Enter" && open()}
-                className={`w-full rounded-2xl px-4 py-3 flex items-center justify-between border text-left transition ${
-                  off
-                    ? "bg-gray-100 border-gray-200 opacity-70 cursor-not-allowed"
-                    : "bg-white shadow-lg border-gray-200 hover:border-orange-300 active:scale-[0.98] cursor-pointer"
-                }`}
-              >
-                <div>
-                  <p className="font-semibold text-gray-900">{learner.name}</p>
-                  <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
-                  {off && (
-                    <span className="inline-block mt-1 text-[11px] font-semibold text-gray-500 bg-gray-200 rounded-full px-2 py-0.5">Deactivated</span>
-                  )}
-                </div>
-                <div className="flex items-center gap-2">
-                  {isManager && (
-                    <>
-                      <button
-                        type="button"
-                        aria-label={`${off ? "Reactivate" : "Deactivate"} ${learner.name}`}
-                        title={off ? "Reactivate" : "Deactivate"}
-                        onClick={(e) => { e.stopPropagation(); setPending({ type: off ? "reactivate" : "deactivate", learner }); }}
-                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-orange-50 text-orange-500 hover:bg-orange-100 active:scale-95 transition"
-                      >
-                        {off ? "↩" : "⏸"}
-                      </button>
-                      <button
-                        type="button"
-                        aria-label={`Delete ${learner.name}`}
-                        title="Delete"
-                        onClick={(e) => { e.stopPropagation(); setPending({ type: "delete", learner }); }}
-                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition"
-                      >
-                        🗑
-                      </button>
-                    </>
-                  )}
-                  {!off && !isManager && <span className="text-orange-400 font-semibold">→</span>}
-                  {off && !isManager && <span className="text-gray-400">🔒</span>}
-                </div>
+          {filtered.map((learner) => (
+            <button
+              key={learner.id}
+              onClick={() => navigate(`${observationsPath}?id=${learner.id}`)}
+              className="w-full bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg border border-gray-200 text-left hover:border-orange-300 active:scale-[0.98] transition"
+            >
+              <div>
+                <p className="font-semibold text-gray-900">{learner.name}</p>
+                <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
               </div>
             );
           })}
