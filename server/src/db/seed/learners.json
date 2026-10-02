@@ -1,0 +1,587 @@
+[
+ {
+  "first_name": "Anisha",
+  "last_name": "Nerwande",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Bailey",
+  "last_name": "Svondo",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Brilliant",
+  "last_name": "Gumbeze",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Carlton Tawananyasha",
+  "last_name": "Gumbeze",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Cwenga",
+  "last_name": "Tomtana",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Daengela",
+  "last_name": "Sityata",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Daniel",
+  "last_name": "Backson",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Duchess Rethabele",
+  "last_name": "Lenyatsa",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Ekho",
+  "last_name": "Mposelwa",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Emmanuel Junior",
+  "last_name": "Sikwese",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Entle",
+  "last_name": "Mshweshwe",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Jaqueline Sandra",
+  "last_name": "Banda",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Kelly Ropafadzo",
+  "last_name": "Mudonhi",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Lizzia Martin",
+  "last_name": "Muwateke",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Malcom",
+  "last_name": "Nyalugwe",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Merry",
+  "last_name": "Banda",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Mick",
+  "last_name": "Longwe",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Panashe",
+  "last_name": "Machingura",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Peace",
+  "last_name": "Banda",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Shamila",
+  "last_name": "White",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Shekina Robins",
+  "last_name": "Phiri",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Snijder",
+  "last_name": "Maliwa",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Thokozile",
+  "last_name": "Magija",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Tinenyasha",
+  "last_name": "Mandeya",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Tyra",
+  "last_name": "Manda",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Wayne Kieran",
+  "last_name": "Dube",
+  "class_name": "Blue"
+ },
+ {
+  "first_name": "Akholiwe",
+  "last_name": "Ngwane",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Enkosi",
+  "last_name": "Mkhonwana",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Erik",
+  "last_name": "Phiri",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Hugh Tinaye",
+  "last_name": "Magaya",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Iminathi",
+  "last_name": "Mpatane",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Inako",
+  "last_name": "Mkhonwana",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Jaden Tinashe",
+  "last_name": "Nyamhuno",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Lingomso Enkosi",
+  "last_name": "Kholobile",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Liyahluma",
+  "last_name": "Skali",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Luthelume Tsitsi",
+  "last_name": "Dakuse",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Nthuseng Pearl",
+  "last_name": "Shumi",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Rachel Phiri",
+  "last_name": "Mziro",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Shamiso",
+  "last_name": "Kamwendo",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Thapelo Lerato",
+  "last_name": "Mangaliso",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Thomas Niza",
+  "last_name": "Banda",
+  "class_name": "Green"
+ },
+ {
+  "first_name": "Alive Mbalenhle",
+  "last_name": "Hlongwane",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Athandwe",
+  "last_name": "Njemla",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Athenkosi Intle",
+  "last_name": "Tomtana",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Avuya",
+  "last_name": "Mposi",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Iminathi Endinako",
+  "last_name": "Centane",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Iminathi",
+  "last_name": "Mtakatana",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Innocent",
+  "last_name": "Banda",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Mesuli Ngcwalisa",
+  "last_name": "Javu",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Micheala Angel",
+  "last_name": "Navaya",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Mufaro Kimberly",
+  "last_name": "Manduntu",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Ntombikayise Diana",
+  "last_name": "Ngadya",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Onele",
+  "last_name": "Platyle",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Promise",
+  "last_name": "Phiri",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Qhawe",
+  "last_name": "Bolosha",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Rodrick",
+  "last_name": "Longwe",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Sanelinewe Namhla",
+  "last_name": "Hlongwane",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Sibongire",
+  "last_name": "Chiume",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Sibusiso Quinton",
+  "last_name": "Mavungavunga",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Thandolwam",
+  "last_name": "Njobeni",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Tinevimbo",
+  "last_name": "Chisunga",
+  "class_name": "Orange"
+ },
+ {
+  "first_name": "Aisha (Munira)",
+  "last_name": "Chitesi",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Alexander",
+  "last_name": "Mwaitana",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Amara",
+  "last_name": "Manduntu",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Benjamin",
+  "last_name": "Jere",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Blessed",
+  "last_name": "Mafume",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Bridget",
+  "last_name": "Mhone",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Bright Ramsey",
+  "last_name": "Zidana",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Charles",
+  "last_name": "Tavuyanago",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Elethu Abongiwe",
+  "last_name": "Dalingiwe",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Esmy Kanyerere",
+  "last_name": "Huwa",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Gift",
+  "last_name": "Malunga",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Gloria",
+  "last_name": "Manda",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Glory",
+  "last_name": "Masautso (Phiri)",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Josephy",
+  "last_name": "Albert Mallah",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Karen Chiratidzo",
+  "last_name": "Chigwaza",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Kimberly Kundai",
+  "last_name": "Gondo",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Kwakhanya",
+  "last_name": "Kotswana",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Luniko Somangaye",
+  "last_name": "Yekani",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Melshizedek",
+  "last_name": "Mudadigwa",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Naya",
+  "last_name": "Banda",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Nhlanhla",
+  "last_name": "Dube",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Robbin Arshley",
+  "last_name": "Kamfoso",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Ryan Tanaka",
+  "last_name": "Sauramba",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Samuel Ayomide",
+  "last_name": "Rasheed",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Santino",
+  "last_name": "Manda",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Sarah",
+  "last_name": "Mvula",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Shanice Makatendeka",
+  "last_name": "Madombwe",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Vinjero Micheal",
+  "last_name": "Phiri",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Wisdom",
+  "last_name": "Ngulube",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Yasinta",
+  "last_name": "Mpenga",
+  "class_name": "Red"
+ },
+ {
+  "first_name": "Aluve",
+  "last_name": "Boloti",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Amelia Tinevimbo",
+  "last_name": "Sauriri",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Anna Gogo",
+  "last_name": "Kalulu",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Bellarmine",
+  "last_name": "Mbizi",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Benjamin",
+  "last_name": "Botha",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Charmaine",
+  "last_name": "Molen",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Christian",
+  "last_name": "Brown",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Eric",
+  "last_name": "Ali",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Ethan",
+  "last_name": "Chirwa",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Genia",
+  "last_name": "Maonga",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Happyness",
+  "last_name": "Jamali",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Harmony Hayden",
+  "last_name": "Kachulu",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Iyathandwa Melokuhle",
+  "last_name": "Tomtana",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Joshua Frank",
+  "last_name": "Starch",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Keagan",
+  "last_name": "Kmanga",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Khanyo",
+  "last_name": "Mbina",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Kungomusa",
+  "last_name": "Nonyashe",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Kuyintando Lugcobo",
+  "last_name": "Dimaza",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Kyler",
+  "last_name": "Beni",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Lesedi Buhle",
+  "last_name": "Mangaliso",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Likuwe Ivakele",
+  "last_name": "Mitchell",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Liora",
+  "last_name": "Kapoli",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Lucwengo",
+  "last_name": "Mpetsheni",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Lukhanyo",
+  "last_name": "Tola",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Nancy",
+  "last_name": "Chiutira",
+  "class_name": "Yellow"
+ },
+ {
+  "first_name": "Sinalo",
+  "last_name": "Kaleni",
+  "class_name": "Yellow"
+ }
+]
