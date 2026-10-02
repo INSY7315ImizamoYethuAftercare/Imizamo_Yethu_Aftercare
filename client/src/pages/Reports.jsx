@@ -4,14 +4,16 @@ import WeeklyChart from "../components/WeeklyChart";
 import TrendChart from "../components/TrendChart";
 import { exportChart } from "../utils/charts";
 import { generatePDF } from "../utils/pdf";
+import { useClasses } from "./UseClasses";
+import { useHeader } from "./UseHeader";
 
 function Reports({ role = "Manager" }) {
   const [activeTab, setActiveTab] = useState("Overview");
   const navigate = useNavigate();
+  const classList = useClasses();
   const comingSoon = () => alert("Coming soon");
   const tabs = ["Overview", "Trends", "Donor Report", "Board Report"];
-  const displayName = role === "Admin" ? "System Admin" : "Sarah Botha";
-  const displayRole = role === "Admin" ? "Admin" : "Manager";
+  const { displayName, displayRole } = useHeader();
   const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const primary =
@@ -19,18 +21,25 @@ function Reports({ role = "Manager" }) {
   const iconBtn =
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
-  const classRows = [
-    { name: "Yellow", thisWeek: 97, lastWeek: 94 },
-    { name: "Green", thisWeek: 90, lastWeek: 88 },
-    { name: "Red", thisWeek: 85, lastWeek: 90 },
-    { name: "Blue", thisWeek: 97, lastWeek: 80 },
-  ];
+  // Sample weekly rates per class. Classes with no data yet (e.g. Orange,
+  // which has no learners) show a dash until real attendance is connected.
+  const sampleWeekly = {
+    Yellow: { thisWeek: 97, lastWeek: 94 },
+    Green: { thisWeek: 90, lastWeek: 88 },
+    Red: { thisWeek: 85, lastWeek: 90 },
+    Blue: { thisWeek: 97, lastWeek: 80 },
+  };
+  const classRows = classList.map((c) => ({
+    name: c.name,
+    ...(sampleWeekly[c.name] ?? { thisWeek: null, lastWeek: null }),
+  }));
+  const pct = (n) => (n === null ? "–" : n + "%");
 
   const overviewRows = [
     { label: "Total learners", value: "6" },
     { label: "Organisation attendance", value: "92%" },
     { label: "Observations", value: "8" },
-    { label: "Class groups", value: "4" },
+    { label: "Class groups", value: String(classList.length) },
   ];
 
   const donorRows = [
@@ -62,7 +71,7 @@ function Reports({ role = "Manager" }) {
       period: "This week vs last week",
       rows: classRows.map((c) => ({
         label: c.name,
-        value: c.thisWeek + "% this week / " + c.lastWeek + "% last week",
+        value: c.thisWeek === null ? "No data yet" : c.thisWeek + "% this week / " + c.lastWeek + "% last week",
       })),
     });
 
@@ -175,8 +184,8 @@ function Reports({ role = "Manager" }) {
                     {classRows.map((cls) => (
                       <tr key={cls.name} className="border-b border-gray-50">
                         <td className="py-2 font-medium">{cls.name}</td>
-                        <td className="py-2">{cls.thisWeek}%</td>
-                        <td className="py-2">{cls.lastWeek}%</td>
+                        <td className="py-2">{pct(cls.thisWeek)}</td>
+                        <td className="py-2">{pct(cls.lastWeek)}</td>
                       </tr>
                     ))}
                   </tbody>

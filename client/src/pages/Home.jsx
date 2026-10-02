@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
+import { useHeader } from "./UseHeader";
 
 function Home() {
+  const { displayName, displayRole } = useHeader();
   const navigate = useNavigate();
   const comingSoon = () => alert("Coming soon");
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
@@ -14,8 +16,8 @@ function Home() {
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Imizamo Yethu Learning Hub" className="w-9 h-9 object-contain" />
           <div>
-            <p className="text-sm font-semibold text-orange-500">Ms Nkosi</p>
-            <p className="text-xs text-gray-500">Teacher • Yellow</p>
+            <p className="text-sm font-semibold text-orange-500">{displayName}</p>
+            <p className="text-xs text-gray-500">{displayRole}</p>
           </div>
         </div>
         <div className="flex items-center gap-3">

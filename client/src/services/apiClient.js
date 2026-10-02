@@ -14,6 +14,14 @@ class ApiError extends Error {
   }
 }
 
+// Set by services/session.js so an expired login sends the user back to the
+// sign-in page from anywhere in the app. Not called for /auth/* requests
+// (a failed login is a normal 401, not an expired session).
+let unauthorizedHandler = null
+export function setUnauthorizedHandler(fn) {
+  unauthorizedHandler = fn
+}
+
 async function request(path, { method = 'GET', body, headers = {} } = {}) {
   const response = await fetch(`${BASE_URL}${path}`, {
     method,
@@ -29,6 +37,7 @@ async function request(path, { method = 'GET', body, headers = {} } = {}) {
   const data = isJson ? await response.json() : null
 
   if (!response.ok) {
+    if (response.status === 401 && !path.startsWith('/auth/')) unauthorizedHandler?.()
     throw new ApiError(data?.message ?? response.statusText, response.status, data)
   }
 

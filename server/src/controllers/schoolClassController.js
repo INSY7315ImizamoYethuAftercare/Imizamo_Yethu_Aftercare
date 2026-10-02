@@ -14,7 +14,10 @@ const schoolClassService = new SchoolClassService({
 
 export async function listClasses(req, res, next) {
   try {
-    const classes = await schoolClassService.listClasses({ userId: req.user.userId })
+    const classes = await schoolClassService.listClasses({
+      userId: req.user.userId,
+      includeInactive: req.query.includeInactive === 'true',
+    })
     res.json(classes)
   } catch (err) {
     next(err)

@@ -2,8 +2,9 @@ import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
 import { useClasses } from "./UseClasses";
-import { useLearners, addLearner, deleteLearner, setLearnerStatus } from "./UseLearners";
+import { useLearners, useLearnersLoading, addLearner, deleteLearner, setLearnerStatus } from "./UseLearners";
 import AddLearnerSheet from "./AddLearnerSheet";
+import { useHeader } from "./UseHeader";
 
 function Learners({ role = "Teacher" }) {
   const navigate = useNavigate();
@@ -14,13 +15,7 @@ function Learners({ role = "Teacher" }) {
   const iconBtn =
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
-  const displayName =
-    role === "Admin" ? "System Admin" :
-    role === "Manager" ? "Sarah Botha" : "Ms Nkosi";
-
-  const displayRole =
-    role === "Admin" ? "Admin" :
-    role === "Manager" ? "Manager" : "Teacher • Yellow";
+  const { displayName, displayRole } = useHeader();
 
   const observationsPath =
     role === "Admin" ? "/admin/observations" :
@@ -31,6 +26,7 @@ function Learners({ role = "Teacher" }) {
   const [selectedClass, setSelectedClass] = useState(startGroup);
 
   const learners = useLearners();
+  const loadingLearners = useLearnersLoading();
   const isManager = role === "Manager";
   const [showAdd, setShowAdd] = useState(false);
   const [pending, setPending] = useState(null); // { type: "delete" | "deactivate" | "reactivate", learner }
@@ -104,6 +100,10 @@ function Learners({ role = "Teacher" }) {
             </button>
           ))}
         </div>
+
+        {loadingLearners && learners.length === 0 && (
+          <p className="text-sm text-gray-400 text-center py-6">Loading learners...</p>
+        )}
 
         <div className="space-y-3">
           {filtered.map((learner) => {

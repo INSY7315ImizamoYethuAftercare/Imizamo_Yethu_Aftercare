@@ -105,9 +105,13 @@ export class AuthService {
   async login({ email, password }) {
     const user = await this.userRepository.findByEmail(email)
     if (!user) {
+
+    // Same message for "no such account" and "wrong password" so the login
+    // form can't be used to find out which emails are registered.
+    const invalid = () => {
       const err = new Error('Invalid email or password')
       err.status = 401
-      throw err
+      return err
     }
 
     const passwordMatches = await bcrypt.compare(password, user.password_hash)
@@ -118,6 +122,14 @@ export class AuthService {
     }
 
     if (!user.is_active) {
+    if (!user) throw invalid()
+
+    const passwordMatches = await bcrypt.compare(password, user.password_hash)
+    if (!passwordMatches) throw invalid()
+
+    // `is_active` can be undefined on older rows/mocks; only an explicit
+    // false means the account has been deactivated.
+    if (user.is_active === false) {
       const err = new Error('This account has been deactivated')
       err.status = 403
       throw err
@@ -131,6 +143,8 @@ export class AuthService {
     return {
       token,
       user: { userId: user.user_id, email: user.email, role: user.role, fullName: user.full_name },
+    }
+  }
     }
   }
 }

@@ -1,8 +1,9 @@
 export class LearnerService {
-  constructor({ learnerRepository, schoolClassRepository, managerRepository }) {
+  constructor({ learnerRepository, schoolClassRepository, managerRepository, teacherRepository }) {
     this.learnerRepository = learnerRepository;
     this.schoolClassRepository = schoolClassRepository;
     this.managerRepository = managerRepository;
+    this.teacherRepository = teacherRepository;
   }
 
   /**
@@ -28,7 +29,14 @@ export class LearnerService {
    * @returns
    */
   async listLearners({ userId }) {
-    await this.#assertIsManager(userId);
+    // Read-only: teachers and managers can both see every learner.
+    const manager = await this.managerRepository.findByUserId(userId);
+    const teacher = manager ? null : await this.teacherRepository?.findByUserId(userId);
+    if (!manager && !teacher) {
+      const err = new Error("Only teachers and managers can view learners");
+      err.status = 403;
+      throw err;
+    }
 
     return this.learnerRepository.findAll();
   }
