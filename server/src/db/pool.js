@@ -21,7 +21,9 @@ export const pool = new Pool({
   // Azure Database for PostgreSQL enforces SSL by default (Security doc,
   // Network Security section). Local dev Postgres doesn't use SSL, so
   // this is only switched on in production.
-  ssl: isProduction ? { rejectUnauthorized: false } : false,
+  // Also switchable with DB_SSL=true so you can run the API locally against Azure
+  // without NODE_ENV=production (which turns on secure-only cookies).
+  ssl: isProduction || env.dbSsl ? { rejectUnauthorized: false } : false,
 })
 
 // Surfaces connection-level errors (e.g. the DB restarting) on the pool's

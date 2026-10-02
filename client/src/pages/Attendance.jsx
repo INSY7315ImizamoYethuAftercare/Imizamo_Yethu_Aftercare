@@ -1,16 +1,18 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
+import { useClasses } from "./UseClasses";
+import { useHeader } from "./UseHeader";
 
 function Attendance({ role = "Teacher" }) {
+  const navigate = useNavigate();
   const comingSoon = () => alert("Coming soon");
+  const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
+  const showSettings = role === "Manager" || role === "Admin";
+  const iconBtn =
+    "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
-  const displayName =
-    role === "Admin" ? "System Admin" :
-    role === "Manager" ? "Sarah Botha" : "Ms Nkosi";
-
-  const displayRole =
-    role === "Admin" ? "Admin" :
-    role === "Manager" ? "Manager" : "Teacher • Yellow";
+  const { displayName, displayRole } = useHeader();
 
   const [selectedClass, setSelectedClass] = useState("Yellow");
   const [showSuccess, setShowSuccess] = useState(false);
@@ -23,7 +25,10 @@ function Attendance({ role = "Teacher" }) {
     { id: 6, name: "Sipho Dlamini", grade: "Grade 5", group: "Blue", status: null },
   ]);
 
-  const classes = ["All", "Yellow", "Green", "Red", "Blue"];
+  // Tabs come from the shared class list, so every class (including Orange)
+  // shows up for both teachers and managers.
+  const classList = useClasses();
+  const classes = ["All", ...classList.map((c) => c.name)];
 
   const filtered =
     selectedClass === "All"
@@ -55,7 +60,10 @@ function Attendance({ role = "Teacher" }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
+          <button onClick={comingSoon} className={iconBtn}>🔔</button>
+          {showSettings && (
+            <button onClick={() => navigate(settingsPath)} className={iconBtn}>⚙️</button>
+          )}
           <MoreMenu />
         </div>
       </div>
@@ -94,6 +102,9 @@ function Attendance({ role = "Teacher" }) {
         </div>
 
         <div className="space-y-3 mb-6">
+          {filtered.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-6">No learners in this class yet.</p>
+          )}
           {filtered.map((learner) => (
             <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 shadow-lg border border-gray-200">
               <div className="flex items-center justify-between mb-3">

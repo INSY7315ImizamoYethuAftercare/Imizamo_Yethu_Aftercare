@@ -20,9 +20,9 @@ export async function listTeachers(req, res, next) {
 
 export async function createTeacher(req, res, next) {
   try {
-    const { email, password, fullName } = req.body
-    if (!email || !password || !fullName || !contactEmail) {
-      const err = new Error('email, password and fullName and contactEmail are required')
+    const { email, password, fullName, contactEmail = email } = req.body
+    if (!email || !password || !fullName) {
+      const err = new Error('email, password and fullName are required')
       err.status = 400
       throw err
     }

@@ -23,6 +23,22 @@ class UserRepository {
     }
 
     /**
+     * Retrieves a user's profile by their unique identifier (no password hash).
+     *
+     * @param {number} userId - The unique identifier of the user.
+     * @returns {Promise<Object|null>} The user, or null if none exists.
+     */
+    async findById(userId) {
+        const result = await this.pool.query(
+            `SELECT "user_id", "email", "role", "full_name", "is_active"
+            FROM users
+            WHERE "user_id" = $1`,
+            [userId]
+        );
+        return result.rows[0] || null;
+    }
+
+    /**
     * Creates a new user record and adds their respective role
     * 
     * @param {Object} params - The new user's details.
