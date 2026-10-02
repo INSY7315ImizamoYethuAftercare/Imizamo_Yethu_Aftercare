@@ -6,7 +6,7 @@
  * logic, and translates the result (or thrown error) into an HTTP
  * response. No business rules live here — see AttendanceService.js.
  */
-import { AttendanceService } from '../services/AttendanceService.js'
+import { AttendanceService, todayInSA } from '../services/AttendanceService.js'
 import AttendanceRepository from '../repositories/AttendanceRepository.js'
 import SchoolClassRepository from '../repositories/SchoolClassRepository.js'
 import TeacherRepository from '../repositories/TeacherRepository.js'
@@ -17,6 +17,7 @@ const attendanceService = new AttendanceService({
   attendanceRepository: new AttendanceRepository(pool),
   schoolClassRepository: new SchoolClassRepository(pool),
   teacherRepository: new TeacherRepository(pool),
+  schoolClassRepository: new SchoolClassRepository(pool),
   learnerRepository: new LearnerRepository(pool),
 })
 
@@ -27,15 +28,19 @@ const attendanceService = new AttendanceService({
  */
 export async function recordAttendance(req, res, next) {
   try {
-    const { classId, learnerId, status, timeIn } = req.body
-    if (!classId || !learnerId || !status) {
-      const err = new Error('classId, learnerId and status are required')
+    const { learnerId, classId, status, timeIn } = req.body
+    if (!learnerId || !status) {
+      const err = new Error('learnerId and status are required')
       err.status = 400
       throw err
     }
-    const recordDate = new Date().toISOString().slice(0, 10)
     const record = await attendanceService.recordAttendance({
-      userId: req.user.userId, classId: Number(classId), learnerId, status, timeIn, recordDate,
+      userId: req.user.userId,
+      learnerId: Number(learnerId),
+      classId: classId ? Number(classId) : undefined,
+      status,
+      timeIn,
+      recordDate: todayInSA(),
     })
     res.status(201).json(record)
   } catch (err) {
@@ -72,9 +77,9 @@ export async function updateAttendance(req, res, next) {
 export async function getClassAttendance(req, res, next) {
   try {
     const { classId } = req.params
-    const date = req.query.date || new Date().toISOString().slice(0, 10)
+    const date = req.query.date || todayInSA()
     const records = await attendanceService.getClassAttendance({
-      userId: req.user.userId, classId: Number(classId), date,
+      userId: req.user.userId, role: req.user.role, classId: Number(classId), date,
     })
     res.json(records)
   } catch (err) {

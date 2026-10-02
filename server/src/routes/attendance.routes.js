@@ -1,7 +1,8 @@
 /**
  * Attendance routes: /api/attendance/*
- * Every route here requires an authenticated Teacher — enforced once at
- * the router level rather than repeated per-route.
+ * Everything requires a login. Recording and correcting attendance is
+ * teacher-only; viewing a class's attendance is open to teachers and managers
+ * (managers are read-only).
  */
 import { Router } from 'express'
 import { authenticate, authorize } from '../middleware/auth.js'
@@ -9,7 +10,7 @@ import { recordAttendance, getClassAttendance, updateAttendance } from '../contr
 
 export const attendanceRouter = Router()
 
-attendanceRouter.use(authenticate, authorize('teacher'))
-attendanceRouter.post('/', recordAttendance)
-attendanceRouter.get('/class/:classId', getClassAttendance)
-attendanceRouter.patch('/:recordId', updateAttendance)
+attendanceRouter.use(authenticate)
+attendanceRouter.post('/', authorize('teacher'), recordAttendance)
+attendanceRouter.get('/class/:classId', authorize('teacher', 'manager'), getClassAttendance)
+attendanceRouter.patch('/:recordId', authorize('teacher'), updateAttendance)

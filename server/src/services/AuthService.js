@@ -145,4 +145,6 @@ export class AuthService {
       user: { userId: user.user_id, email: user.email, role: user.role, fullName: user.full_name },
     }
   }
+    }
+  }
 }
