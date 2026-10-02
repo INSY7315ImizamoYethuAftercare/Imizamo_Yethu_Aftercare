@@ -13,8 +13,10 @@ import PickupPermissionRepository from '../repositories/PickupPermissionReposito
 import { pool } from '../db/pool.js'
 import { isProduction } from '../config/env.js'
 
+const userRepository = new UserRepository(pool)
+
 const authService = new AuthService({
-  userRepository: new UserRepository(pool),
+  userRepository,
   guardianRepository: new GuardianRepository(pool),
   learnerRepository: new LearnerRepository(pool),
   pickupPermissionRepository: new PickupPermissionRepository(pool),
@@ -79,7 +81,21 @@ export function logout(req, res) {
   res.json({ message: 'Logged out successfully' })
 }
 
-/** GET /api/auth/me - returns the identity of whoever the session cookie belongs to. */
-export function me(req, res) {
-  res.json({ user: req.user })
+/**
+ * GET /api/auth/me - returns the profile of whoever the session cookie belongs to.
+ * The frontend calls this on page load to restore the session after a refresh.
+ */
+export async function me(req, res, next) {
+  try {
+    const user = await userRepository.findById(req.user.userId)
+    if (!user || user.is_active === false) {
+      res.clearCookie('token', cookieOptions)
+      const err = new Error('Session is no longer valid')
+      err.status = 401
+      throw err
+    }
+    res.json({ user: { userId: user.user_id, email: user.email, role: user.role, fullName: user.full_name } })
+  } catch (err) {
+    next(err)
+  }
 }

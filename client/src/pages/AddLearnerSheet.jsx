@@ -10,22 +10,18 @@ function AddLearnerSheet({ onAdd, onClose }) {
   const classes = useClasses();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [grade, setGrade] = useState("Grade 1");
-  const [group, setGroup] = useState(classes[0]?.name ?? "");
-  const [parentName, setParentName] = useState("");
-  const [parentPhone, setParentPhone] = useState("");
-  const [parentEmail, setParentEmail] = useState("");
+  const [classId, setClassId] = useState(classes[0]?.id ?? "");
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [error, setError] = useState("");
 
   const submit = () => {
     if (!firstName.trim() || !lastName.trim()) return setError("Please enter the learner's first and last name.");
-    if (!group) return setError("Please pick a class.");
-    if (!parentName.trim()) return setError("Please enter the parent or guardian's name.");
+    if (!classId) return setError("Please pick a class.");
     onAdd({
-      name: `${firstName.trim()} ${lastName.trim()}`,
-      grade,
-      group,
-      parent: { name: parentName.trim(), phone: parentPhone.trim(), email: parentEmail.trim() },
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      classId: Number(classId),
+      dateOfBirth,
     });
   };
 
@@ -50,26 +46,16 @@ function AddLearnerSheet({ onAdd, onClose }) {
           </div>
         </div>
 
-        <label className={label}>GRADE <span className="text-red-500">*</span></label>
-        <select value={grade} onChange={(e) => setGrade(e.target.value)} className={field}>
-          {GRADES.map((g) => <option key={g} value={g}>{g}</option>)}
+        <label className={label}>CLASS <span className="text-red-500">*</span></label>
+        <select value={classId} onChange={(e) => setClassId(e.target.value)} className={field}>
+          {classes.map((c) => <option key={c.id} value={c.id}>{c.name} ({c.grade})</option>)}
         </select>
 
-        <label className={label}>CLASS</label>
-        <select value={group} onChange={(e) => setGroup(e.target.value)} className={field}>
-          {classes.map((c) => <option key={c.name} value={c.name}>{c.name} ({c.grade})</option>)}
-        </select>
-
-        <p className="text-[11px] font-semibold text-gray-400 tracking-wide mt-1 mb-2">PARENT / GUARDIAN</p>
-
-        <label className={label}>PARENT NAME <span className="text-red-500">*</span></label>
-        <input value={parentName} onChange={(e) => { setParentName(e.target.value); setError(""); }} placeholder="e.g. Fatima Petersen" className={field} />
-
-        <label className={label}>PARENT PHONE</label>
-        <input value={parentPhone} onChange={(e) => setParentPhone(e.target.value)} placeholder="e.g. 072 345 6789" inputMode="tel" className={field} />
-
-        <label className={label}>PARENT EMAIL</label>
-        <input value={parentEmail} onChange={(e) => setParentEmail(e.target.value)} placeholder="e.g. parent@gmail.com" inputMode="email" className={field} />
+        <label className={label}>DATE OF BIRTH (optional)</label>
+        <input type="date" value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className={field} />
+        <p className="text-[11px] text-gray-400 -mt-2 mb-3">
+          Parents link to a learner through their name and date of birth, so add it when you have it.
+        </p>
 
         {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
 

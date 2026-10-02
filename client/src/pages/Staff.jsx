@@ -1,28 +1,27 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useStaff, setStaffStatus } from "./UseTeachers";
+import { useClasses } from "./UseClasses";
+import { useHeader } from "./UseHeader";
 
 function Staff() {
+  const { displayName, displayRole } = useHeader();
   const navigate = useNavigate();
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const [banner, setBanner] = useState("");
-  const [staff, setStaff] = useState([
-    { id: 1, name: "Ms Nkosi", role: "Teacher", group: "Yellow", status: "Active" },
-    { id: 2, name: "Mr Dlamini", role: "Teacher", group: "Green", status: "Active" },
-    { id: 3, name: "Ms Williams", role: "Teacher", group: "Red", status: "Active" },
-    { id: 4, name: "Mr Naidoo", role: "Teacher", group: "Blue", status: "Active" },
-    { id: 5, name: "Sarah Botha", role: "Manager", group: "All classes", status: "Active" },
-  ]);
+  const staff = useStaff();
+  const classes = useClasses();
 
-  const toggle = (id) => {
-    setStaff((prev) =>
-      prev.map((s) => {
-        if (s.id !== id) return s;
-        const next = s.status === "Active" ? "Suspended" : "Active";
-        setBanner(s.name + " is now " + next.toLowerCase());
-        setTimeout(() => setBanner(""), 2200);
-        return { ...s, status: next };
-      })
-    );
+  // A teacher's class comes from the Classes page, so assigning a teacher
+  // there shows up here too.
+  const groupFor = (person) =>
+    person.role === "Manager" ? "All classes" : classes.find((c) => c.teacher === person.name)?.name ?? "No class";
+
+  const toggle = (person) => {
+    const next = person.status === "Active" ? "Suspended" : "Active";
+    setStaffStatus(person.id, next);
+    setBanner(person.name + " is now " + next.toLowerCase());
+    setTimeout(() => setBanner(""), 2200);
   };
 
   return (
@@ -32,8 +31,8 @@ function Staff() {
           <div className="flex items-center gap-2">
             <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
             <div>
-              <p className="text-sm font-semibold text-orange-500">Sarah Botha</p>
-              <p className="text-xs text-gray-500">Manager</p>
+              <p className="text-sm font-semibold text-orange-500">{displayName}</p>
+              <p className="text-xs text-gray-500">{displayRole}</p>
             </div>
           </div>
           <button
@@ -74,7 +73,7 @@ function Staff() {
             >
               <div>
                 <p className="font-semibold text-gray-900">{person.name}</p>
-                <p className="text-xs text-gray-500">{person.role} • {person.group}</p>
+                <p className="text-xs text-gray-500">{person.role} • {groupFor(person)}</p>
               </div>
               <div className="flex items-center gap-2">
                 <span
@@ -86,7 +85,7 @@ function Staff() {
                 </span>
                 {person.role !== "Manager" && (
                   <button
-                    onClick={() => toggle(person.id)}
+                    onClick={() => toggle(person)}
                     className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-200 shadow-lg hover:border-orange-300 hover:shadow-xl active:scale-95 transition"
                   >
                     {person.status === "Active" ? "Suspend" : "Restore"}

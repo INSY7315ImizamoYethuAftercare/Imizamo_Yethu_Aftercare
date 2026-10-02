@@ -6,8 +6,9 @@ import {
 
 export const learnerRouter = Router()
 
-learnerRouter.use(authenticate, authorize('manager'))
-learnerRouter.get('/', listLearners)
-learnerRouter.post('/', createLearner)
-learnerRouter.patch('/:learnerId', updateLearner)
-learnerRouter.delete('/:learnerId', deleteLearner)
+learnerRouter.use(authenticate)
+// Read-only list: teachers and managers. Everything that changes data is manager-only.
+learnerRouter.get('/', authorize('manager', 'teacher'), listLearners)
+learnerRouter.post('/', authorize('manager'), createLearner)
+learnerRouter.patch('/:learnerId', authorize('manager'), updateLearner)
+learnerRouter.delete('/:learnerId', authorize('manager'), deleteLearner)

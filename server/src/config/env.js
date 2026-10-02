@@ -24,6 +24,8 @@ export const env = {
   port: Number(process.env.PORT),
   clientOrigin: process.env.CLIENT_ORIGIN,
   databaseUrl: process.env.DATABASE_URL ?? null,
+  // Azure PostgreSQL needs SSL. Set DB_SSL=true when pointing a dev machine at Azure.
+  dbSsl: process.env.DB_SSL === 'true',
   jwtSecret: process.env.JWT_SECRET ?? null,
 }
 
