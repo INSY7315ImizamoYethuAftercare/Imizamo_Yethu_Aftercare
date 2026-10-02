@@ -13,6 +13,16 @@ const apply = process.argv.includes('--apply')
 const file = path.join(path.dirname(fileURLToPath(import.meta.url)), 'seed', 'learners.json')
 const learners = JSON.parse(readFileSync(file, 'utf8'))
 
+const dobPattern = /^\d{4}-\d{2}-\d{2}$/
+const badDob = learners.filter((l) => !dobPattern.test(l.date_of_birth ?? ''))
+if (badDob.length > 0) {
+  console.error(
+    `${badDob.length} learner(s) missing a valid date_of_birth ("YYYY-MM-DD"):`,
+    badDob.map((l) => `${l.first_name} ${l.last_name}`).join(', '),
+  )
+  process.exit(1)
+}
+
 const counts = learners.reduce((m, l) => ((m[l.class_name] = (m[l.class_name] ?? 0) + 1), m), {})
 console.log(`Loaded ${learners.length} learners:`, counts)
 
@@ -22,6 +32,15 @@ if (!apply) {
 }
 
 const { pool } = await import('./pool.js')
+
+const targetsAzure = /azure\.com/i.test(process.env.DATABASE_URL ?? '')
+if (targetsAzure && process.env.CONFIRM_PRODUCTION !== 'yes') {
+  console.error(
+    'DATABASE_URL points at Azure. Re-run with CONFIRM_PRODUCTION=yes to confirm you mean to write to it.',
+  )
+  process.exit(1)
+}
+
 const client = await pool.connect()
 try {
   const { rows: classes } = await client.query(
@@ -39,14 +58,14 @@ try {
     const cid = classId.get(l.class_name.toLowerCase())
     const res = await client.query(
       `INSERT INTO learners (class_id, first_name, last_name, date_of_birth)
-       SELECT $1::int, $2::varchar, $3::varchar, NULL
+       SELECT $1::int, $2::varchar, $3::varchar, $4::date
        WHERE NOT EXISTS (
          SELECT 1 FROM learners
          WHERE class_id = $1::int
            AND LOWER(first_name) = LOWER($2::varchar)
            AND LOWER(last_name) = LOWER($3::varchar)
        )`,
-      [cid, l.first_name, l.last_name],
+      [cid, l.first_name, l.last_name, l.date_of_birth],
     )
     inserted += res.rowCount
   }
@@ -60,3 +79,4 @@ try {
   client.release()
   await pool.end()
 }
+
