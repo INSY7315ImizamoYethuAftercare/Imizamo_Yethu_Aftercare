@@ -1,7 +1,9 @@
 import { useNavigate } from "react-router-dom";
+import { useClasses, classOverviewRows } from "./UseClasses";
 
 function AdminHome() {
   const navigate = useNavigate();
+  const classOverview = classOverviewRows(useClasses());
   const comingSoon = () => alert("Coming soon");
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const action =
@@ -80,12 +82,7 @@ function AdminHome() {
 
         <h2 className="font-semibold text-gray-900 mb-3">Class Overview</h2>
         <div className={`${card} grid grid-cols-1 md:grid-cols-2 gap-4`}>
-          {[
-            { name: "Yellow", value: "2/2", width: "100%", colour: "bg-yellow-400", text: "text-yellow-600" },
-            { name: "Green", value: "2/2", width: "100%", colour: "bg-green-400", text: "text-green-600" },
-            { name: "Red", value: "1/1", width: "100%", colour: "bg-red-400", text: "text-red-500" },
-            { name: "Blue", value: "0/1", width: "0%", colour: "bg-sky-400", text: "text-sky-500" },
-          ].map((cls) => (
+          {classOverview.map((cls) => (
             <div key={cls.name}>
               <div className="flex justify-between text-sm mb-1">
                 <span className={`font-medium ${cls.text}`}>{cls.name}</span>

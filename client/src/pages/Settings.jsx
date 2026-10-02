@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useClasses } from "./UseClasses";
 
 function Settings({ role = "Manager" }) {
   const navigate = useNavigate();
@@ -18,7 +19,8 @@ function Settings({ role = "Manager" }) {
   const [year, setYear] = useState("2025");
   const [activeTerm, setActiveTerm] = useState("Term 3");
   const [newClass, setNewClass] = useState("");
-  const [classes, setClasses] = useState(["Yellow", "Green", "Red", "Blue"]);
+  const sharedClasses = useClasses();
+  const [classes, setClasses] = useState(sharedClasses.map((c) => c.name));
   const [saved, setSaved] = useState("");
 
   const showSaved = (text) => {

@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
 import AddClassSheet, { colourForClass, UNASSIGNED_GRADE } from "./AddClassSheet";
 import EditClassSheet from "./EditClassSheet.jsx";
-import { addClass, removeClass, updateClassGrade, learnerCount, useClasses } from "./UseClasses";
+import { addClass, removeClass, updateClassGrade, assignTeacher, learnerCount, useClasses } from "./UseClasses";
 
 function Classes({ role = "Teacher" }) {
   const navigate = useNavigate();
@@ -26,8 +26,9 @@ function Classes({ role = "Teacher" }) {
     setShowAdd(false);
   };
 
-  const handleEditGrade = (grade) => {
-    updateClassGrade(toEdit.name, grade);
+  const handleEdit = (grade, teacher) => {
+    if (grade !== toEdit.grade) updateClassGrade(toEdit.name, grade);
+    if (teacher !== toEdit.teacher) assignTeacher(toEdit.name, teacher);
     setToEdit(null);
   };
 
@@ -135,7 +136,8 @@ function Classes({ role = "Teacher" }) {
       {isManager && toEdit && (
         <EditClassSheet
           cls={toEdit}
-          onSave={handleEditGrade}
+          classes={classes}
+          onSave={handleEdit}
           onClose={() => setToEdit(null)}
         />
       )}

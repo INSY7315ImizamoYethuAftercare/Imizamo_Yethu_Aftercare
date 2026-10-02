@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 export const GRADE_RANGES = ["Gr R", "Gr 1-2", "Gr 3-4", "Gr 5-6", "Gr 7"];
+export const UNASSIGNED_GRADE = "Unassigned";
 
 // A class's colour is the actual name of the class, so this list drives both both the colour and class name
 export const CLASS_COLOURS = [

@@ -23,6 +23,11 @@ const CLASS_THEMES = {
     tabActive: "bg-sky-300",
     back: "bg-sky-500 border-sky-700 text-white",
   },
+  Orange: {
+    banner: "bg-orange-300",
+    tabActive: "bg-orange-300",
+    back: "bg-orange-500 border-orange-700 text-white",
+  },
 };
 
 const DEFAULT_LEARNER = { name: "Aisha Petersen", grade: "Grade 2", group: "Yellow" };

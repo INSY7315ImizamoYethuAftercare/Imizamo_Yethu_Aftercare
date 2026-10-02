@@ -31,6 +31,19 @@ export function updateClassGrade(name, grade) {
   listeners.forEach((fn) => fn());
 }
 
+// Assign a teacher to a class, or pass "Unassigned" to clear it.
+// A teacher only leads one class here, so if they were on another class they
+// are moved off it. Backend equivalent: PATCH /classes/:classId with
+// { teacherId } (null to unassign).
+export function assignTeacher(name, teacher) {
+  classes = classes.map((c) => {
+    if (c.name === name) return { ...c, teacher };
+    if (teacher !== "Unassigned" && c.teacher === teacher) return { ...c, teacher: "Unassigned" };
+    return c;
+  });
+  listeners.forEach((fn) => fn());
+}
+
 export function removeClass(name) {
   classes = classes.filter((c) => c.name !== name);
   listeners.forEach((fn) => fn());
