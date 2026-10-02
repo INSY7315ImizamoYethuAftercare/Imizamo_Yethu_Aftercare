@@ -42,3 +42,4 @@ server/.env
 #Learner Data
 server/src/db/seed/learners.json
 
+learners.json

@@ -86,7 +86,7 @@ class LearnerRepository {
 
 /**
  * Finds a learner by full name and date of birth, for guardian
- * self-registration matching (Part 2 — name+DOB match; Part 3 will
+ * self-registration matching (Part 2 - name+DOB match; Part 3 will
  * replace this with something more secure).
  *
  * @param {string} fullName - e.g. "Thandiwe Mokoena"
