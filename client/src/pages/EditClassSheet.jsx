@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { GRADE_RANGES, UNASSIGNED_GRADE, colourForClass } from "./AddClassSheet";
-import { teachers, NO_TEACHER } from "./UseTeachers";
+import { useStaff, teachersOnly, NO_TEACHER } from "./UseTeachers";
 
 // Lets a manager change which grade a class is assigned to and which teacher
 // leads it. The class colour/name itself can't be changed.
@@ -9,6 +9,10 @@ const GRADE_OPTIONS = [...GRADE_RANGES, UNASSIGNED_GRADE];
 function EditClassSheet({ cls, classes = [], onSave, onClose }) {
   const [grade, setGrade] = useState(cls.grade);
   const [teacher, setTeacher] = useState(cls.teacher);
+
+  // Only active teachers can be picked. The class's current teacher stays
+  // listed even if suspended so the sheet still shows who is assigned.
+  const teachers = teachersOnly(useStaff()).filter((t) => t.status === "Active" || t.name === cls.teacher);
 
   // Which class (if any) a teacher currently leads, so the manager can see
   // that picking them will move them off that class.
