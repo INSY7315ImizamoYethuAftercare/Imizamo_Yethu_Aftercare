@@ -1,0 +1,161 @@
+# End-to-end walkthrough (#54)
+
+This is a scripted tour of the app as each of the 5 roles, using the demo data from `npm run seed:demo`. Do each step and compare what you see with **Expected**.
+
+If you get a different result, check [known-bugs.md](known-bugs.md) before logging a new issue. Steps affected by a known bug are marked ⚠️ with the bug ID.
+
+---
+
+## 0. Setup (PowerShell, from the repo root)
+
+1. **Point your local API at a local database.** Use `imizamo_dev` or `imizamo_test`; never Azure. The seed script refuses anything else. Your `server/.env` controls which database `npm run dev:server` uses.
+
+2. **One-off: update an existing database.** If your local database was created before the sign-out change (managers can sign out), run the migration once. It is safe to run again:
+
+   ```powershell
+   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/001_signout_by_manager.sql
+   ```
+
+   A database built fresh from `schema.sql` already has it.
+
+3. **Load the demo data**, wiping that database's tables first:
+
+   ```powershell
+   npm run seed:demo -- --apply --reset
+   ```
+
+   **Expected:** a table of demo accounts. **Every password is `Demo-Password-2026!`** unless you set `$env:SEED_PASSWORD` first.
+
+4. **Start the app**, using two terminals:
+
+   ```powershell
+   npm run dev:server
+   ```
+
+   ```powershell
+   npm run dev:client
+   ```
+
+   Open http://localhost:5173.
+
+5. **Login limits.** Successful sign-ins never count. After **5 wrong passwords for the same account** in 15 minutes (or 30 wrong passwords across accounts from your machine), login returns *"Too many requests, please try again later."* To reset it while testing, restart `npm run dev:server`.
+
+### Demo accounts
+
+| Role | Email | Notes |
+|---|---|---|
+| Admin (master) | `master.admin@iylh.test` | |
+| Admin (standard) | `admin@iylh.test` | |
+| Manager | `manager@iylh.test` | Sarah Botha |
+| Teacher | `t.nkosi@iylh.test` | Thandeka Nkosi, Yellow class (also `s.dlamini` Green, `m.williams` Red, `r.naidoo` Blue, `a.patel` Orange) |
+| Guardian | `fatima.petersen@iylh.test` | Mother of Aisha Petersen (Yellow) |
+| Guardian | `ahmed.petersen@iylh.test` | Father of Aisha (secondary contact) |
+| Guardian | `grace.ntombela@iylh.test` | Grandmother of Zoe Ntombela (Green) |
+| Guardian | `thabo.mokoena@iylh.test` | Father of Naledi Mokoena (Red); may also collect Lwazi Mthembu (Orange) |
+| Guardian | `karen.vdberg@iylh.test` | **Deactivated** account |
+
+### Today's data (South African date)
+
+- **Present:** Aisha, Liam, Zoe, Keanu, Naledi, Bongani, Lwazi.
+- **Absent:** Amahle Zulu, Daniel Smit.
+- **Not marked:** everyone else.
+- **Already signed out:** Bongani Khumalo, who can walk home alone.
+- **Deactivated learner:** Ethan Fortuin (Green).
+
+---
+
+## 1. Teacher: Thandeka Nkosi
+
+| # | Step | Expected |
+|---|---|---|
+| T1 | On the sign-in page, choose **Teacher**, enter `t.nkosi@iylh.test` and the demo password, then click **Sign In**. | You land on `/home`. The header shows **Thandeka Nkosi** and **Teacher • Yellow**. (The greeting "Good afternoon, Thandi!" and the activity feed are static placeholders.) |
+| T2 | Click **Sign In** with an empty password (sign out first via the ⋯ menu). | *"Please enter your email and password."* No request is sent. |
+| T3 | Sign in with a wrong password. | *"Invalid email or password"* |
+| T4 | Sign in correctly and tap **Attendance** in the bottom nav. | **12 learners** (Ethan is deactivated so he's hidden). The counters show **Present 7, Absent 2**. Filter buttons: All, Blue, Green, Orange, Red, Yellow. |
+| T5 | Tap **Yellow**. | **3 learners:** Aisha (Present), Liam (Present), Amahle (Absent). |
+| T6 | Tap **Save Attendance** without changing anything. | *"Nothing new to save. Mark learners present or absent first."* |
+| T7 | Change **Amahle Zulu** to **Present** and tap **Save Attendance**. | *"Attendance saved"*. The counters update to Present 3, Absent 0 for Yellow. Refreshing the page keeps it. |
+| T8 | Tap **All**, mark **Chloe Adams** (Orange, not marked) **Present**, and save. | *"Attendance saved"*. On the **Classes** page, Orange shows 2/2 present. |
+| T9 | Open **Learners**. | All 13 learners. Ethan Fortuin is shown greyed out (deactivated). |
+| T10 | Open **Sign Out**. | Everyone marked present today who hasn't gone yet (8 learners after steps T7–T8). Under **ALREADY COLLECTED TODAY**: *Bongani Khumalo, 16:10 • Walked home alone*. |
+| T11 | Tap **Sign Out** next to Aisha Petersen. | The authorised pickups are buttons: **Fatima Petersen** (Mother), **Ahmed Petersen** (Father), and **Walking Home**. Nobody from another family appears. |
+| T12 | Tap **Fatima Petersen**, then **Verify**, then **Confirm Sign-Out**. | *"Aisha is signed out"*, *"Collected by Fatima Petersen at HH:MM"*. Tap **Sign Out Another Learner**: Aisha is now under "Already collected today". It's saved, so it survives a refresh. |
+| T12a | Start a sign-out for **Naledi Mokoena**, tap **Walking Home**, then **Verify**, then **Confirm Sign-Out**. | *"Naledi Mokoena is allowed to walk home alone"*, then *"Walking home alone at HH:MM"*. |
+| T12b | Start a sign-out for **Zoe Ntombela**, tap **Walking Home**, then **Verify**. | **"Needs manager approval"**: *"Walking home is not pre-authorised for this learner."* Tap **Go back**. |
+| T12c | Still on Zoe, type **grace ntombela** in "Someone not on the list?" and tap **Verify**. | *"Grace Ntombela is on the pickup list. Tap their name above instead."* Tap **Cancel**. |
+| T12d | Start a sign-out for **Liam van der Berg**. | *"No-one is on this learner's pickup list yet…"*: his only guardian (Karen) is deactivated. Type **Random Stranger** and tap **Verify**: *"Needs manager approval"*, with no Override button for teachers. **Send to manager queue** shows a note that the queue isn't connected yet and nothing was saved. |
+| T13 | Open `http://localhost:5173/manager` in the address bar. | You're sent back to `/home`. |
+| T14 | Open `http://localhost:5173/parent`. | You're sent back to `/home`. |
+
+---
+
+## 2. Manager: Sarah Botha
+
+| # | Step | Expected |
+|---|---|---|
+| M1 | Sign in as `manager@iylh.test`. | You land on `/manager`. The Class Overview shows all 5 classes with present/active bars. |
+| M2 | Open **Attendance**. | The page says *"… learners • view only"*. You see statuses but no Present/Absent buttons and no Save. |
+| M3 | Open **Learners** and add **Sizwe Ndlovu**, Yellow class. | Sizwe appears in the list. The Yellow learner count goes up on **Classes**. |
+| M4 | On **Classes**, try to remove/deactivate **Orange**. | Error: *"Cannot deactivate this class - there are active learners enrolled in it"*. |
+| M5 | Open **Staff**. | 5 teachers are listed with their active status. |
+| M5a | Tap **+ Add teacher**, enter **Sipho Ndlovu**, `sipho.ndlovu@iylh.test` and a starting password of 8+ characters, then tap **Add teacher**. | *"Sipho Ndlovu was added. Give them their email and starting password to sign in."* He appears in the list as Active. |
+| M5b | Add a teacher with the same email again (any letter case). | *"An account with this email already exists"*, and the form stays open with what you typed. |
+| M5c | In a private window, sign in as `sipho.ndlovu@iylh.test` with that starting password. | You land on the teacher home page `/home`. |
+| M6 | Deactivate **Sipho Dlamini**, then sign in as `s.dlamini@iylh.test` in a private window. | *"This account has been deactivated"*. If Sipho was **already** signed in elsewhere, his next click sends him back to the sign-in page. |
+| M7 | Reactivate Sipho. | He can sign in again. |
+| M8 | Open **Sign Out** and sign out **Zoe Ntombela** by tapping **Grace Ntombela**. | *"Zoe is signed out"*. Managers can sign learners out, and the record shows the manager as the person who did it. |
+| M8a | Start a sign-out for **Keanu Abrahams**, type an unknown name, and tap **Verify**. | **"Override and approve"** is visible but greyed out, with *"Override isn't available yet: it needs the approval queue."* |
+| M9 | Open **Reports**. | Tabs: Overview, Trends, Donor Report, Board Report. (The figures are currently static placeholders, not live data.) |
+| M10 | Open `http://localhost:5173/admin`. | You're sent back to `/manager`. |
+
+---
+
+## 3. Admin (master): Nomvula Dube
+
+| # | Step | Expected |
+|---|---|---|
+| A1 | Sign in as `master.admin@iylh.test`. | You land on `/admin`. |
+| A2 | Open **Attendance** and **Learners**. | The lists are **empty**. Admins can't read individual learner data (the API returns 403). This is intended under POPIA. |
+| A3 | Open **Reports**. | The Reports page loads. (The donor API returns aggregate counts only: no names or IDs.) |
+| A4 | Open `http://localhost:5173/home` and `/manager`. | You're sent back to `/admin`. |
+
+## 4. Admin (standard): Pieter Jacobs
+
+| # | Step | Expected |
+|---|---|---|
+| S1 | Repeat A1–A4 as `admin@iylh.test`. | The same results as the master admin. `access_level` isn't enforced anywhere yet, so both admin levels can do exactly the same things. |
+
+---
+
+## 5. Guardian: Fatima Petersen
+
+| # | Step | Expected |
+|---|---|---|
+| G1 | Sign in as `fatima.petersen@iylh.test` (any role card works: you land on your real role's page). | You land on `/parent`, showing **Aisha Petersen**. |
+| G2 | Sign out and sign in as `grace.ntombela@iylh.test`. | You **should** see Zoe Ntombela. ⚠️ The parent home page is static and shows *Aisha Petersen* for every guardian (see "Static screens" in known-bugs.md). The API itself only returns Grace's own child. |
+| G3 | Open `http://localhost:5173/attendance`, `/manager` and `/admin`. | You're sent back to `/parent` every time. |
+| G4 | Sign in as `karen.vdberg@iylh.test`. | *"This account has been deactivated"*. |
+| G5 | Sign out. On the sign-in page, tap **Create an account →**. | A parent-only form: *"Parent / Guardian"* and *"Staff accounts are created by the manager."* No Teacher, Manager or Admin options. |
+| G6 | Tap **Create Account** with the form empty. | *"Please fill in every field."* Nothing is sent. |
+| G7 | Fill in: Nandi Zulu, `nandi.zulu@example.com`, phone `082 555 0101`, relationship **Mother**, child **Amahle Zulu**, date of birth **2019-01-22** (one day wrong), and an 8+ character password twice. Tap **Create Account**. | *"We couldn't find a learner with that name and date of birth…"* |
+| G8 | Change the date of birth to **2019-01-21** and tap **Create Account**. | Back on the sign-in page with *"Account created. Please sign in."* |
+| G9 | Sign in as `nandi.zulu@example.com`. | You land on `/parent`. (The API returns only Amahle as her child; the parent home page itself is still placeholder data.) |
+| G10 | Sign out, open **Create an account →** again, and register `nandi.zulu@example.com` a second time. | *"An account with this email already exists"* |
+
+---
+
+## 6. Optional API checks (Postman or curl)
+
+Sign in with `POST http://localhost:4000/api/auth/login` and the body `{"email":"…","password":"Demo-Password-2026!"}`. Postman keeps the `token` cookie for later requests.
+
+| As | Request | Expected |
+|---|---|---|
+| teacher | `POST /api/signout/verify` with Aisha's `learnerId` and Fatima's `guardianId` | `authorised: true` |
+| teacher | same with Grace's `guardianId` | `authorised: false`, *"…Escalate to the manager."* |
+| teacher | `POST /api/signout/confirm` with Grace | `403`, nothing written |
+| teacher | `PATCH /api/attendance/<Aisha's record_id>` with `{"status":"absent"}`, then `POST /api/signout/confirm` for Aisha with Fatima | `409` *"This learner was marked absent today…"*, nothing written |
+| teacher | `PATCH` Aisha back to `present`, then confirm with Fatima again | `201`; the `record_date` is today's SA date |
+| teacher | `POST /api/attendance` for Aisha again today | `409` *"Attendance has already been recorded for this learner today"* |
+| guardian (Fatima) | `GET /api/guardian/children/<Zoe's id>` | `403` *"You can only view information for your own children"* |
+| admin | `GET /api/reports/donor?periodStart=2026-01-01&periodEnd=2026-12-31` | `200`, aggregate counts only |
+| manager | `POST /api/attendance` | `403` (managers are read-only for attendance) |

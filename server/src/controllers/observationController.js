@@ -4,6 +4,7 @@ import LearnerRepository from '../repositories/LearnerRepository.js'
 import SchoolClassRepository from '../repositories/SchoolClassRepository.js'
 import TeacherRepository from '../repositories/TeacherRepository.js'
 import { pool } from '../db/pool.js'
+import * as validate from '../utils/validation.js'
 
 const observationService = new ObservationService({
   observationRepository: new ObservationRepository(pool),
@@ -14,20 +15,18 @@ const observationService = new ObservationService({
 
 export async function addObservation(req, res, next) {
   try {
-   const { learnerId, category, rating, notes } = req.body
+   const { learnerId, category, rating, notes } = req.body ?? {}
     if (!learnerId || !category || rating === undefined) {
       const err = new Error('learnerId, category and rating are required')
       err.status = 400
       throw err
     }
-    if (!Number.isInteger(rating) || rating < 1 || rating > 10) {
-      const err = new Error('rating must be a whole number from 1 to 10')
-      err.status = 400
-      throw err
-    }
+    validate.rating(rating)
+    validate.text(category, 'category', { max: validate.LIMITS.category })
+    validate.text(notes, 'notes', { max: validate.LIMITS.notes, required: false })
     const recordDate = new Date().toISOString().slice(0, 10)
     const observation = await observationService.addObservation({
-      userId: req.user.userId, learnerId, category, rating, notes, recordDate,
+      userId: req.user.userId, learnerId: validate.parseId(learnerId, 'learnerId'), category, rating, notes, recordDate,
     })
     res.status(201).json(observation)
   } catch (err) {
@@ -39,7 +38,7 @@ export async function getLearnerObservations(req, res, next) {
   try {
     const observations = await observationService.getLearnerObservations({
       userId: req.user.userId,
-      learnerId: Number(req.params.learnerId),
+      learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
     })
     res.json(observations)
   } catch (err) {
@@ -50,17 +49,17 @@ export async function getLearnerObservations(req, res, next) {
 export async function updateObservation(req, res, next) {
   try {
 
-    const { category, rating, notes } = req.body
+    const { category, rating, notes } = req.body ?? {}
 
     const fields = {}
-    if (category !== undefined) fields.category = category
-    if (rating !== undefined) fields.rating = rating
-    if (notes !== undefined) fields.notes = note
+    if (category !== undefined) fields.category = validate.text(category, 'category', { max: validate.LIMITS.category })
+    if (rating !== undefined) fields.rating = validate.rating(rating)
+    if (notes !== undefined) fields.notes = notes === null ? null : validate.text(notes, 'notes', { max: validate.LIMITS.notes, required: false })
 
     const updated = await observationService.updateObservation({
       userId: req.user.userId,
-      observationId: Number(req.params.observationId),
-      fields: { category, rating, notes },
+      observationId: validate.parseId(req.params.observationId, 'observationId'),
+      fields,
     })
     res.json(updated)
   } 
@@ -73,7 +72,7 @@ export async function deleteObservation(req, res, next) {
   try {
     await observationService.deleteObservation({
       userId: req.user.userId,
-      observationId: Number(req.params.observationId),
+      observationId: validate.parseId(req.params.observationId, 'observationId'),
     })
     res.status(204).send()
   } catch (err) {

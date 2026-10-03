@@ -1,45 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
 import { useHeader } from "./UseHeader";
+import { useLearners, useLearnersLoading, fetchLearnerById, updateLearnerDetails } from "./UseLearners";
 
 const CLASS_THEMES = {
-  Yellow: {
-    banner: "bg-yellow-300",
-    tabActive: "bg-yellow-300",
-    back: "bg-yellow-400 border-yellow-600 text-yellow-950",
-  },
-  Green: {
-    banner: "bg-green-300",
-    tabActive: "bg-green-300",
-    back: "bg-green-500 border-green-700 text-white",
-  },
-  Red: {
-    banner: "bg-red-300",
-    tabActive: "bg-red-300",
-    back: "bg-red-400 border-red-600 text-white",
-  },
-  Blue: {
-    banner: "bg-sky-300",
-    tabActive: "bg-sky-300",
-    back: "bg-sky-500 border-sky-700 text-white",
-  },
-  Orange: {
-    banner: "bg-orange-300",
-    tabActive: "bg-orange-300",
-    back: "bg-orange-500 border-orange-700 text-white",
-  },
-};
-
-const DEFAULT_LEARNER = { name: "Aisha Petersen", grade: "Grade 2", group: "Yellow" };
-
-const learnerRecords = {
-  1: { id: 1, name: "Aisha Petersen", grade: "Grade 2", group: "Yellow", dob: "2018-03-12" },
-  2: { id: 2, name: "Liam van der Berg", grade: "Grade 4", group: "Green", dob: "2016-09-04" },
-  3: { id: 3, name: "Zoe Ntombela", grade: "Grade 6", group: "Red", dob: "2014-01-22" },
-  4: { id: 4, name: "Keanu Abrahams", grade: "Grade 3", group: "Green", dob: "2017-11-08" },
-  5: { id: 5, name: "Amara Okoye", grade: "Grade 1", group: "Yellow", dob: "2019-06-30" },
-  6: { id: 6, name: "Sipho Dlamini", grade: "Grade 5", group: "Blue", dob: "2015-04-17" },
+  Yellow: { banner: "bg-yellow-300", tabActive: "bg-yellow-300", back: "bg-yellow-400 border-yellow-600 text-yellow-950" },
+  Green:  { banner: "bg-green-300",  tabActive: "bg-green-300",  back: "bg-green-500 border-green-700 text-white" },
+  Red:    { banner: "bg-red-300",    tabActive: "bg-red-300",    back: "bg-red-400 border-red-600 text-white" },
+  Blue:   { banner: "bg-sky-300",    tabActive: "bg-sky-300",    back: "bg-sky-500 border-sky-700 text-white" },
+  Orange: { banner: "bg-orange-300", tabActive: "bg-orange-300", back: "bg-orange-500 border-orange-700 text-white" },
 };
 
 function ageFromDob(dob) {
@@ -58,77 +28,71 @@ function ageFromDob(dob) {
 function Observations({ role = "Teacher" }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const learnerId = searchParams.get("id") || "1";
-  const starting = learnerRecords[learnerId] || learnerRecords[1];
+  const learnerId = Number(searchParams.get("id"));
 
-  const [activeTab, setActiveTab] = useState("Profile");
-  const location = useLocation();
-  const learner = location.state?.learner || DEFAULT_LEARNER;
-  const theme = CLASS_THEMES[learner.group] || CLASS_THEMES.Yellow;
+  // --- Resolve the learner: shared list first, direct fetch as fallback ---
+  const allLearners = useLearners();
+  const loadingList = useLearnersLoading();
+  const learnerFromList = allLearners.find((l) => l.id === learnerId);
+
+  const [directLearner, setDirectLearner] = useState(null);
+  const [directLoading, setDirectLoading] = useState(false);
+
+  useEffect(() => {
+    if (learnerFromList || !learnerId) return;
+    let cancelled = false;
+    setDirectLoading(true);
+    fetchLearnerById(learnerId)
+      .then((l) => { if (!cancelled) setDirectLearner(l); })
+      .finally(() => { if (!cancelled) setDirectLoading(false); });
+    return () => { cancelled = true; };
+  }, [learnerFromList, learnerId]);
+
+  const learner = learnerFromList || directLearner;
+  const stillLoading = (loadingList && !learnerFromList) || directLoading;
+
+  // --- Every hook below runs unconditionally, before any early return ---
   const [activeTab, setActiveTab] = useState("Observations");
   const [showForm, setShowForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Academic");
   const [note, setNote] = useState("");
   const [editing, setEditing] = useState(false);
   const [saveError, setSaveError] = useState("");
+  const [saving, setSaving] = useState(false);
   const [savedBanner, setSavedBanner] = useState("");
-  const [learner, setLearner] = useState(starting);
-  const [draftName, setDraftName] = useState(starting.name);
-  const [draftDob, setDraftDob] = useState(starting.dob);
-
-  const comingSoon = () => alert("Coming soon");
-  const canEdit = role === "Manager";
-  const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
-  const showSettings = role === "Manager" || role === "Admin";
-  const iconBtn =
-    "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
-  const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
-
-  const { displayName, displayRole } = useHeader();
-
-  const backPath =
-    role === "Admin" ? "/admin/learners" :
-    role === "Manager" ? "/manager/learners" : "/learners";
-
+  const [draftFirstName, setDraftFirstName] = useState("");
+  const [draftLastName, setDraftLastName] = useState("");
+  const [draftDob, setDraftDob] = useState("");
   const [observations, setObservations] = useState([
     { id: 1, category: "Social", date: "2025-07-15", note: "Showed great leadership during group activity today.", teacher: "Ms Nkosi" },
     { id: 2, category: "Academic", date: "2025-07-08", note: "Reading fluency improving significantly. Completed level 3 book.", teacher: "Ms Nkosi" },
   ]);
+  const { displayName, displayRole } = useHeader();
 
+  const theme = CLASS_THEMES[learner?.group] || CLASS_THEMES.Yellow;
+  const canEdit = role === "Manager";
+  const comingSoon = () => alert("Coming soon");
+  const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
+  const showSettings = role === "Manager" || role === "Admin";
+  const iconBtn = "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
+  const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
+  const backPath = role === "Admin" ? "/admin/learners" : role === "Manager" ? "/manager/learners" : "/learners";
   const categories = ["Academic", "Social", "Wellbeing", "Creative", "Physical"];
 
-  const getCategoryColour = (category) => {
-    switch (category) {
-      case "Social": return "text-cyan-500";
-      case "Academic": return "text-blue-500";
-      case "Wellbeing": return "text-green-500";
-      case "Creative": return "text-pink-500";
-      case "Physical": return "text-purple-500";
-      default: return "text-gray-500";
-    }
-  };
+  const getCategoryColour = (category) => ({
+    Social: "text-cyan-500", Academic: "text-blue-500", Wellbeing: "text-green-500",
+    Creative: "text-pink-500", Physical: "text-purple-500",
+  }[category] || "text-gray-500");
 
-  const getCategoryBg = (category) => {
-    switch (category) {
-      case "Social": return "bg-cyan-400 text-white";
-      case "Academic": return "bg-blue-400 text-white";
-      case "Wellbeing": return "bg-green-400 text-white";
-      case "Creative": return "bg-pink-400 text-white";
-      case "Physical": return "bg-purple-400 text-white";
-      default: return "bg-gray-200 text-gray-600";
-    }
-  };
+  const getCategoryBg = (category) => ({
+    Social: "bg-cyan-400 text-white", Academic: "bg-blue-400 text-white", Wellbeing: "bg-green-400 text-white",
+    Creative: "bg-pink-400 text-white", Physical: "bg-purple-400 text-white",
+  }[category] || "bg-gray-200 text-gray-600");
 
   const handleSave = () => {
     if (!note.trim()) return;
     setObservations([
-      {
-        id: Date.now(),
-        category: selectedCategory,
-        date: new Date().toISOString().split("T")[0],
-        note,
-        teacher: displayName,
-      },
+      { id: Date.now(), category: selectedCategory, date: new Date().toISOString().split("T")[0], note, teacher: displayName },
       ...observations,
     ]);
     setNote("");
@@ -137,35 +101,50 @@ function Observations({ role = "Teacher" }) {
   };
 
   const startEdit = () => {
-    setDraftName(learner.name);
-    setDraftDob(learner.dob);
+    setDraftFirstName(learner.firstName);
+    setDraftLastName(learner.lastName);
+    setDraftDob(learner.dateOfBirth ?? "");
     setSaveError("");
     setEditing(true);
   };
 
-  const cancelEdit = () => {
-    setDraftName(learner.name);
-    setDraftDob(learner.dob);
-    setSaveError("");
-    setEditing(false);
+  const cancelEdit = () => { setSaveError(""); setEditing(false); };
+
+  const saveDetails = async () => {
+    const firstName = draftFirstName.trim();
+    const lastName = draftLastName.trim();
+    if (!firstName || !lastName) { setSaveError("Enter the learner's first and last name."); return; }
+    if (!draftDob) { setSaveError("Enter the date of birth."); return; }
+
+    setSaving(true);
+    try {
+      await updateLearnerDetails(learner.id, { firstName, lastName, dateOfBirth: draftDob });
+      setSaveError("");
+      setEditing(false);
+      setSavedBanner("Learner details saved");
+      setTimeout(() => setSavedBanner(""), 2200);
+    } catch {
+      setSaveError("Couldn't save — please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const saveDetails = () => {
-    const name = draftName.trim();
-    if (!name) {
-      setSaveError("Enter the learner's name.");
-      return;
-    }
-    if (!draftDob) {
-      setSaveError("Enter the date of birth.");
-      return;
-    }
-    setLearner({ ...learner, name, dob: draftDob });
-    setSaveError("");
-    setEditing(false);
-    setSavedBanner("Learner details saved");
-    setTimeout(() => setSavedBanner(""), 2200);
-  };
+  // --- Early returns come after every hook above ---
+  if (stillLoading) {
+    return <div className="min-h-screen bg-[#FFFBF5] flex items-center justify-center text-gray-400 text-sm">Loading learner...</div>;
+  }
+
+  if (!learner) {
+    return (
+      <div className="min-h-screen bg-[#FFFBF5] flex flex-col items-center justify-center gap-4 px-4 text-center">
+        <p className="text-gray-500 text-sm">Couldn't find that learner.</p>
+        <button onClick={() => navigate(backPath)} className="px-4 py-2 rounded-full bg-orange-400 text-white text-sm font-semibold">
+          Back to Learners
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
@@ -179,9 +158,7 @@ function Observations({ role = "Teacher" }) {
         </div>
         <div className="flex items-center gap-3">
           <button onClick={comingSoon} className={iconBtn}>🔔</button>
-          {showSettings && (
-            <button onClick={() => navigate(settingsPath)} className={iconBtn}>⚙️</button>
-          )}
+          {showSettings && <button onClick={() => navigate(settingsPath)} className={iconBtn}>⚙️</button>}
           <MoreMenu />
         </div>
       </div>
@@ -194,8 +171,10 @@ function Observations({ role = "Teacher" }) {
           >
             ← Back
           </button>
-          <h1 className="text-xl font-bold text-gray-900">{learner.name}</h1>
-          <p className="text-sm text-gray-700">{learner.grade} • {learner.group}</p>
+          <div className="text-center">
+            <h1 className="text-lg font-bold text-gray-900 leading-tight">{learner.name}</h1>
+            <p className="text-xs text-gray-700">{learner.grade} • {learner.group}</p>
+          </div>
         </div>
       </div>
 
@@ -212,26 +191,17 @@ function Observations({ role = "Teacher" }) {
             <p className="text-xs text-gray-500">Attendance</p>
           </div>
           <div className={`${card} text-center`}>
-            <p className="text-xl font-bold text-gray-800">{ageFromDob(learner.dob)}</p>
+            <p className="text-xl font-bold text-gray-800">{ageFromDob(learner.dateOfBirth)}</p>
             <p className="text-xs text-gray-500">Age</p>
           </div>
-          <div>
+          <div className={`${card} text-center`}>
             <p className="text-xl font-bold text-orange-500">{observations.length}</p>
             <p className="text-xs text-gray-500">Observations</p>
           </div>
         </div>
 
-        <div className="flex gap-2 mb-4">
-          <span className="px-3 py-1 bg-pink-100 text-pink-600 text-xs font-medium rounded-full">Reading Club</span>
-          <span className="px-3 py-1 bg-purple-100 text-purple-600 text-xs font-medium rounded-full">Art</span>
-        </div>
-
         <div className="flex gap-2 mb-5">
-          {[
-            { label: "Profile", icon: "👤" },
-            { label: "Observations", icon: "📝" },
-            { label: "Attendance", icon: "✅" },
-          ].map(({ label, icon }) => (
+          {[{ label: "Profile", icon: "👤" }, { label: "Observations", icon: "📝" }, { label: "Attendance", icon: "✅" }].map(({ label, icon }) => (
             <button
               key={label}
               onClick={() => setActiveTab(label)}
@@ -250,11 +220,7 @@ function Observations({ role = "Teacher" }) {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold text-gray-900">Learner details</h3>
                 {canEdit && !editing && (
-                  <button
-                    type="button"
-                    onClick={startEdit}
-                    className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-orange-500 border border-gray-200 shadow-lg hover:border-orange-300 active:scale-95 transition"
-                  >
+                  <button type="button" onClick={startEdit} className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-orange-500 border border-gray-200 shadow-lg hover:border-orange-300 active:scale-95 transition">
                     Edit details
                   </button>
                 )}
@@ -263,42 +229,35 @@ function Observations({ role = "Teacher" }) {
               {!editing && (
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between gap-3"><span className="text-gray-500">Name</span><span className="font-medium text-right">{learner.name}</span></div>
-                  <div className="flex justify-between gap-3"><span className="text-gray-500">Date of birth</span><span className="font-medium">{learner.dob}</span></div>
-                  <div className="flex justify-between gap-3"><span className="text-gray-500">Age</span><span className="font-medium">{ageFromDob(learner.dob)}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-gray-500">Date of birth</span><span className="font-medium">{learner.dateOfBirth ?? "—"}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-gray-500">Age</span><span className="font-medium">{ageFromDob(learner.dateOfBirth)}</span></div>
                 </div>
               )}
 
               {editing && (
                 <div className="space-y-3">
                   <label className="block text-sm">
-                    <span className="text-gray-500">Name</span>
-                    <input
-                      type="text"
-                      value={draftName}
-                      onChange={(e) => setDraftName(e.target.value)}
-                      className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300"
-                    />
+                    <span className="text-gray-500">First name</span>
+                    <input type="text" value={draftFirstName} onChange={(e) => setDraftFirstName(e.target.value)}
+                      className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300" />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="text-gray-500">Last name</span>
+                    <input type="text" value={draftLastName} onChange={(e) => setDraftLastName(e.target.value)}
+                      className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300" />
                   </label>
                   <label className="block text-sm">
                     <span className="text-gray-500">Date of birth</span>
-                    <input
-                      type="date"
-                      value={draftDob}
-                      onChange={(e) => setDraftDob(e.target.value)}
-                      className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300"
-                    />
+                    <input type="date" value={draftDob} onChange={(e) => setDraftDob(e.target.value)}
+                      className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300" />
                   </label>
-                  {saveError && (
-                    <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-3 py-2">
-                      {saveError}
-                    </div>
-                  )}
+                  {saveError && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-3 py-2">{saveError}</div>}
                   <div className="flex gap-3">
-                    <button type="button" onClick={cancelEdit} className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium text-sm border border-gray-200 shadow-lg">
+                    <button type="button" onClick={cancelEdit} disabled={saving} className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium text-sm border border-gray-200 shadow-lg disabled:opacity-50">
                       Cancel
                     </button>
-                    <button type="button" onClick={saveDetails} className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-semibold text-sm shadow-lg">
-                      Save
+                    <button type="button" onClick={saveDetails} disabled={saving} className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-semibold text-sm shadow-lg disabled:opacity-50">
+                      {saving ? "Saving..." : "Save"}
                     </button>
                   </div>
                 </div>
@@ -332,10 +291,7 @@ function Observations({ role = "Teacher" }) {
         {activeTab === "Observations" && (
           <>
             {!showForm && (
-              <button
-                onClick={() => setShowForm(true)}
-                className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold mb-6 shadow-lg hover:bg-orange-500 active:scale-[0.98] transition"
-              >
+              <button onClick={() => setShowForm(true)} className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold mb-6 shadow-lg hover:bg-orange-500 active:scale-[0.98] transition">
                 + Add Observation
               </button>
             )}
@@ -344,23 +300,14 @@ function Observations({ role = "Teacher" }) {
                 <h2 className="font-semibold text-gray-900 mb-3">New Observation</h2>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {categories.map((cat) => (
-                    <button
-                      key={cat}
-                      onClick={() => setSelectedCategory(cat)}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium shadow-md active:scale-95 transition ${
-                        selectedCategory === cat ? getCategoryBg(cat) : "bg-gray-100 text-gray-500"
-                      }`}
-                    >
+                    <button key={cat} onClick={() => setSelectedCategory(cat)}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium shadow-md active:scale-95 transition ${selectedCategory === cat ? getCategoryBg(cat) : "bg-gray-100 text-gray-500"}`}>
                       {cat}
                     </button>
                   ))}
                 </div>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  placeholder="Write your observation here..."
-                  className="w-full h-28 p-3 border border-gray-200 rounded-xl text-sm mb-4 shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none"
-                />
+                <textarea value={note} onChange={(e) => setNote(e.target.value)} placeholder="Write your observation here..."
+                  className="w-full h-28 p-3 border border-gray-200 rounded-xl text-sm mb-4 shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300 resize-none" />
                 <div className="flex gap-3">
                   <button onClick={() => { setShowForm(false); setNote(""); }} className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium text-sm border border-gray-200 shadow-lg active:scale-[0.98] transition">
                     Cancel

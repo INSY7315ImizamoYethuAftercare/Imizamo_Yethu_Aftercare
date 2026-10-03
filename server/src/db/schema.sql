@@ -1004,3 +1004,15 @@ ALTER TABLE learners
 
 -- Learners may be seeded without a date of birth
 ALTER TABLE learners ALTER COLUMN date_of_birth DROP NOT NULL;
+
+-- ===== Managers can sign learners out (#22 / BUG-22) =====
+-- Who recorded a sign-out is now a teacher OR a manager (exactly one).
+-- guardian_id stays nullable: NULL means the learner walked home alone,
+-- which the API only allows when learners.can_walk_home_alone is true.
+-- Existing databases: run migrations/001_signout_by_manager.sql instead.
+ALTER TABLE sign_out_records ALTER COLUMN teacher_id DROP NOT NULL;
+ALTER TABLE sign_out_records
+  ADD COLUMN manager_id integer REFERENCES managers(manager_id) ON DELETE RESTRICT;
+ALTER TABLE sign_out_records
+  ADD CONSTRAINT chk_signout_recorded_by CHECK ((teacher_id IS NULL) <> (manager_id IS NULL));
+CREATE INDEX idx_signout_manager_id ON sign_out_records USING btree (manager_id);

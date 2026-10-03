@@ -8,31 +8,60 @@
  */
 import jwt from 'jsonwebtoken'
 import { env } from '../config/env.js'
+import { pool } from '../db/pool.js'
+import UserRepository from '../repositories/UserRepository.js'
+
+const unauthorised = (message) => {
+  const err = new Error(message)
+  err.status = 401
+  return err
+}
 
 /**
- * Verifies the JWT stored in the httpOnly "token" cookie and attaches the
- * decoded payload ({ userId, role }) to req.user. Must run before any
- * route or middleware that relies on req.user, including authorize().
+ * Builds the authenticate middleware. `findUserById` is injected so unit
+ * tests can supply a fake instead of a database.
  *
- * Responds with 401 if no token is present, or if the token is missing,
- * expired, or has been tampered with.
+ * @param {{ findUserById: (userId: number) => Promise<{ is_active: boolean, role: string } | null> }} deps
  */
-export function authenticate(req, res, next) {
-  const token = req.cookies?.token
-  if (!token) {
-    const err = new Error('Not authenticated')
-    err.status = 401
-    return next(err)
-  }
-  try {
-    req.user = jwt.verify(token, env.jwtSecret) // { userId, role }
+export function createAuthenticate({ findUserById }) {
+  /**
+   * Verifies the JWT stored in the httpOnly "token" cookie and attaches the
+   * decoded payload ({ userId, role }) to req.user. Must run before any
+   * route or middleware that relies on req.user, including authorize().
+   *
+   * Responds with 401 if no token is present, if the token is expired or
+   * has been tampered with, or if the account behind it has since been
+   * deactivated, deleted or given a different role. Checking the account on
+   * every request means a manager's "deactivate" takes effect immediately,
+   * instead of when the 8-hour token runs out.
+   */
+  return async function authenticate(req, res, next) {
+    const token = req.cookies?.token
+    if (!token) return next(unauthorised('Not authenticated'))
+
+    let payload
+    try {
+      payload = jwt.verify(token, env.jwtSecret) // { userId, role }
+    } catch {
+      return next(unauthorised('Invalid or expired session'))
+    }
+
+    try {
+      const user = await findUserById(payload.userId)
+      if (!user || user.is_active === false || user.role !== payload.role) {
+        return next(unauthorised('Session is no longer valid'))
+      }
+    } catch (err) {
+      return next(err)
+    }
+
+    req.user = payload
     next()
-  } catch {
-    const err = new Error('Invalid or expired session')
-    err.status = 401
-    next(err)
   }
 }
+
+const userRepository = new UserRepository(pool)
+export const authenticate = createAuthenticate({ findUserById: (id) => userRepository.findById(id) })
 
 /**
  * Restricts a route to one or more roles. Must be used after authenticate(),

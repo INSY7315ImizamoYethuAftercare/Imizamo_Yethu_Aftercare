@@ -12,6 +12,7 @@ import SchoolClassRepository from '../repositories/SchoolClassRepository.js'
 import TeacherRepository from '../repositories/TeacherRepository.js'
 import LearnerRepository from '../repositories/LearnerRepository.js'
 import { pool } from '../db/pool.js'
+import * as validate from '../utils/validation.js'
 
 const attendanceService = new AttendanceService({
   attendanceRepository: new AttendanceRepository(pool),
@@ -28,7 +29,7 @@ const attendanceService = new AttendanceService({
  */
 export async function recordAttendance(req, res, next) {
   try {
-    const { learnerId, classId, status, timeIn } = req.body
+    const { learnerId, classId, status, timeIn } = req.body ?? {}
     if (!learnerId || !status) {
       const err = new Error('learnerId and status are required')
       err.status = 400
@@ -36,10 +37,10 @@ export async function recordAttendance(req, res, next) {
     }
     const record = await attendanceService.recordAttendance({
       userId: req.user.userId,
-      learnerId: Number(learnerId),
-      classId: classId ? Number(classId) : undefined,
-      status,
-      timeIn,
+      learnerId: validate.parseId(learnerId, 'learnerId'),
+      classId: validate.optionalId(classId, 'classId'),
+      status: validate.text(status, 'status', { max: 10 }),
+      timeIn: validate.timeOfDay(timeIn, 'timeIn'),
       recordDate: todayInSA(),
     })
     res.status(201).json(record)
@@ -54,14 +55,17 @@ export async function recordAttendance(req, res, next) {
  */
 export async function updateAttendance(req, res, next) {
   try {
-    const { status, timeIn } = req.body
+    const { status, timeIn } = req.body ?? {}
     if (!status) {
       const err = new Error('status is required')
       err.status = 400
       throw err
     }
     const record = await attendanceService.updateAttendanceStatus({
-      userId: req.user.userId, recordId: Number(req.params.recordId), status, timeIn,
+      userId: req.user.userId,
+      recordId: validate.parseId(req.params.recordId, 'recordId'),
+      status: validate.text(status, 'status', { max: 10 }),
+      timeIn: validate.timeOfDay(timeIn, 'timeIn'),
     })
     res.json(record)
   } catch (err) {
@@ -76,10 +80,10 @@ export async function updateAttendance(req, res, next) {
  */
 export async function getClassAttendance(req, res, next) {
   try {
-    const { classId } = req.params
-    const date = req.query.date || todayInSA()
+    const classId = validate.parseId(req.params.classId, 'classId')
+    const date = validate.isoDate(req.query.date, 'date', { required: false }) ?? todayInSA()
     const records = await attendanceService.getClassAttendance({
-      userId: req.user.userId, role: req.user.role, classId: Number(classId), date,
+      userId: req.user.userId, role: req.user.role, classId, date,
     })
     res.json(records)
   } catch (err) {

@@ -16,7 +16,7 @@ class UserRepository {
          const result = await this.pool.query(
             `SELECT "user_id", "email", "password_hash", "role", "full_name", "is_active"
             FROM users
-            WHERE "email" = $1`,
+            WHERE LOWER("email") = LOWER($1)`,
             [email]
          );
          return result.rows[0] || null;
@@ -83,7 +83,7 @@ class UserRepository {
         const result = await this.pool.query(
         `UPDATE users SET ${setClause} 
         WHERE "email" = $${keys.length + 1} 
-        RETURNING  "email", "role", "password_hash", "full_name"`,
+        RETURNING "user_id", "email", "role", "full_name"`,
         [...values, email]
         );
         return result.rows[0] || null;
@@ -100,7 +100,7 @@ class UserRepository {
         const result = await this.pool.query(
         `UPDATE users SET "role" = $2
         WHERE "user_id" =  $1
-        RETURNING "user_id", "email", "role", "password_hash", "full_name"`,
+        RETURNING "user_id", "email", "role", "full_name"`,
         [userId, role]
         );
         return result.rows[0] || null;

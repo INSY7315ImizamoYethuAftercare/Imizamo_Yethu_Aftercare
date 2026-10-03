@@ -53,7 +53,7 @@ class GuardianRepository {
   async create({ userId, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob }) {
     const result = await this.pool.query(
       `INSERT INTO guardians ("user_id", "full_name", "contact_number", "relationship", "claimed_learner_name", "claimed_learner_dob")
-       VALUES ($1, $2, $3, $4)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING "guardian_id", "user_id", "full_name", "contact_number", "relationship", "claimed_learner_name", "claimed_learner_dob"`,
       [userId, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob]
     );

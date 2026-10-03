@@ -116,8 +116,8 @@ function Learners({ role = "Teacher" }) {
                 <p className="font-semibold text-gray-900">{learner.name}</p>
                 <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
               </div>
-            );
-          })}
+            </button>
+          ))}
         </div>
       </div>
       {isManager && showAdd && (

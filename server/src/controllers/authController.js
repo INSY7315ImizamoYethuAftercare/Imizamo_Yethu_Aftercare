@@ -11,6 +11,8 @@ import GuardianRepository from '../repositories/GuardianRepository.js'
 import LearnerRepository from '../repositories/LearnerRepository.js'
 import PickupPermissionRepository from '../repositories/PickupPermissionRepository.js'
 import { pool } from '../db/pool.js'
+import { withTransaction } from '../db/transaction.js'
+import * as validate from '../utils/validation.js'
 import { isProduction } from '../config/env.js'
 
 const userRepository = new UserRepository(pool)
@@ -20,6 +22,15 @@ const authService = new AuthService({
   guardianRepository: new GuardianRepository(pool),
   learnerRepository: new LearnerRepository(pool),
   pickupPermissionRepository: new PickupPermissionRepository(pool),
+  // Registration writes users + guardians + pickup_permissions as one unit.
+  runInTransaction: (work) =>
+    withTransaction((client) =>
+      work({
+        userRepository: new UserRepository(client),
+        guardianRepository: new GuardianRepository(client),
+        pickupPermissionRepository: new PickupPermissionRepository(client),
+      }),
+    ),
 })
 
 /**
@@ -39,15 +50,25 @@ const cookieOptions = {
 export async function register(req, res, next) {
   try {
 
-    const { email, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob  } = req.body
+    const { email, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob  } = req.body ?? {}
     if (!email || !password || !role || !fullName) {
       const err = new Error('email, password, role and fullName are all required')
       err.status = 400
       throw err
     }
+    const normalisedEmail = validate.email(email)
+    validate.password(password)
+    validate.text(role, 'role', { max: 20 })
+    validate.text(fullName, 'fullName', { max: validate.LIMITS.fullName })
+    // Guardian-only fields: AuthService decides whether they are required;
+    // here we only check that whatever was sent is the right shape.
+    validate.text(contactNumber, 'contactNumber', { max: validate.LIMITS.contactNumber, required: false })
+    validate.text(relationship, 'relationship', { max: validate.LIMITS.relationship, required: false })
+    validate.text(claimedLearnerName, 'claimedLearnerName', { max: validate.LIMITS.claimedLearnerName, required: false })
+    validate.isoDate(claimedLearnerDob, 'claimedLearnerDob', { required: false })
 
     const user = await authService.register({ 
-      email, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob, 
+      email: normalisedEmail, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob, 
     })
     res.status(201).json({ userId: user.user_id, email: user.email, role: user.role })
 
@@ -60,9 +81,15 @@ export async function register(req, res, next) {
 export async function login(req, res, next) {
   try {
 
-    const { email, password } = req.body
+    const { email, password } = req.body ?? {}
     if (!email || !password) {
       const err = new Error('email and password are required')
+      err.status = 400
+      throw err
+    }
+    // Only the type is checked here: no length rules, so older accounts can still sign in.
+    if (typeof email !== 'string' || typeof password !== 'string') {
+      const err = new Error('email and password must be text')
       err.status = 400
       throw err
     }

@@ -22,6 +22,11 @@ import { teacherRouter } from './routes/teacher.routes.js'
 export function createApp() {
   const app = express()
 
+  // Azure App Service puts one proxy (its front end) in front of the app.
+  // Trusting exactly one hop makes req.ip the real client address from
+  // X-Forwarded-For, so per-IP rate limits apply per user, not to everyone.
+  app.set('trust proxy', 1)
+
   // --- Security & platform middleware ---
   // helmet sets a sensible baseline of HTTP security headers (CSP,
   // X-Content-Type-Options, etc.) per the Security doc's XSS mitigation.

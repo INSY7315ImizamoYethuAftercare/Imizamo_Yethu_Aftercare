@@ -66,6 +66,15 @@ export async function setStaffStatus(id, status) {
   }
 }
 
+// Creates a teacher account (POST /api/teacher, manager only) and reloads the
+// list. Throws on failure so the form can show the server's message (e.g.
+// "An account with this email already exists").
+export async function createTeacher({ fullName, email, password }) {
+  const teacher = await apiClient.post("/teacher", { fullName, email, password });
+  await refreshStaff();
+  return teacher;
+}
+
 export function useStaff() {
   const base = useSyncExternalStore(subscribe, getSnapshot);
   const { user } = useSession();
