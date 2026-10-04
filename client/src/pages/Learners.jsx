@@ -4,6 +4,7 @@ import MoreMenu from "../components/MoreMenu";
 import { useClasses } from "./UseClasses";
 import { useLearners, useLearnersLoading, addLearner, deleteLearner, setLearnerStatus } from "./UseLearners";
 import AddLearnerSheet from "./AddLearnerSheet";
+import { colourForClass } from "./AddClassSheet";
 import { useHeader } from "./UseHeader";
 
 function Learners({ role = "Teacher" }) {
@@ -86,19 +87,24 @@ function Learners({ role = "Teacher" }) {
         />
 
         <div className="flex gap-2 mb-5 overflow-x-auto py-2">
-          {classes.map((cls) => (
-            <button
-              key={cls}
-              onClick={() => setSelectedClass(cls)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap shadow-md border transition active:scale-95 ${
-                selectedClass === cls
-                  ? "bg-orange-400 text-white border-orange-400"
-                  : "bg-white text-gray-600 border-gray-200"
-              }`}
-            >
-              {cls}
-            </button>
-          ))}
+          {classes.map((cls) => {
+            const isActive = selectedClass === cls;
+            const classColour = cls === "All" ? "#FB923C" : colourForClass(cls);
+            return (
+              <button
+                key={cls}
+                onClick={() => setSelectedClass(cls)}
+                style={
+                  isActive
+                    ? { backgroundColor: classColour, borderColor: classColour, color: "#1f2937" }
+                    : { backgroundColor: "#ffffff", borderColor: "#e5e7eb", color: "#4b5563" }
+                }
+                className="px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap shadow-md border transition active:scale-95"
+              >
+                {cls}
+              </button>
+            );
+          })}
         </div>
 
         {loadingLearners && learners.length === 0 && (
