@@ -12,6 +12,7 @@ import AttendanceRepository from '../repositories/AttendanceRepository.js'
 import ObservationRepository from '../repositories/ObservationRepository.js'
 import ManagerRepository from '../repositories/ManagerRepository.js'
 import { pool } from '../db/pool.js'
+import * as validate from '../utils/validation.js'
 
 const guardianService = new GuardianService({
   guardianRepository: new GuardianRepository(pool),
@@ -59,7 +60,7 @@ const setGuardianActiveHandler = (isActive) => async (req, res, next) => {
   try {
     const updated = await guardianService.setGuardianActive({
       userId: req.user.userId,
-      guardianId: Number(req.params.guardianId),
+      guardianId: validate.parseId(req.params.guardianId, 'guardianId'),
       isActive,
     })
     res.json(updated)

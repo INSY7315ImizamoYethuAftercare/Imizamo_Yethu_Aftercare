@@ -6,9 +6,9 @@ import { getSessionRole, onSessionReset, useSession } from "../services/session"
 // Shared store for learners, loaded from GET /api/learners (teachers and
 // managers can read; only managers can change anything).
 //
-//  status "active"       - normal
-//  status "deactivated"  - still listed (greyed out) but cannot be opened
-//  deleted               - removed from the database
+//  status "active" - normal
+//  status "deactivated" - still listed (greyed out) but cannot be opened
+//  deleted - removed from the database
 //
 // `grade` is the class's grade range (e.g. "Gr 1-2"): the database stores a
 // grade range per class, not a grade per learner.
@@ -67,6 +67,18 @@ const fail = (e) => alert(e.message || "Something went wrong. Please try again."
 
 export const getLearners = () => learners;
 
+// Fetches one learner directly (GET /learners/:id), for when the shared
+// list hasn't loaded yet — e.g. a deep link straight to a learner's page.
+// Returns null on 404, same shape as entries in the shared `learners` list.
+export async function fetchLearnerById(id) {
+  try {
+    return toLearner(await apiClient.get(`/learners/${id}`));
+  } catch (e) {
+    if (e.status === 404) return null;
+    throw e;
+  }
+}
+
 // learner: { firstName, lastName, classId, dateOfBirth? }
 export async function addLearner({ firstName, lastName, classId, dateOfBirth }) {
   try {
@@ -104,6 +116,30 @@ export async function setLearnerStatus(id, status) {
   } catch (e) {
     fail(e);
   }
+}
+
+// Saves a learner's name and date of birth (PATCH /learners/:id). Unlike the
+// helpers above it doesn't alert: it throws, so the page can show its own
+// error message. An empty dateOfBirth clears it.
+export async function updateLearnerDetails(id, { firstName, lastName, dateOfBirth }) {
+  const updated = await apiClient.patch(`/learners/${id}`, {
+    firstName,
+    lastName,
+    dateOfBirth: dateOfBirth || null,
+  });
+  learners = learners.map((l) =>
+    l.id === id
+      ? {
+          ...l,
+          firstName: updated.first_name,
+          lastName: updated.last_name,
+          name: `${updated.first_name} ${updated.last_name}`,
+          dateOfBirth: updated.date_of_birth,
+        }
+      : l,
+  );
+  emit();
+  return updated;
 }
 
 export function useLearners() {

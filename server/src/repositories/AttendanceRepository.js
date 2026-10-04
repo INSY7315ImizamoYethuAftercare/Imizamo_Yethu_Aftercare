@@ -41,6 +41,46 @@ class AttendanceRepository {
   }
 
   /**
+   * One learner's attendance record for one date (there is at most one:
+   * uq_attendance_learner_date). Used to check a learner is present before
+   * they can be signed out.
+   *
+   * @param {number} learnerId
+   * @param {string} date - YYYY-MM-DD
+   * @returns {Promise<Object|null>}
+   */
+  async findByLearnerAndDate(learnerId, date) {
+    const result = await this.pool.query(
+      `SELECT "record_id", "learner_id", "teacher_id", "record_date", "time_in", "status"
+       FROM attendance_records
+       WHERE "learner_id" = $1 AND "record_date" = $2`,
+      [learnerId, date],
+    )
+    return result.rows[0] || null
+  }
+
+  /**
+   * Every active learner marked present on a date, with their class, for
+   * the Sign-Out page ("who is here and still to be collected").
+   *
+   * @param {string} date - YYYY-MM-DD
+   * @returns {Promise<Array<Object>>}
+   */
+  async findPresentByDate(date) {
+    const result = await this.pool.query(
+      `SELECT l."learner_id", l."first_name", l."last_name", l."can_walk_home_alone",
+              c."class_name", c."grade_range"
+       FROM attendance_records a
+       JOIN learners l ON l."learner_id" = a."learner_id"
+       JOIN school_classes c ON c."class_id" = l."class_id"
+       WHERE a."record_date" = $1 AND a."status" = 'present' AND l."is_active"
+       ORDER BY c."class_name", l."last_name", l."first_name"`,
+      [date],
+    )
+    return result.rows
+  }
+
+  /**
    * Attendance for every learner in a class on a given date.
    * Joins learners because attendance_records stores learner_id, not class_id.
    *

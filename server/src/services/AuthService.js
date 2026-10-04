@@ -21,11 +21,18 @@ import { env } from '../config/env.js'
 const SALT_ROUNDS = 10
 
 export class AuthService {
-  constructor({ userRepository, guardianRepository, learnerRepository, pickupPermissionRepository }) {
+  /**
+   * runInTransaction is optional: when given (as it is in the controller) it
+   * runs a callback with { userRepository, guardianRepository,
+   * pickupPermissionRepository } bound to one transaction. Without it the
+   * plain repositories are used (unit tests with mocks).
+   */
+  constructor({ userRepository, guardianRepository, learnerRepository, pickupPermissionRepository, runInTransaction }) {
     this.userRepository = userRepository
     this.guardianRepository = guardianRepository
     this.learnerRepository = learnerRepository
     this.pickupPermissionRepository = pickupPermissionRepository
+    this.runInTransaction = runInTransaction ?? ((work) => work(this))
   }
 
   /**
@@ -37,6 +44,11 @@ export class AuthService {
     if (role === 'admin' || role === 'manager' || role === 'teacher') {
       const err = new Error('This role cannot self-register')
       err.status = 403
+      throw err
+    }
+    if (role !== 'guardian') {
+      const err = new Error('role must be "guardian"')
+      err.status = 400
       throw err
     }
 
@@ -64,22 +76,37 @@ export class AuthService {
     }
 
     const passwordHash = await bcrypt.hash(password, SALT_ROUNDS)
-    const user = await this.userRepository.createUser({ email, role, passwordHash, fullName, isActive: true })
 
-    if (role === 'guardian') {
-      const guardian = await this.guardianRepository.create({
-        userId: user.user_id, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob,
-      })
+    // All-or-nothing: a failure part-way must not leave an orphan user that
+    // blocks the parent from ever retrying ("account already exists").
+    try {
+      return await this.runInTransaction(async ({ userRepository, guardianRepository, pickupPermissionRepository }) => {
+        const user = await userRepository.createUser({ email, role, passwordHash, fullName, isActive: true })
 
-      await this.pickupPermissionRepository.create({
-        learnerId: matchedLearner.learner_id,
-        guardianId: guardian.guardian_id,
-        isPrimaryContact: true,
-        authorisedDate: new Date().toISOString().slice(0, 10),
+        if (role === 'guardian') {
+          const guardian = await guardianRepository.create({
+            userId: user.user_id, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob,
+          })
+
+          await pickupPermissionRepository.create({
+            learnerId: matchedLearner.learner_id,
+            guardianId: guardian.guardian_id,
+            isPrimaryContact: true,
+            authorisedDate: new Date().toISOString().slice(0, 10),
+          })
+        }
+
+        return user
       })
+    } catch (err) {
+      // Postgres unique_violation: the same email was registered concurrently.
+      if (err.code === '23505') {
+        const conflict = new Error('An account with this email already exists')
+        conflict.status = 409
+        throw conflict
+      }
+      throw err
     }
-
-    return user
   }
 
   /**

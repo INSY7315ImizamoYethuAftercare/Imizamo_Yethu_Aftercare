@@ -27,16 +27,43 @@ class PickupPermissionRepository {
      * 
      * @param {number} learnerId - The unique identifier of the learner.
      * @param {number} guardianId - The unique identifier of the guardian.
+     * A guardian whose account a manager has deactivated is never authorised.
+     *
      * @returns {Promise<boolean>} - True if the guardian is authorised to collect the learner, false otherwise.
      */
     async verifyGuardian(learnerId, guardianId) {
         const result = await this.pool.query(
-            `SELECT 1 
-            FROM pickup_permissions 
-            WHERE "learner_id" = $1 AND "guardian_id" = $2`,
+            `SELECT 1
+            FROM pickup_permissions p
+            JOIN guardians g ON g."guardian_id" = p."guardian_id"
+            JOIN users u ON u."user_id" = g."user_id"
+            WHERE p."learner_id" = $1 AND p."guardian_id" = $2
+              AND u."is_active" = true`,
             [learnerId, guardianId]
         );
         return result.rows.length > 0;
+    }
+
+    /**
+     * The authorised pickups for several learners at once, active guardian
+     * accounts only. Names and relationships only (no contact numbers):
+     * enough for staff to recognise who is at the door (POPIA).
+     *
+     * @param {number[]} learnerIds
+     * @returns {Promise<Array<Object>>} { learner_id, guardian_id, full_name, relationship, is_primary_contact }
+     */
+    async findActiveByLearnerIds(learnerIds) {
+        if (learnerIds.length === 0) return [];
+        const result = await this.pool.query(
+            `SELECT p."learner_id", g."guardian_id", g."full_name", g."relationship", p."is_primary_contact"
+            FROM pickup_permissions p
+            JOIN guardians g ON g."guardian_id" = p."guardian_id"
+            JOIN users u ON u."user_id" = g."user_id"
+            WHERE p."learner_id" = ANY($1::int[]) AND u."is_active" = true
+            ORDER BY p."is_primary_contact" DESC, g."full_name"`,
+            [learnerIds]
+        );
+        return result.rows;
     }
 
     /**

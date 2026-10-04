@@ -12,7 +12,11 @@
     "dev:server": "npm run dev --workspace server",
     "build:client": "npm run build --workspace client",
     "start:server": "npm run start --workspace server",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test:server && npm run test:client",
+    "test:server": "npm run test --workspace server",
+    "test:client": "npm run test --workspace client",
+    "test:coverage": "npm run test:coverage --workspace server && npm run test:coverage --workspace client",
+    "seed:demo": "npm run seed:demo --workspace server --"
   },
   "license": "UNLICENSED",
   "dependencies": {

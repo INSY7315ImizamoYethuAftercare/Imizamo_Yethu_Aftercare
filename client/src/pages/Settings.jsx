@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { logout } from "../services/session";
 import { useClasses } from "./UseClasses";
 import { useHeader } from "./UseHeader";
 
@@ -155,7 +156,12 @@ function Settings({ role = "Manager" }) {
         <div className={card}>
           <h2 className="font-semibold text-gray-900 mb-3">Account</h2>
           <button
-            onClick={() => navigate("/")}
+            onClick={async () => {
+              // End the session first; otherwise the sign-in page sees a valid
+              // cookie and sends the user straight back here.
+              await logout();
+              navigate("/", { replace: true });
+            }}
             className="w-full py-3 rounded-full bg-white text-red-500 font-semibold border border-red-200 shadow-lg hover:shadow-xl active:scale-[0.98] transition"
           >
             Log out

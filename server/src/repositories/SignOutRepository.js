@@ -14,7 +14,7 @@ class SignOutRepository {
      */
     async findById(recordId) {
         const result = await this.pool.query(
-            `SELECT "record_id", "learner_id", "teacher_id", "guardian_id", "record_date", "time_out"
+            `SELECT "record_id", "learner_id", "teacher_id", "manager_id", "guardian_id", "record_date", "time_out"
             FROM sign_out_records 
             WHERE "record_id" = $1`,
             [recordId]
@@ -31,7 +31,7 @@ class SignOutRepository {
      */
     async findByLearnerId(learnerId) {
         const result = await this.pool.query(
-            `SELECT "record_id", "learner_id", "teacher_id", "guardian_id", "record_date", "time_out"
+            `SELECT "record_id", "learner_id", "teacher_id", "manager_id", "guardian_id", "record_date", "time_out"
             FROM sign_out_records
             WHERE "learner_id" = $1 ORDER BY "record_date" DESC`,
             [learnerId]
@@ -40,24 +40,63 @@ class SignOutRepository {
     }
 
     /**
+     * Retrieves a learner's sign-out for one date, if there is one. Used to
+     * stop the same learner being signed out twice on the same day.
+     *
+     * @param {number} learnerId - The unique identifier of the learner.
+     * @param {string} date - YYYY-MM-DD
+     * @returns {Promise<Object|null>} The sign-out record, or null if none exists.
+     */
+    async findByLearnerAndDate(learnerId, date) {
+        const result = await this.pool.query(
+            `SELECT "record_id", "learner_id", "teacher_id", "manager_id", "guardian_id", "record_date", "time_out"
+            FROM sign_out_records
+            WHERE "learner_id" = $1 AND "record_date" = $2`,
+            [learnerId, date]
+        );
+        return result.rows[0] || null;
+    }
+
+    /**
      * Creates a new sign out record.
      *
      * @param {Object} params - The new sign out record details.
      * @param {number} params.learnerId - The unique identifier of the learner.
-     * @param {string} params.teacherId - The unique identifier of the teacher.
-     * @param {string} params.guardianId - The unique identifier of the guardian.
+     * @param {number|null} params.teacherId - The teacher who recorded it (or null if a manager did).
+     * @param {number|null} params.managerId - The manager who recorded it (or null if a teacher did).
+     * @param {number|null} params.guardianId - The guardian who collected; null = walked home alone.
      * @param {string} params.recordDate - The date the sign out of a leaner was recorded.
      * @param {string} params.timeOut - The time the sign out of a learner was recorded.
      * @returns {Promise<Object>} The newly created sign out record.
      */
-  async create({ learnerId, teacherId, guardianId, recordDate, timeOut }) {
+  async create({ learnerId, teacherId = null, managerId = null, guardianId, recordDate, timeOut }) {
     const result = await this.pool.query(
-      `INSERT INTO sign_out_records ("learner_id", "teacher_id", "guardian_id", "record_date", "time_out")
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING "record_id", "learner_id", "teacher_id", "guardian_id", "record_date", "time_out"`,
-      [learnerId, teacherId, guardianId, recordDate, timeOut]
+      `INSERT INTO sign_out_records ("learner_id", "teacher_id", "manager_id", "guardian_id", "record_date", "time_out")
+       VALUES ($1, $2, $3, $4, $5, $6)
+       RETURNING "record_id", "learner_id", "teacher_id", "manager_id", "guardian_id", "record_date", "time_out"`,
+      [learnerId, teacherId, managerId, guardianId, recordDate, timeOut]
     );
     return result.rows[0];
+  }
+
+  /**
+   * Every sign-out on one date, with who collected the learner (null
+   * guardian = walked home alone). Feeds the Sign-Out page's
+   * "already collected today" list.
+   *
+   * @param {string} date - YYYY-MM-DD
+   * @returns {Promise<Array<Object>>}
+   */
+  async findByDate(date) {
+    const result = await this.pool.query(
+      `SELECT s."record_id", s."learner_id", s."guardian_id", s."time_out", g."full_name" AS "guardian_name"
+       FROM sign_out_records s
+       LEFT JOIN guardians g ON g."guardian_id" = s."guardian_id"
+       WHERE s."record_date" = $1
+       ORDER BY s."time_out"`,
+      [date]
+    );
+    return result.rows;
   }
 }
 

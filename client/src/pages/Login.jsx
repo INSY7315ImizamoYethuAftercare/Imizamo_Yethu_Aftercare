@@ -1,9 +1,11 @@
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { login, restoreSession, homePathFor, useSession } from "../services/session";
 
 function Login() {
   const navigate = useNavigate();
+  // e.g. "Account created. Please sign in." after registering.
+  const notice = useLocation().state?.message;
   const { user, status } = useSession();
   const [role, setRole] = useState("Teacher");
   const [email, setEmail] = useState("");
@@ -76,8 +78,9 @@ function Login() {
 
         <form onSubmit={handleSignIn}>
         <div className="mb-4">
-          <label className="text-xs font-medium text-gray-500 mb-1 block">EMAIL</label>
+          <label htmlFor="login-email" className="text-xs font-medium text-gray-500 mb-1 block">EMAIL</label>
           <input
+            id="login-email"
             type="email"
             autoComplete="username"
             value={email}
@@ -87,8 +90,9 @@ function Login() {
         </div>
 
         <div className="mb-6">
-          <label className="text-xs font-medium text-gray-500 mb-1 block">PASSWORD</label>
+          <label htmlFor="login-password" className="text-xs font-medium text-gray-500 mb-1 block">PASSWORD</label>
           <input
+            id="login-password"
             type="password"
             autoComplete="current-password"
             value={password}
@@ -97,6 +101,7 @@ function Login() {
           />
         </div>
 
+        {notice && !error && <p role="status" className="text-sm text-center text-green-600 mb-4">{notice}</p>}
         {error && <p className="text-sm text-center text-red-500 mb-4">{error}</p>}
 
         <button

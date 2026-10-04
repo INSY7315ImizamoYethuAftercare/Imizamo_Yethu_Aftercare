@@ -42,6 +42,36 @@ export class LearnerService {
   }
 
   /**
+   * Retrieves a single learner by id. Same access as listLearners:
+   * teachers and managers can both view any learner.
+   *
+   * @param {Object} params
+   * @param {number} params.userId
+   * @param {number} params.learnerId
+   * @returns {Promise<Object>} The learner record.
+   * @throws {Error} 403 if the caller is neither a teacher nor a manager.
+   * @throws {Error} 404 if no learner exists with that id.
+   */
+  async getLearner({ userId, learnerId }) {
+    const manager = await this.managerRepository.findByUserId(userId);
+    const teacher = manager ? null : await this.teacherRepository?.findByUserId(userId);
+    if (!manager && !teacher) {
+      const err = new Error("Only teachers and managers can view learners");
+      err.status = 403;
+      throw err;
+    }
+
+    const learner = await this.learnerRepository.findById(learnerId);
+    if (!learner) {
+      const err = new Error("Learner not found");
+      err.status = 404;
+      throw err;
+    }
+
+    return learner;
+  }
+
+  /**
    *
    * @param {*} param0
    * @returns

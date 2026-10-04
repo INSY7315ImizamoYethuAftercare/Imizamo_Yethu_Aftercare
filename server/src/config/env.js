@@ -3,7 +3,10 @@
 // `process.env` directly — that way a missing variable fails loudly at
 // startup instead of causing a confusing bug three requests later.
 
-import 'dotenv/config'
+import dotenv from 'dotenv'
+
+// Tests get their config from tests/setup-env.js; never load real secrets under Jest.
+if (process.env.NODE_ENV !== 'test') dotenv.config()
 
 const required = ['PORT', 'CLIENT_ORIGIN', 'DATABASE_URL', 'JWT_SECRET']
 
