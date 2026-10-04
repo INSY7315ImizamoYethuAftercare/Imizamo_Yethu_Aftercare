@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
 import { apiClient } from "../services/apiClient";
 import { dataBus } from "../services/dataBus";
+import { colourForClass } from "./AddClassSheet";
 import { useClasses } from "./UseClasses";
 import { useHeader } from "./UseHeader";
 import { useLearners } from "./UseLearners";
@@ -144,19 +145,24 @@ function Attendance({ role = "Teacher" }) {
         </div>
 
         <div className="flex gap-2 mt-4 mb-5 overflow-x-auto py-2">
-          {classes.map((cls) => (
-            <button
-              key={cls}
-              onClick={() => setSelectedClass(cls)}
-              className={`px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap shadow-md border transition active:scale-95 ${
-                selectedClass === cls
-                  ? "bg-orange-400 text-white border-orange-400"
-                  : "bg-white text-gray-600 border-gray-200"
-              }`}
-            >
-              {cls}
-            </button>
-          ))}
+          {classes.map((cls) => {
+            const isActive = selectedClass === cls;
+            const classColour = cls === "All" ? "#FB923C" : colourForClass(cls);
+            return (
+              <button
+                key={cls}
+                onClick={() => setSelectedClass(cls)}
+                style={
+                  isActive
+                    ? { backgroundColor: classColour, borderColor: classColour, color: "#1f2937" }
+                    : { backgroundColor: "#ffffff", borderColor: "#e5e7eb", color: "#4b5563" }
+                }
+                className="px-4 py-2 rounded-full text-sm font-semibold whitespace-nowrap shadow-md border transition active:scale-95"
+              >
+                {cls}
+              </button>
+            );
+          })}
         </div>
 
         <div className="grid grid-cols-2 gap-3 mb-5">

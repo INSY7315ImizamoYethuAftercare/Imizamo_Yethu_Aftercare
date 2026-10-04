@@ -62,10 +62,6 @@ function Observations({ role = "Teacher" }) {
   const starting = learnerRecords[learnerId] || learnerRecords[1];
 
   const [activeTab, setActiveTab] = useState("Profile");
-  const location = useLocation();
-  const learner = location.state?.learner || DEFAULT_LEARNER;
-  const theme = CLASS_THEMES[learner.group] || CLASS_THEMES.Yellow;
-  const [activeTab, setActiveTab] = useState("Observations");
   const [showForm, setShowForm] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Academic");
   const [note, setNote] = useState("");
@@ -73,6 +69,7 @@ function Observations({ role = "Teacher" }) {
   const [saveError, setSaveError] = useState("");
   const [savedBanner, setSavedBanner] = useState("");
   const [learner, setLearner] = useState(starting);
+  const theme = CLASS_THEMES[learner.group] || CLASS_THEMES.Yellow;
   const [draftName, setDraftName] = useState(starting.name);
   const [draftDob, setDraftDob] = useState(starting.dob);
 
