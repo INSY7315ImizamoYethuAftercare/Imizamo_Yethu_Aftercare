@@ -98,6 +98,22 @@ class SignOutRepository {
     );
     return result.rows;
   }
+
+  /**
+   * Count of sign-out (safe collection) records in a date range.
+   * @param {string} periodStart - YYYY-MM-DD
+   * @param {string} periodEnd - YYYY-MM-DD
+   * @returns {Promise<number>}
+   */
+  async countByDateRange(periodStart, periodEnd) {
+    const result = await this.pool.query(
+      `SELECT COUNT(*) AS count
+       FROM sign_out_records
+       WHERE "record_date" BETWEEN $1 AND $2`,
+      [periodStart, periodEnd],
+    );
+    return Number(result.rows[0].count);
+  }
 }
 
 export default SignOutRepository;

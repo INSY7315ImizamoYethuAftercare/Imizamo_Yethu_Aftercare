@@ -1,39 +1,40 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import WeeklyChart from "../components/WeeklyChart";
 import TrendChart from "../components/TrendChart";
 import { exportChart } from "../utils/charts";
 import { generatePDF } from "../utils/pdf";
 import { colourForClass } from "./AddClassSheet";
-import { useClasses } from "./UseClasses";
 import { useHeader } from "./UseHeader";
+import { apiClient } from "../services/apiClient";
 
-const WEEKLY_DAYS = [
-  { label: "Mon 21", value: 5, color: "#FB923C" },
-  { label: "Tue 22", value: 5, color: "#38BDF8" },
-  { label: "Wed 23", value: 5, color: "#4ADE80" },
-  { label: "Thu 24", value: 4, color: "#F472B6" },
-  { label: "Fri 25", value: 4, color: "#A78BFA" },
-];
+const DAY_COLOURS = ["#FB923C", "#38BDF8", "#4ADE80", "#F472B6", "#A78BFA"];
 
-const ATTENDANCE_BY_CLASS = [
-  { name: "Yellow", rate: 97, learners: 2 },
-  { name: "Green", rate: 90, learners: 2 },
-  { name: "Blue", rate: 97, learners: 1 },
-  { name: "Red", rate: 85, learners: 1 },
-];
+const CATEGORY_COLOURS = {
+  Academic: "#38BDF8",
+  Social: "#2DD4BF",
+  Wellbeing: "#FB923C",
+  Creative: "#F472B6",
+};
 
-const DEV_CATEGORIES = [
-  { name: "Academic", count: 3, color: "#38BDF8" },
-  { name: "Social", count: 2, color: "#2DD4BF" },
-  { name: "Wellbeing", count: 1, color: "#FB923C" },
-  { name: "Creative", count: 1, color: "#F472B6" },
-];
+function formatPeriodLabel(start, end) {
+  if (!start || !end) return "Current period";
+  try {
+    const opts = { month: "short", year: "numeric", day: "numeric" };
+    const s = new Date(`${start}T00:00:00`).toLocaleDateString(undefined, opts);
+    const e = new Date(`${end}T00:00:00`).toLocaleDateString(undefined, opts);
+    return `${s} – ${e}`;
+  } catch {
+    return `${start} – ${end}`;
+  }
+}
 
 function Reports({ role = "Manager" }) {
   const [activeTab, setActiveTab] = useState("Overview");
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
   const navigate = useNavigate();
-  const classList = useClasses();
   const comingSoon = () => alert("Coming soon");
   const tabs = [
     { id: "Overview", icon: "📊" },
@@ -49,49 +50,133 @@ function Reports({ role = "Manager" }) {
   const iconBtn =
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
-  const sampleWeekly = {
-    Yellow: { thisWeek: 97, lastWeek: 94 },
-    Green: { thisWeek: 90, lastWeek: 88 },
-    Red: { thisWeek: 85, lastWeek: 90 },
-    Blue: { thisWeek: 97, lastWeek: 80 },
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError("");
+    apiClient
+      .get("/reports/overview")
+      .then((payload) => {
+        if (!cancelled) setData(payload);
+      })
+      .catch((e) => {
+        if (!cancelled) setError(e.message || "Could not load report data.");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const t = data?.totals ?? {
+    activeLearners: 0,
+    classes: 0,
+    teachers: 0,
+    observations: 0,
+    avgAttendance: 0,
+    signOutsThisMonth: 0,
+    daysDelivered: 0,
+    uniqueLearnersServed: 0,
   };
-  const classRows = classList.map((c) => ({
-    name: c.name,
-    ...(sampleWeekly[c.name] ?? { thisWeek: null, lastWeek: null }),
+
+  const weeklyDays = (data?.weeklyDays ?? []).map((d, i) => ({
+    ...d,
+    color: DAY_COLOURS[i % DAY_COLOURS.length],
   }));
-  const pct = (n) => (n === null ? "–" : n + "%");
+
+  const weeklyChartData = weeklyDays.map((d) => ({
+    day: d.day,
+    present: d.value,
+  }));
+
+  const attendanceByClass = data?.attendanceByClass ?? [];
+  const classRows = data?.classTrends ?? [];
+  const orgTrend = data?.orgTrend ?? [];
+
+  const maxCat = Math.max(
+    1,
+    ...(data?.observationsByCategory ?? []).map((c) => c.observationCount),
+  );
+
+  const devCategories = (data?.observationsByCategory ?? []).map((row) => ({
+    name: row.category,
+    count: row.observationCount,
+    color: CATEGORY_COLOURS[row.category] ?? "#94A3B8",
+  }));
+
+  const pct = (n) => (n === null || n === undefined ? "–" : n + "%");
+
+  const periodLabel = formatPeriodLabel(data?.periodStart, data?.periodEnd);
 
   const overviewStats = [
-    { label: "Total Learners", value: "6", icon: "🎒", color: "text-orange-500" },
-    { label: "Avg Attendance", value: "92%", icon: "📈", color: "text-green-500" },
-    { label: "Observations", value: "8", icon: "📝", color: "text-sky-500" },
-    { label: "Classes", value: String(classList.length || 4), icon: "🏫", color: "text-pink-500" },
+    {
+      label: "Total Learners",
+      value: String(t.activeLearners),
+      icon: "🎒",
+      color: "text-orange-500",
+    },
+    {
+      label: "Avg Attendance",
+      value: `${t.avgAttendance}%`,
+      icon: "📈",
+      color: "text-green-500",
+    },
+    {
+      label: "Observations",
+      value: String(t.observations),
+      icon: "📝",
+      color: "text-sky-500",
+    },
+    {
+      label: "Classes",
+      value: String(t.classes),
+      icon: "🏫",
+      color: "text-pink-500",
+    },
   ];
 
   const donorMetrics = [
-    { icon: "🎒", label: "Learners served this quarter", value: "6" },
-    { icon: "📈", label: "Average attendance rate", value: "92%" },
-    { icon: "📝", label: "Development observations", value: "8" },
-    { icon: "🏠", label: "Safe collections this month", value: "48" },
-    { icon: "📅", label: "Days of aftercare delivered", value: "22" },
+    {
+      icon: "🎒",
+      label: "Learners served this period",
+      value: String(t.uniqueLearnersServed || t.activeLearners),
+    },
+    {
+      icon: "📈",
+      label: "Average attendance rate",
+      value: `${t.avgAttendance}%`,
+    },
+    {
+      icon: "📝",
+      label: "Development observations",
+      value: String(t.observations),
+    },
+    {
+      icon: "🏠",
+      label: "Safe collections this month",
+      value: String(t.signOutsThisMonth),
+    },
+    {
+      icon: "📅",
+      label: "Days of aftercare delivered",
+      value: String(t.daysDelivered),
+    },
   ];
 
   const boardEnrolment = [
-    "6 active learners",
-    "4 class groups",
-    "4 qualified teachers",
-    "1 new enrolment (July)",
+    `${t.activeLearners} active learners`,
+    `${t.classes} class groups`,
+    `${t.teachers} qualified teachers`,
   ];
   const boardOperations = [
-    "Digital attendance: 100% compliance",
+    `Digital attendance recorded on ${t.daysDelivered} day${t.daysDelivered === 1 ? "" : "s"}`,
     "Digital sign-out system operational",
-    "Parent portal launched",
-    "0 safety incidents",
+    `${t.signOutsThisMonth} safe collection${t.signOutsThisMonth === 1 ? "" : "s"} this month`,
   ];
   const boardWellbeing = [
-    "8 teacher observations",
-    "Peer mentor programme active",
-    "2 learners receiving additional support",
+    `${t.observations} teacher observation${t.observations === 1 ? "" : "s"}`,
     "Parent communication: ongoing",
   ];
 
@@ -99,7 +184,7 @@ function Reports({ role = "Manager" }) {
     generatePDF({
       filename: "overview-report",
       title: "Overview Report",
-      period: "July 2025",
+      period: periodLabel,
       rows: overviewStats.map((r) => ({ label: r.label, value: r.value })),
     });
 
@@ -111,9 +196,9 @@ function Reports({ role = "Manager" }) {
       rows: classRows.map((c) => ({
         label: c.name,
         value:
-          c.thisWeek === null
+          c.thisWeek === null && c.lastWeek === null
             ? "No data yet"
-            : c.thisWeek + "% this week / " + c.lastWeek + "% last week",
+            : `${pct(c.thisWeek)} this week / ${pct(c.lastWeek)} last week`,
       })),
     });
 
@@ -121,7 +206,7 @@ function Reports({ role = "Manager" }) {
     generatePDF({
       filename: "donor-report",
       title: "Donor Impact Report",
-      period: "Q3 2025 · July",
+      period: periodLabel,
       rows: donorMetrics.map((r) => ({ label: r.label, value: r.value })),
     });
 
@@ -129,11 +214,11 @@ function Reports({ role = "Manager" }) {
     generatePDF({
       filename: "board-report",
       title: "Board Report",
-      period: "July 2025 · Monthly Overview",
+      period: periodLabel,
       rows: [
-        ...boardEnrolment.map((t) => ({ label: "Enrolment", value: t })),
-        ...boardOperations.map((t) => ({ label: "Operations", value: t })),
-        ...boardWellbeing.map((t) => ({ label: "Wellbeing", value: t })),
+        ...boardEnrolment.map((text) => ({ label: "Enrolment", value: text })),
+        ...boardOperations.map((text) => ({ label: "Operations", value: text })),
+        ...boardWellbeing.map((text) => ({ label: "Wellbeing", value: text })),
       ],
     });
 
@@ -149,8 +234,12 @@ function Reports({ role = "Manager" }) {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={comingSoon} className={iconBtn}>🔔</button>
-            <button onClick={() => navigate(settingsPath)} className={iconBtn}>⚙️</button>
+            <button onClick={comingSoon} className={iconBtn}>
+              🔔
+            </button>
+            <button onClick={() => navigate(settingsPath)} className={iconBtn}>
+              ⚙️
+            </button>
           </div>
         </div>
       </div>
@@ -180,7 +269,16 @@ function Reports({ role = "Manager" }) {
           ))}
         </div>
 
-        {/* ── Overview (Figma) ── */}
+        {loading && (
+          <p className="text-sm text-gray-500 mb-4">Loading report data…</p>
+        )}
+        {error && (
+          <p className="text-sm text-red-500 mb-4 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+            {error}
+          </p>
+        )}
+
+        {/* ── Overview ── */}
         {activeTab === "Overview" && (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
@@ -200,7 +298,10 @@ function Reports({ role = "Manager" }) {
                 <span>📅</span> Weekly Attendance
               </h3>
               <div className="flex justify-between gap-2 mb-4">
-                {WEEKLY_DAYS.map((d) => (
+                {weeklyDays.length === 0 && (
+                  <p className="text-xs text-gray-400">No attendance recorded this week yet.</p>
+                )}
+                {weeklyDays.map((d) => (
                   <div key={d.label} className="flex-1 text-center">
                     <p className="text-lg font-bold" style={{ color: d.color }}>
                       {d.value}
@@ -209,7 +310,7 @@ function Reports({ role = "Manager" }) {
                   </div>
                 ))}
               </div>
-              <WeeklyChart />
+              <WeeklyChart data={weeklyChartData} />
             </div>
 
             <div className={card}>
@@ -217,7 +318,10 @@ function Reports({ role = "Manager" }) {
                 <span>🏫</span> Attendance by Class
               </h3>
               <div className="space-y-3">
-                {ATTENDANCE_BY_CLASS.map((c) => (
+                {attendanceByClass.length === 0 && (
+                  <p className="text-xs text-gray-400">No class attendance data for this period.</p>
+                )}
+                {attendanceByClass.map((c) => (
                   <div key={c.name}>
                     <div className="flex items-center justify-between mb-1">
                       <span className="text-sm font-semibold text-gray-800">{c.name}</span>
@@ -244,14 +348,17 @@ function Reports({ role = "Manager" }) {
                 <span>🧩</span> Development Categories
               </h3>
               <div className="space-y-3">
-                {DEV_CATEGORIES.map((cat) => (
+                {devCategories.length === 0 && (
+                  <p className="text-xs text-gray-400">No observations recorded for this period.</p>
+                )}
+                {devCategories.map((cat) => (
                   <div key={cat.name} className="flex items-center gap-3">
                     <span className="text-sm text-gray-700 w-24 shrink-0">{cat.name}</span>
                     <div className="flex-1 h-2.5 rounded-full bg-gray-100 overflow-hidden">
                       <div
                         className="h-full rounded-full"
                         style={{
-                          width: `${(cat.count / 3) * 100}%`,
+                          width: `${(cat.count / maxCat) * 100}%`,
                           backgroundColor: cat.color,
                         }}
                       />
@@ -283,7 +390,7 @@ function Reports({ role = "Manager" }) {
                   Export chart
                 </button>
               </div>
-              <TrendChart />
+              <TrendChart data={orgTrend} />
             </div>
             <div className={card}>
               <h3 className="font-semibold text-gray-900 mb-3">Cross-class attendance</h3>
@@ -297,6 +404,13 @@ function Reports({ role = "Manager" }) {
                     </tr>
                   </thead>
                   <tbody>
+                    {classRows.length === 0 && (
+                      <tr>
+                        <td colSpan={3} className="py-3 text-xs text-gray-400">
+                          No class trend data yet.
+                        </td>
+                      </tr>
+                    )}
                     {classRows.map((cls) => (
                       <tr key={cls.name} className="border-b border-gray-50">
                         <td className="py-2 font-medium flex items-center gap-2">
@@ -320,13 +434,13 @@ function Reports({ role = "Manager" }) {
           </div>
         )}
 
-        {/* ── Donor Report (Figma) ── */}
+        {/* ── Donor Report ── */}
         {activeTab === "Donor Report" && (
           <div className="space-y-4 max-w-3xl">
             <div className="bg-purple-50 rounded-2xl p-6 text-center shadow-lg border border-purple-100">
               <div className="text-3xl mb-2">💼</div>
               <h2 className="font-bold text-orange-500 text-lg">Donor Impact Report</h2>
-              <p className="text-sm text-gray-500 mt-1">Q3 2025 · July</p>
+              <p className="text-sm text-gray-500 mt-1">{periodLabel}</p>
             </div>
 
             <div className={card}>
@@ -350,10 +464,15 @@ function Reports({ role = "Manager" }) {
             <div className={card}>
               <h3 className="font-semibold text-gray-900 mb-2">Narrative Summary</h3>
               <p className="text-sm text-gray-600 leading-relaxed">
-                During Q3 2025, the Imizamo Yethu Learning Hub successfully provided
-                aftercare services to 6 registered learners across 4 class groups. The
-                programme maintained a strong 92% average attendance rate, demonstrating
-                consistent learner engagement and parental trust in our services.
+                During this period, the Imizamo Yethu Learning Hub provided aftercare services
+                to {t.uniqueLearnersServed || t.activeLearners} registered learner
+                {(t.uniqueLearnersServed || t.activeLearners) === 1 ? "" : "s"} across{" "}
+                {t.classes} class group{t.classes === 1 ? "" : "s"}. The programme maintained a{" "}
+                {t.avgAttendance}% average attendance rate
+                {t.observations > 0
+                  ? `, with ${t.observations} development observation${t.observations === 1 ? "" : "s"} recorded`
+                  : ""}
+                .
               </p>
             </div>
 
@@ -363,13 +482,13 @@ function Reports({ role = "Manager" }) {
           </div>
         )}
 
-        {/* ── Board Report (Figma) ── */}
+        {/* ── Board Report ── */}
         {activeTab === "Board Report" && (
           <div className="space-y-4 max-w-3xl">
             <div className="bg-orange-50 rounded-2xl p-6 text-center shadow-lg border border-orange-100">
               <div className="text-3xl mb-2">📋</div>
               <h2 className="font-bold text-orange-500 text-lg">Board Report</h2>
-              <p className="text-sm text-gray-500 mt-1">July 2025 · Monthly Overview</p>
+              <p className="text-sm text-gray-500 mt-1">{periodLabel}</p>
             </div>
 
             <div className={card}>
@@ -377,7 +496,7 @@ function Reports({ role = "Manager" }) {
               <ul className="space-y-2">
                 {boardEnrolment.map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="mt-1.5 w-2 h-2 rounded-full bg-orange-400 shrink-0" />
+                    <span className="text-orange-400 mt-0.5">●</span>
                     {item}
                   </li>
                 ))}
@@ -389,7 +508,7 @@ function Reports({ role = "Manager" }) {
               <ul className="space-y-2">
                 {boardOperations.map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="mt-1.5 w-2 h-2 rounded-full bg-orange-400 shrink-0" />
+                    <span className="text-orange-400 mt-0.5">●</span>
                     {item}
                   </li>
                 ))}
@@ -401,7 +520,7 @@ function Reports({ role = "Manager" }) {
               <ul className="space-y-2">
                 {boardWellbeing.map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="mt-1.5 w-2 h-2 rounded-full bg-orange-400 shrink-0" />
+                    <span className="text-orange-400 mt-0.5">●</span>
                     {item}
                   </li>
                 ))}
