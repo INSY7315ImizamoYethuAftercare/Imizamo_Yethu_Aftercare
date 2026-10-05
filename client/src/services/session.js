@@ -26,7 +26,18 @@ export const onSessionReset = (fn) => {
   return () => resetters.delete(fn)
 }
 
-export const getSessionRole = () => state.user?.role ?? null
+// A master admin can do everything a manager can, so uses the manager's
+// pages: their "app role" is manager. user.role stays the real account role
+// (admin) and user.accessLevel says 'master' or 'standard'.
+export const appRoleOf = (user) =>
+  user?.role === 'admin' && user?.accessLevel === 'master' ? 'manager' : user?.role ?? null
+
+export const isMasterAdmin = (user) => user?.role === 'admin' && user?.accessLevel === 'master'
+
+const withAppRole = (user) => (user ? { ...user, appRole: appRoleOf(user) } : null)
+
+/** The role the app treats the user as (see appRoleOf). */
+export const getSessionRole = () => state.user?.appRole ?? null
 
 /** Where each role lands after signing in. */
 export const homePathFor = (role) =>
@@ -37,7 +48,7 @@ export async function restoreSession() {
   if (state.status !== 'unknown') return state
   try {
     const { user } = await apiClient.get('/auth/me')
-    set({ user, status: 'authed' })
+    set({ user: withAppRole(user), status: 'authed' })
   } catch {
     set({ user: null, status: 'anon' })
   }
@@ -47,8 +58,8 @@ export async function restoreSession() {
 export async function login(email, password) {
   const { user } = await apiClient.post('/auth/login', { email, password })
   resetters.forEach((fn) => fn())
-  set({ user, status: 'authed' })
-  return user
+  set({ user: withAppRole(user), status: 'authed' })
+  return state.user
 }
 
 export async function logout() {

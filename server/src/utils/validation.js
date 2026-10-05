@@ -93,6 +93,16 @@ export function password(value, name = 'password') {
   return value
 }
 
+/** A colour as a hex code such as #FFD166. null or '' means "no colour". */
+export function hexColour(value, name = 'colour') {
+  if (value === undefined) return undefined
+  if (value === null || value === '') return null
+  if (typeof value !== 'string' || !/^#[0-9A-Fa-f]{6}$/.test(value)) {
+    throw badRequest(`${name} must be a hex colour such as #FFD166`)
+  }
+  return value.toUpperCase()
+}
+
 /** Observation rating: a whole number from 1 to 10. */
 export function rating(value) {
   if (!Number.isInteger(value) || value < 1 || value > 10) {

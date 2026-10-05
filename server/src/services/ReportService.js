@@ -1,3 +1,5 @@
+import { todayInSA } from './AttendanceService.js'
+
 function httpError(status, message) {
   const err = new Error(message)
   err.status = status
@@ -129,6 +131,7 @@ export class ReportService {
       signOutsThisMonth,
       daysDelivered,
       ratePeriod,
+      signedOutToday,
     ] = await Promise.all([
       this.learnerRepository.findAll(),
       this.schoolClassRepository.findAll({ includeInactive: false }),
@@ -144,6 +147,7 @@ export class ReportService {
       this.signOutRepository.countByDateRange(monthStart, end),
       this.attendanceRepository.getDaysWithAttendance(start, end),
       this.attendanceRepository.getAttendanceRate(start, end),
+      this.signOutRepository.countByDateRange(todayInSA(), todayInSA()),
     ])
 
     const activeLearners = learners.filter((l) => l.is_active)
@@ -176,11 +180,16 @@ export class ReportService {
       return Math.round((Number(row.present_count) / Number(row.total_count)) * 100)
     }
 
+    // A class's saved colour (null for the original five, which take the
+    // colour of their name), so every page draws a class the same way.
+    const colourOf = (name) => classes.find((c) => c.class_name === name)?.colour ?? null
+
     const attendanceByClass = byClassThisPeriod.map((row) => {
       const total = Number(row.total_count)
       const present = Number(row.present_count)
       return {
         name: row.class_name,
+        colour: colourOf(row.class_name),
         learners: Number(row.learner_count),
         rate: total === 0 ? 0 : Math.round((present / total) * 100),
       }
@@ -189,12 +198,13 @@ export class ReportService {
     // Include active classes that had no attendance rows yet
     for (const c of classes) {
       if (!attendanceByClass.some((r) => r.name === c.class_name)) {
-        attendanceByClass.push({ name: c.class_name, learners: Number(c.active_learner_count) || 0, rate: 0 })
+        attendanceByClass.push({ name: c.class_name, colour: c.colour ?? null, learners: Number(c.active_learner_count) || 0, rate: 0 })
       }
     }
 
     const classTrends = classes.map((c) => ({
       name: c.class_name,
+      colour: c.colour ?? null,
       thisWeek: rateFor(byClassThisWeek, c.class_name),
       lastWeek: rateFor(byClassLastWeek, c.class_name),
     }))
@@ -239,6 +249,20 @@ export class ReportService {
       })),
       classTrends,
       orgTrend,
+      // Today's numbers (South African date), per class and in total. Counts
+      // only, no learner names, so admins can see them too (POPIA).
+      today: {
+        date: todayInSA(),
+        present: classes.reduce((sum, c) => sum + Number(c.present_today), 0),
+        activeLearners: activeLearners.length,
+        signedOut: Number(signedOutToday) || 0,
+        classes: classes.map((c) => ({
+          name: c.class_name,
+          colour: c.colour ?? null,
+          present: Number(c.present_today),
+          activeLearners: Number(c.active_learner_count),
+        })),
+      },
       rates: {
         thisWeek: rateThisWeek,
         lastWeek: rateLastWeek,

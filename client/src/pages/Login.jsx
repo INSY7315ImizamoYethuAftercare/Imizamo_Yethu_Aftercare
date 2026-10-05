@@ -25,7 +25,7 @@ function Login() {
     restoreSession();
   }, []);
   useEffect(() => {
-    if (status === "authed" && user) navigate(homePathFor(user.role), { replace: true });
+    if (status === "authed" && user) navigate(homePathFor(user.appRole), { replace: true });
   }, [status, user, navigate]);
 
   const handleSignIn = async (e) => {
@@ -36,7 +36,7 @@ function Login() {
     try {
       const signedIn = await login(email.trim(), password);
       // Where you land depends on your real account role, not the card picked above.
-      navigate(homePathFor(signedIn.role), { replace: true });
+      navigate(homePathFor(signedIn.appRole), { replace: true });
     } catch (err) {
       setError(err.message || "Could not sign in. Please try again.");
     } finally {

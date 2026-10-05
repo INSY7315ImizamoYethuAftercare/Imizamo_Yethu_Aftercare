@@ -94,6 +94,12 @@ export class LearnerService {
       throw err;
     }
 
+    if (schoolClass.is_active === false) {
+      const err = new Error(`${schoolClass.class_name} has been removed. Choose another class.`);
+      err.status = 409;
+      throw err;
+    }
+
     return this.learnerRepository.create({
       classId,
       firstName,
@@ -129,6 +135,13 @@ export class LearnerService {
       if (!schoolClass) {
         const err = new Error('Class not found')
         err.status = 404
+        throw err
+      }
+
+      // A removed (deactivated) class can't take new learners.
+      if (schoolClass.is_active === false) {
+        const err = new Error(`${schoolClass.class_name} has been removed. Choose another class.`)
+        err.status = 409
         throw err
       }
     }

@@ -91,11 +91,14 @@ function ManagerHome() {
               {classOverview.map((cls) => (
                 <div key={cls.name}>
                   <div className="flex justify-between text-sm mb-1">
-                    <span className={`font-medium ${cls.text}`}>{cls.name}</span>
+                    <span className="font-medium text-gray-800 inline-flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full inline-block shrink-0" style={{ backgroundColor: cls.hex }}></span>
+                      {cls.name}
+                    </span>
                     <span className="text-gray-500">{cls.value}</span>
                   </div>
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-                    <div className={`h-full ${cls.colour} rounded-full`} style={{ width: cls.width }}></div>
+                    <div className="h-full rounded-full" style={{ width: cls.width, backgroundColor: cls.hex }}></div>
                   </div>
                 </div>
               ))}

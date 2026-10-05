@@ -14,7 +14,7 @@ class SchoolClassRepository {
    */
   async findById(classId) {
     const result = await this.pool.query(
-      `SELECT "class_id", "teacher_id", "class_name", "grade_range", "is_active"
+      `SELECT "class_id", "teacher_id", "class_name", "grade_range", "colour", "is_active"
             FROM school_classes 
             WHERE "class_id" = $1`,
       [classId],
@@ -31,7 +31,7 @@ class SchoolClassRepository {
    */
   async findByTeacherId(teacherId) {
     const result = await this.pool.query(
-      `SELECT "class_id", "class_name", "grade_range", "is_active"
+      `SELECT "class_id", "class_name", "grade_range", "colour", "is_active"
         FROM school_classes 
         WHERE "teacher_id" = $1`,
       [teacherId],
@@ -49,7 +49,7 @@ class SchoolClassRepository {
    */
   async findAll({ includeInactive = false } = {}) {
     const result = await this.pool.query(
-      `SELECT c."class_id", c."teacher_id", c."class_name", c."grade_range", c."is_active",
+      `SELECT c."class_id", c."teacher_id", c."class_name", c."grade_range", c."colour", c."is_active",
               t."full_name" AS "teacher_name",
               (SELECT COUNT(*) FROM learners l
                  WHERE l."class_id" = c."class_id")::int AS "learner_count",
@@ -80,12 +80,12 @@ class SchoolClassRepository {
    */
 
   
-  async create({ teacherId, className, gradeRange }) {
+  async create({ teacherId, className, gradeRange, colour = null }) {
     const result = await this.pool.query(
-      `INSERT INTO school_classes ("teacher_id", "class_name", "grade_range")
-       VALUES ($1, $2, $3)
-       RETURNING "class_id", "teacher_id", "class_name", "grade_range", "is_active"`,
-      [teacherId, className, gradeRange],
+      `INSERT INTO school_classes ("teacher_id", "class_name", "grade_range", "colour")
+       VALUES ($1, $2, $3, $4)
+       RETURNING "class_id", "teacher_id", "class_name", "grade_range", "colour", "is_active"`,
+      [teacherId, className, gradeRange, colour],
     );
     return result.rows[0];
   }
@@ -103,7 +103,7 @@ class SchoolClassRepository {
    */
   async update(classId, fields) {
     // Whitelist updatable columns so callers can't inject arbitrary column names
-    const allowed = ["class_name", "grade_range", "teacher_id"];
+    const allowed = ["class_name", "grade_range", "teacher_id", "colour"];
     const keys = Object.keys(fields).filter((k) => allowed.includes(k));
     if (keys.length === 0) return this.findById(classId);
 
@@ -113,7 +113,7 @@ class SchoolClassRepository {
     const result = await this.pool.query(
       `UPDATE school_classes SET ${setClause} 
         WHERE "class_id" = $${keys.length + 1} 
-        RETURNING "class_id", "teacher_id", "class_name", "grade_range", "is_active"`,
+        RETURNING "class_id", "teacher_id", "class_name", "grade_range", "colour", "is_active"`,
       [...values, classId],
     );
     return result.rows[0] || null;

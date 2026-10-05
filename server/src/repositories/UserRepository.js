@@ -39,6 +39,24 @@ class UserRepository {
     }
 
     /**
+     * Lists every manager and admin account (no password hash), with the
+     * admin access level ('master' | 'standard', null for managers).
+     * Used by the master admin's account management.
+     *
+     * @returns {Promise<Array<Object>>} Admins first, then managers, by name.
+     */
+    async findManagersAndAdmins() {
+        const result = await this.pool.query(
+            `SELECT u."user_id", u."email", u."role", u."full_name", u."is_active", a."access_level"
+            FROM users u
+            LEFT JOIN admins a ON a."user_id" = u."user_id"
+            WHERE u."role" IN ('admin', 'manager')
+            ORDER BY u."role", u."full_name"`
+        );
+        return result.rows;
+    }
+
+    /**
     * Creates a new user record and adds their respective role
     * 
     * @param {Object} params - The new user's details.

@@ -8,7 +8,10 @@ export function useHeader() {
   const classes = useClasses();
   if (!user) return { displayName: "", displayRole: "" };
 
-  const roleLabel = { manager: "Manager", admin: "Admin", guardian: "Parent", teacher: "Teacher" }[user.role] ?? user.role;
+  const roleLabel =
+    user.role === "admin" && user.accessLevel === "master"
+      ? "Master Admin"
+      : { manager: "Manager", admin: "Admin", guardian: "Parent", teacher: "Teacher" }[user.role] ?? user.role;
   let displayRole = roleLabel;
   if (user.role === "teacher") {
     const led = classes.find((c) => c.teacher === user.fullName);

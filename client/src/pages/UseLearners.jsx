@@ -13,7 +13,6 @@ import { getSessionRole, onSessionReset, useSession } from "../services/session"
 // `grade` is the class's grade range (e.g. "Gr 1-2"): the database stores a
 // grade range per class, not a grade per learner.
 let learners = [];
-let loaded = false;
 let loading = false;
 const listeners = new Set();
 const emit = () => listeners.forEach((fn) => fn());
@@ -33,6 +32,7 @@ const toLearner = (l) => ({
   name: `${l.first_name} ${l.last_name}`,
   grade: l.grade_range,
   group: l.class_name,
+  classColour: l.class_colour ?? null,
   status: l.is_active ? "active" : "deactivated",
   dateOfBirth: l.date_of_birth, // null until the client supplies it
   canWalkHomeAlone: l.can_walk_home_alone,
@@ -40,24 +40,30 @@ const toLearner = (l) => ({
 
 const canLoad = () => ["teacher", "manager"].includes(getSessionRole());
 
-export async function refreshLearners() {
-  if (!canLoad()) return;
+// Reloads the list. Calls made while one is already running share it, so
+// several components opening at once make a single request.
+let inFlight = null;
+export function refreshLearners() {
+  if (!canLoad()) return Promise.resolve();
+  if (inFlight) return inFlight;
   loading = true;
   emit();
-  try {
-    learners = (await apiClient.get("/learners")).map(toLearner);
-    loaded = true;
-  } catch (e) {
-    console.error("Could not load learners:", e);
-  } finally {
-    loading = false;
-    emit();
-  }
+  inFlight = (async () => {
+    try {
+      learners = (await apiClient.get("/learners")).map(toLearner);
+    } catch (e) {
+      console.error("Could not load learners:", e);
+    } finally {
+      loading = false;
+      inFlight = null;
+      emit();
+    }
+  })();
+  return inFlight;
 }
 
 onSessionReset(() => {
   learners = [];
-  loaded = false;
   emit();
 });
 // A class's grade range changed.
@@ -118,14 +124,16 @@ export async function setLearnerStatus(id, status) {
   }
 }
 
-// Saves a learner's name and date of birth (PATCH /learners/:id). Unlike the
-// helpers above it doesn't alert: it throws, so the page can show its own
-// error message. An empty dateOfBirth clears it.
-export async function updateLearnerDetails(id, { firstName, lastName, dateOfBirth }) {
+// Saves a learner's name, date of birth and (optionally) class
+// (PATCH /learners/:id). Unlike the helpers above it doesn't alert: it throws,
+// so the page can show its own error message. An empty dateOfBirth clears it.
+export async function updateLearnerDetails(id, { firstName, lastName, dateOfBirth, classId }) {
+  const before = learners.find((l) => l.id === id);
   const updated = await apiClient.patch(`/learners/${id}`, {
     firstName,
     lastName,
     dateOfBirth: dateOfBirth || null,
+    ...(classId ? { classId } : {}),
   });
   learners = learners.map((l) =>
     l.id === id
@@ -139,13 +147,37 @@ export async function updateLearnerDetails(id, { firstName, lastName, dateOfBirt
       : l,
   );
   emit();
+  // A new class changes the learner's class name and grade, and both
+  // classes' counts: reload them.
+  if (before && updated.class_id !== before.classId) {
+    await refreshLearners();
+    dataBus.emit("classes");
+  }
   return updated;
+}
+
+// Moves learners to another class, one at a time (PATCH /learners/:id).
+// Throws on the first failure, so the caller knows not to go on and
+// remove the old class.
+export async function moveLearners(ids, classId) {
+  try {
+    for (const id of ids) await apiClient.patch(`/learners/${id}`, { classId });
+  } finally {
+    await refreshLearners();
+    dataBus.emit("classes");
+  }
 }
 
 export function useLearners() {
   const { user } = useSession();
+  // Reload whenever a page using the list opens, and when the user comes back
+  // to the tab, so a learner the manager added or moved shows up for the
+  // teacher without signing out and in again.
   useEffect(() => {
-    if (["teacher", "manager"].includes(user?.role) && !loaded && !loading) refreshLearners();
+    if (!["teacher", "manager"].includes(user?.appRole)) return undefined;
+    refreshLearners();
+    window.addEventListener("focus", refreshLearners);
+    return () => window.removeEventListener("focus", refreshLearners);
   }, [user]);
   return useSyncExternalStore(subscribe, getSnapshot);
 }

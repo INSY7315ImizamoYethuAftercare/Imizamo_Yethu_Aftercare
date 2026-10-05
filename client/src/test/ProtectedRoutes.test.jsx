@@ -56,7 +56,14 @@ describe('anonymous visitors', () => {
 const CASES = [
   ['teacher', ['/attendance', 'attendance'], ['/manager', '/admin', '/parent', '/manager/learners'], ['/home', 'teacher-home']],
   ['manager', ['/manager/learners', 'learners'], ['/home', '/admin', '/parent', '/attendance'], ['/manager', 'manager-home']],
-  ['admin', ['/admin/reports', 'reports'], ['/home', '/manager', '/parent', '/signout'], ['/admin', 'admin-home']],
+  // Admins see totals only (POPIA): no learner list, register or learner pages.
+  ['admin', ['/admin/reports', 'reports'],
+    ['/home', '/manager', '/parent', '/signout', '/admin/learners', '/admin/attendance', '/admin/observations?id=1'],
+    ['/admin', 'admin-home']],
+  // A master admin can do everything a manager can, so uses the manager pages.
+  ['masterAdmin', ['/manager/staff', 'staff'],
+    ['/admin', '/admin/reports', '/home', '/parent', '/attendance'],
+    ['/manager', 'manager-home']],
   ['guardian', ['/parent', 'parent-home'], ['/home', '/attendance', '/manager', '/admin/learners'], ['/parent', 'parent-home']],
 ]
 

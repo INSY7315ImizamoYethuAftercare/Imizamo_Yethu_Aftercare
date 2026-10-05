@@ -16,7 +16,7 @@ class LearnerRepository {
         const result = await this.pool.query(
             `SELECT l."learner_id", l."class_id", l."first_name", l."last_name",
                 l."date_of_birth", l."can_walk_home_alone", l."is_active",
-                c."class_name", c."grade_range"
+                c."class_name", c."grade_range", c."colour" AS "class_colour"
             FROM learners l
             JOIN school_classes c ON c."class_id" = l."class_id"
             WHERE l."learner_id" = $1`,
@@ -57,7 +57,8 @@ class LearnerRepository {
   async findAll() {
     const result = await this.pool.query(
       `SELECT l."learner_id", l."class_id", l."first_name", l."last_name",
-              l."date_of_birth", l."can_walk_home_alone", l."is_active", c."class_name", c."grade_range"
+              l."date_of_birth", l."can_walk_home_alone", l."is_active", c."class_name", c."grade_range",
+              c."colour" AS "class_colour"
        FROM learners l
        JOIN school_classes c ON c."class_id" = l."class_id"
        ORDER BY c."class_name", l."last_name", l."first_name"`,

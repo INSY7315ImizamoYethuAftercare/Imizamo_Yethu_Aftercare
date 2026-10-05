@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import MoreMenu from "../components/MoreMenu";
 import { useHeader } from "./UseHeader";
 import { useLearners, useLearnersLoading, fetchLearnerById, updateLearnerDetails } from "./UseLearners";
+import { useClasses } from "./UseClasses";
 
 const CLASS_THEMES = {
   Yellow: { banner: "bg-yellow-300", tabActive: "bg-yellow-300", back: "bg-yellow-400 border-yellow-600 text-yellow-950" },
@@ -49,7 +50,9 @@ function Observations({ role = "Teacher" }) {
   }, [learnerFromList, learnerId]);
 
   const learner = learnerFromList || directLearner;
-  const stillLoading = (loadingList && !learnerFromList) || directLoading;
+  // Once the learner is in the list we're done, even if the direct fetch was
+  // cancelled mid-way (it then never clears directLoading).
+  const stillLoading = !learnerFromList && (loadingList || directLoading);
 
   // --- Every hook below runs unconditionally, before any early return ---
   const [activeTab, setActiveTab] = useState("Observations");
@@ -63,13 +66,20 @@ function Observations({ role = "Teacher" }) {
   const [draftFirstName, setDraftFirstName] = useState("");
   const [draftLastName, setDraftLastName] = useState("");
   const [draftDob, setDraftDob] = useState("");
+  const [draftClassId, setDraftClassId] = useState("");
+  const classes = useClasses();
   const [observations, setObservations] = useState([
     { id: 1, category: "Social", date: "2025-07-15", note: "Showed great leadership during group activity today.", teacher: "Ms Nkosi" },
     { id: 2, category: "Academic", date: "2025-07-08", note: "Reading fluency improving significantly. Completed level 3 book.", teacher: "Ms Nkosi" },
   ]);
   const { displayName, displayRole } = useHeader();
 
-  const theme = CLASS_THEMES[learner?.group] || CLASS_THEMES.Yellow;
+  // The original five classes have a theme; a class added with its own
+  // colour (e.g. "Brown" in purple) is painted with that colour instead.
+  const customColour = learner?.classColour ?? (CLASS_THEMES[learner?.group] ? null : "#9CA3AF");
+  const theme = customColour
+    ? { banner: "", tabActive: "", back: "border-black/20 text-gray-900", style: { backgroundColor: customColour } }
+    : { ...(CLASS_THEMES[learner?.group] || CLASS_THEMES.Yellow), style: undefined };
   const canEdit = role === "Manager";
   const comingSoon = () => alert("Coming soon");
   const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
@@ -104,6 +114,7 @@ function Observations({ role = "Teacher" }) {
     setDraftFirstName(learner.firstName);
     setDraftLastName(learner.lastName);
     setDraftDob(learner.dateOfBirth ?? "");
+    setDraftClassId(String(learner.classId ?? ""));
     setSaveError("");
     setEditing(true);
   };
@@ -115,16 +126,17 @@ function Observations({ role = "Teacher" }) {
     const lastName = draftLastName.trim();
     if (!firstName || !lastName) { setSaveError("Enter the learner's first and last name."); return; }
     if (!draftDob) { setSaveError("Enter the date of birth."); return; }
+    if (!draftClassId) { setSaveError("Choose a class."); return; }
 
     setSaving(true);
     try {
-      await updateLearnerDetails(learner.id, { firstName, lastName, dateOfBirth: draftDob });
+      await updateLearnerDetails(learner.id, { firstName, lastName, dateOfBirth: draftDob, classId: Number(draftClassId) });
       setSaveError("");
       setEditing(false);
       setSavedBanner("Learner details saved");
       setTimeout(() => setSavedBanner(""), 2200);
-    } catch {
-      setSaveError("Couldn't save — please try again.");
+    } catch (e) {
+      setSaveError(e?.message || "Couldn't save — please try again.");
     } finally {
       setSaving(false);
     }
@@ -163,11 +175,12 @@ function Observations({ role = "Teacher" }) {
         </div>
       </div>
 
-      <div className={`${theme.banner} px-4 pt-3 pb-12`}>
+      <div className={`${theme.banner} px-4 pt-3 pb-12`} style={theme.style}>
         <div className="max-w-lg mx-auto relative flex items-center justify-center min-h-[48px]">
           <button
             onClick={() => navigate(backPath)}
             className={`absolute left-0 top-1/2 -translate-y-1/2 px-3 py-1.5 rounded-full border-2 text-xs font-semibold shadow-md flex items-center gap-1 active:scale-95 transition ${theme.back}`}
+            style={theme.style}
           >
             ← Back
           </button>
@@ -208,6 +221,7 @@ function Observations({ role = "Teacher" }) {
               className={`flex-1 py-2.5 rounded-xl text-xs font-semibold shadow-md transition active:scale-[0.97] ${
                 activeTab === label ? `${theme.tabActive} text-gray-800` : "bg-gray-100 text-gray-500"
               }`}
+              style={activeTab === label ? theme.style : undefined}
             >
               <span className="mr-1">{icon}</span>{label}
             </button>
@@ -229,6 +243,7 @@ function Observations({ role = "Teacher" }) {
               {!editing && (
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between gap-3"><span className="text-gray-500">Name</span><span className="font-medium text-right">{learner.name}</span></div>
+                  <div className="flex justify-between gap-3"><span className="text-gray-500">Class</span><span className="font-medium text-right">{learner.group} ({learner.grade})</span></div>
                   <div className="flex justify-between gap-3"><span className="text-gray-500">Date of birth</span><span className="font-medium">{learner.dateOfBirth ?? "—"}</span></div>
                   <div className="flex justify-between gap-3"><span className="text-gray-500">Age</span><span className="font-medium">{ageFromDob(learner.dateOfBirth)}</span></div>
                 </div>
@@ -250,6 +265,19 @@ function Observations({ role = "Teacher" }) {
                     <span className="text-gray-500">Date of birth</span>
                     <input type="date" value={draftDob} onChange={(e) => setDraftDob(e.target.value)}
                       className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300" />
+                  </label>
+                  <label className="block text-sm">
+                    <span className="text-gray-500">Class</span>
+                    <select value={draftClassId} onChange={(e) => setDraftClassId(e.target.value)}
+                      className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300">
+                      {/* The learner's current class stays selectable even if the list hasn't loaded yet. */}
+                      {!classes.some((c) => String(c.id) === String(learner.classId)) && (
+                        <option value={String(learner.classId ?? "")}>{learner.group}</option>
+                      )}
+                      {classes.map((c) => (
+                        <option key={c.id} value={String(c.id)}>{c.name} ({c.grade})</option>
+                      ))}
+                    </select>
                   </label>
                   {saveError && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-3 py-2">{saveError}</div>}
                   <div className="flex gap-3">

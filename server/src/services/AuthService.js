@@ -27,8 +27,9 @@ export class AuthService {
    * pickupPermissionRepository } bound to one transaction. Without it the
    * plain repositories are used (unit tests with mocks).
    */
-  constructor({ userRepository, guardianRepository, learnerRepository, pickupPermissionRepository, runInTransaction }) {
+  constructor({ userRepository, guardianRepository, learnerRepository, pickupPermissionRepository, adminRepository, runInTransaction }) {
     this.userRepository = userRepository
+    this.adminRepository = adminRepository
     this.guardianRepository = guardianRepository
     this.learnerRepository = learnerRepository
     this.pickupPermissionRepository = pickupPermissionRepository
@@ -142,9 +143,12 @@ export class AuthService {
       env.jwtSecret,
       { expiresIn: '8h' },
     )
-    return {
-      token,
-      user: { userId: user.user_id, email: user.email, role: user.role, fullName: user.full_name },
+    const profile = { userId: user.user_id, email: user.email, role: user.role, fullName: user.full_name }
+    // Admins also get their access level: a master admin can do everything a
+    // manager can, and create manager and admin accounts.
+    if (user.role === 'admin' && this.adminRepository) {
+      profile.accessLevel = (await this.adminRepository.findByUserId(user.user_id))?.access_level ?? 'standard'
     }
+    return { token, user: profile }
   }
     }

@@ -7,7 +7,7 @@
 import { Router } from 'express'
 import { authenticate, authorize } from '../middleware/auth.js'
 import {
-  getMyChildren, getChildProfile, getChildObservations,
+  getMyChildren, getChildProfile, getChildObservations, getChildOverview, addChildPickup,
   deactivateGuardian, activateGuardian,
 } from '../controllers/guardianController.js'
 
@@ -18,6 +18,8 @@ guardianRouter.use(authenticate)
 guardianRouter.get('/children', authorize('guardian'), getMyChildren)
 guardianRouter.get('/children/:learnerId', authorize('guardian'), getChildProfile)
 guardianRouter.get('/children/:learnerId/observations', authorize('guardian'), getChildObservations)
+guardianRouter.get('/children/:learnerId/overview', authorize('guardian'), getChildOverview)
+guardianRouter.post('/children/:learnerId/pickups', authorize('guardian'), addChildPickup)
 
 guardianRouter.patch('/:guardianId/deactivate', authenticate, authorize('manager'), deactivateGuardian)
 guardianRouter.patch('/:guardianId/activate', authenticate, authorize('manager'), activateGuardian)

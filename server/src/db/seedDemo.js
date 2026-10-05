@@ -136,6 +136,10 @@ try {
     const userId = await createUser(s)
     if (s.role === 'admin') {
       await client.query(`INSERT INTO admins ("user_id", "full_name", "access_level") VALUES ($1, $2, $3)`, [userId, s.fullName, s.accessLevel])
+      // A master admin can do everything a manager can (migration 004).
+      if (s.accessLevel === 'master') {
+        await client.query(`INSERT INTO managers ("user_id", "full_name") VALUES ($1, $2)`, [userId, s.fullName])
+      }
     } else if (s.role === 'manager') {
       managerId = (await client.query(
         `INSERT INTO managers ("user_id", "full_name") VALUES ($1, $2) RETURNING "manager_id"`, [userId, s.fullName],
@@ -204,6 +208,42 @@ try {
     `INSERT INTO sign_out_records ("learner_id", "teacher_id", "guardian_id", "record_date", "time_out") VALUES ($1, $2, $3, $4, $5)`,
     [learnerId[SIGNED_OUT_TODAY.learner], teacherFor(SIGNED_OUT_TODAY.learner), signOutGuardian, date, SIGNED_OUT_TODAY.time],
   )
+
+  // A pickup person Fatima registered herself (no login account), and a few
+  // days of history for Aisha so the parent page's "This Week" isn't empty.
+  const guardianIdByName = Object.fromEntries(
+    (await client.query('SELECT "guardian_id", "full_name" FROM guardians')).rows.map((g) => [g.full_name, g.guardian_id]),
+  )
+  const { rows: [zainab] } = await client.query(
+    `INSERT INTO guardians ("user_id", "full_name", "contact_number", "relationship")
+     VALUES (NULL, 'Zainab Hendricks', '0723456789', 'Aunt') RETURNING "guardian_id"`,
+  )
+  guardianIdByName['Zainab Hendricks'] = zainab.guardian_id
+  await client.query(
+    `INSERT INTO pickup_permissions ("learner_id", "guardian_id", "is_primary_contact", "added_by_guardian_id") VALUES ($1, $2, false, $3)`,
+    [learnerId['Aisha Petersen'], zainab.guardian_id, guardianIdByName['Fatima Petersen']],
+  )
+  // [days before today, status, collected by, time out]
+  const AISHA_HISTORY = [
+    [1, 'present', 'Zainab Hendricks', '17:00:00'],
+    [2, 'present', 'Fatima Petersen', '17:15:00'],
+    [3, 'absent'],
+    [4, 'present', 'Ahmed Petersen', '17:45:00'],
+  ]
+  for (const [daysAgo, status, collector, timeOut] of AISHA_HISTORY) {
+    await client.query(
+      `INSERT INTO attendance_records ("learner_id", "teacher_id", "record_date", "time_in", "status")
+       VALUES ($1, $2, $3::date - $4::int, $5, $6)`,
+      [learnerId['Aisha Petersen'], teacherFor('Aisha Petersen'), date, daysAgo, status === 'present' ? '14:00:00' : null, status],
+    )
+    if (collector) {
+      await client.query(
+        `INSERT INTO sign_out_records ("learner_id", "teacher_id", "guardian_id", "record_date", "time_out")
+         VALUES ($1, $2, $3, $4::date - $5::int, $6)`,
+        [learnerId['Aisha Petersen'], teacherFor('Aisha Petersen'), guardianIdByName[collector], date, daysAgo, timeOut],
+      )
+    }
+  }
 
   for (const [name, category, rating, notes] of OBSERVATIONS) {
     await client.query(

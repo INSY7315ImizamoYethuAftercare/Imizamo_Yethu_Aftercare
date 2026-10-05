@@ -71,10 +71,17 @@ describe('teachers', () => {
 })
 
 describe.each(['admin_standard', 'admin_master'])('%s', (role) => {
-  it('cannot read individual learner, class or guardian data (403)', async () => {
-    for (const path of ['/api/learners', '/api/classes', '/api/guardian/children', `/api/attendance/class/${w.yellowId}`]) {
-      expect((await get(path, w.users[role])).status).toBe(403)
+  // A standard admin sees totals only. The master admin can do everything a
+  // manager can (by design), so reads learners and classes like a manager;
+  // neither admin is a guardian.
+  it(role === 'admin_standard'
+    ? 'cannot read individual learner, class or guardian data (403)'
+    : 'can read learners, classes and the register like a manager, but not the guardian portal', async () => {
+    const expected = role === 'admin_standard' ? 403 : 200
+    for (const path of ['/api/learners', '/api/classes', `/api/attendance/class/${w.yellowId}`]) {
+      expect((await get(path, w.users[role])).status).toBe(expected)
     }
+    expect((await get('/api/guardian/children', w.users[role])).status).toBe(403)
   })
 
   it('gets a donor report that is aggregate only (no names, ids or dates of birth)', async () => {

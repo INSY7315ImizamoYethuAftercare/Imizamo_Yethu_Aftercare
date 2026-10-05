@@ -19,7 +19,7 @@ Run this before merging a PR into `main`. Copy the list into the PR description 
 
 ## B. Authentication
 
-- [ ] Sign in as each role (teacher, manager, master admin, standard admin, guardian). Each lands on its own home: `/home`, `/manager`, `/admin`, `/admin`, `/parent`.
+- [ ] Sign in as each role (teacher, manager, master admin, standard admin, guardian). Each lands on its own home: `/home`, `/manager`, `/manager` (the master admin uses the manager pages), `/admin`, `/parent`.
 - [ ] A wrong password shows *"Invalid email or password"*. An unknown email shows the **same** message.
 - [ ] Empty fields show *"Please enter your email and password."*
 - [ ] A deactivated account (`karen.vdberg@iylh.test`) shows *"This account has been deactivated"*.
@@ -42,13 +42,16 @@ Run this before merging a PR into `main`. Copy the list into the PR description 
 |---|---|---|
 | Teacher | `/home`, `/attendance`, `/learners`, `/classes`, `/signout` | `/manager`, `/admin`, `/parent` |
 | Manager | `/manager`, `/manager/attendance`, `/manager/learners`, `/manager/classes`, `/manager/staff`, `/reports` | `/home`, `/admin`, `/parent` |
-| Admin (master + standard) | `/admin`, `/admin/reports` | `/home`, `/manager`, `/parent` |
+| Master admin | Everything the manager can open, plus **Managers & admins** on Staff | `/home`, `/admin`, `/parent` |
+| Standard admin | `/admin`, `/admin/reports`, `/admin/settings` | `/home`, `/manager`, `/parent`, `/admin/learners`, `/admin/attendance` |
 | Guardian | `/parent`, `/parent/settings` | `/home`, `/attendance`, `/manager`, `/admin` |
 | Signed out | `/`, `/register` | every other page → `/` |
 
 - [ ] Every row above checked.
-- [ ] Admin pages show **no individual learner names**, by design under POPIA.
-- [ ] A guardian sees only their own child's information. ⚠️ The parent home page is static.
+- [ ] Admin pages show **no individual learner names**, by design under POPIA. Admins have no Learners or Attendance tab, and `/admin/learners`, `/admin/attendance` send them back to `/admin`.
+- [ ] Master admin: on **Staff → Managers & admins**, creating a manager and a standard admin works; each new account can sign in with its starting password and lands on its own home. A duplicate email is refused. Managers and standard admins don't see this section.
+- [ ] Admin home shows today's real numbers and every class in the Class Overview. Class colours match the Reports page and the manager's Classes list.
+- [ ] A guardian sees only their own child's information, and a parent with two children can switch between them.
 
 ## D. Attendance
 
@@ -59,6 +62,16 @@ Run this before merging a PR into `main`. Copy the list into the PR description 
 - [ ] Change a saved learner from Absent to Present and save: it updates without a duplicate-record error.
 - [ ] Manager: the Attendance page is **view only** (no buttons, no Save).
 - [ ] The Classes page "present today" numbers match the register.
+
+## D2. Moving learners and removing classes (manager)
+
+- [ ] **+ Add Class** matches the design: class name, grade range chips (Gr R to Gr 7), 8 colour swatches, a live preview card, Cancel / Add Classroom. A new class keeps its chosen colour on Classes, Learners, Attendance and the learner page banner, after a refresh too.
+- [ ] Learner **Profile → Edit details** has a **Class** box starting on the learner's current class, listing only classes that still exist.
+- [ ] Changing the class and saving updates the learner's page, the Learners list, and both classes' counts on **Classes**. The teacher of the new class sees the learner on their register.
+- [ ] Removing an empty class asks *"Remove Class?"* and removes it.
+- [ ] Removing a class that still has learners asks where to move them. **Move & remove** moves every learner (deactivated ones too), then removes the class.
+- [ ] If there's no other class, it says to add a class first, and nothing can be removed.
+- [ ] Refreshing a learner's page (or opening its link directly) loads the learner instead of staying on "Loading learner...".
 
 ## E. Sign-out
 
@@ -80,6 +93,14 @@ Use DevTools device mode at **360×740 (small Android)**, **768×1024 (tablet)**
 - [ ] Class filter chips scroll sideways instead of wrapping off-screen.
 - [ ] Buttons are big enough to tap (about 44px) and text is readable without zooming.
 - [ ] Manager pages use the wider layout on laptop width.
+
+## F2. Parent page
+
+- [ ] The welcome card, child card (attendance % over 30 days, today, updates), status box, observations, pickups, This Week and teacher contact all show **that parent's child's** real data.
+- [ ] The status box follows the day: not marked yet → at aftercare (arrival time) → collected (by whom, when), or absent.
+- [ ] **+ Add Person**: Submit stays disabled until name, relationship and contact number are filled in; a new person appears in the list and on the teacher's Sign-Out page for that child; adding someone already on the list is refused.
+- [ ] Ticking "may walk home alone" shows "May walk home alone ✓ Allowed" afterwards, and teachers can then choose Walking Home for that child.
+- [ ] No other family's names, and no phone numbers of other pickup people, appear anywhere on the page.
 
 ## G. Console, network and accessibility
 

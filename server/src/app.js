@@ -18,6 +18,7 @@ import { observationRouter } from './routes/observation.routes.js'
 import { learnerRouter } from './routes/learner.routes.js'
 import { reportRouter } from './routes/report.routes.js'
 import { teacherRouter } from './routes/teacher.routes.js'
+import { accountRouter } from './routes/account.routes.js'
 
 export function createApp() {
   const app = express()
@@ -55,6 +56,7 @@ export function createApp() {
   app.use('/api/learners', learnerRouter)
   app.use('/api/classes', schoolClassRouter)
   app.use('/api/teacher', teacherRouter)
+  app.use('/api/accounts', accountRouter)
 
   // --- Fallbacks ---
   app.use(notFound)

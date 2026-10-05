@@ -28,6 +28,7 @@ class PickupPermissionRepository {
      * @param {number} learnerId - The unique identifier of the learner.
      * @param {number} guardianId - The unique identifier of the guardian.
      * A guardian whose account a manager has deactivated is never authorised.
+     * A pickup person a parent added (no account, user_id NULL) is authorised.
      *
      * @returns {Promise<boolean>} - True if the guardian is authorised to collect the learner, false otherwise.
      */
@@ -36,17 +37,17 @@ class PickupPermissionRepository {
             `SELECT 1
             FROM pickup_permissions p
             JOIN guardians g ON g."guardian_id" = p."guardian_id"
-            JOIN users u ON u."user_id" = g."user_id"
+            LEFT JOIN users u ON u."user_id" = g."user_id"
             WHERE p."learner_id" = $1 AND p."guardian_id" = $2
-              AND u."is_active" = true`,
+              AND (g."user_id" IS NULL OR u."is_active" = true)`,
             [learnerId, guardianId]
         );
         return result.rows.length > 0;
     }
 
     /**
-     * The authorised pickups for several learners at once, active guardian
-     * accounts only. Names and relationships only (no contact numbers):
+     * The authorised pickups for several learners at once: active guardian
+     * accounts, plus pickup people a parent added (they have no account). Names and relationships only (no contact numbers):
      * enough for staff to recognise who is at the door (POPIA).
      *
      * @param {number[]} learnerIds
@@ -58,8 +59,8 @@ class PickupPermissionRepository {
             `SELECT p."learner_id", g."guardian_id", g."full_name", g."relationship", p."is_primary_contact"
             FROM pickup_permissions p
             JOIN guardians g ON g."guardian_id" = p."guardian_id"
-            JOIN users u ON u."user_id" = g."user_id"
-            WHERE p."learner_id" = ANY($1::int[]) AND u."is_active" = true
+            LEFT JOIN users u ON u."user_id" = g."user_id"
+            WHERE p."learner_id" = ANY($1::int[]) AND (g."user_id" IS NULL OR u."is_active" = true)
             ORDER BY p."is_primary_contact" DESC, g."full_name"`,
             [learnerIds]
         );
@@ -76,12 +77,12 @@ class PickupPermissionRepository {
      * @param {string} params.authorisedDate - The authorised date.
      * @returns {Promise<boolean>} The newly created pick up person's record.
      */
-  async create({ learnerId, guardianId, isPrimaryContact, authorisedDate }) {
+  async create({ learnerId, guardianId, isPrimaryContact, authorisedDate, addedByGuardianId = null }) {
     const result = await this.pool.query(
-      `INSERT INTO pickup_permissions ("learner_id", "guardian_id", "is_primary_contact", "authorised_date")
-       VALUES ($1, $2, $3, $4)
-       RETURNING "permission_id", "learner_id", "guardian_id", "is_primary_contact", "authorised_date"`,
-      [learnerId, guardianId, isPrimaryContact, authorisedDate]
+      `INSERT INTO pickup_permissions ("learner_id", "guardian_id", "is_primary_contact", "authorised_date", "added_by_guardian_id")
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING "permission_id", "learner_id", "guardian_id", "is_primary_contact", "authorised_date", "added_by_guardian_id"`,
+      [learnerId, guardianId, isPrimaryContact, authorisedDate, addedByGuardianId]
     );
     return result.rows[0];
   }

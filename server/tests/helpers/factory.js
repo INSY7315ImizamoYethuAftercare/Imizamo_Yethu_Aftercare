@@ -58,6 +58,15 @@ export async function createUser(role, { email, fullName, isActive = true } = {}
        RETURNING "admin_id", "user_id", "access_level"`,
       [user.user_id, name, accessLevel],
     ))
+    // A master admin can do everything a manager can, so also has a
+    // managers row (as seeds and the accounts API create; migration 004).
+    if (accessLevel === 'master') {
+      const { rows: [m] } = await pool.query(
+        `INSERT INTO managers ("user_id", "full_name") VALUES ($1, $2) RETURNING "manager_id"`,
+        [user.user_id, name],
+      )
+      profile.manager_id = m.manager_id
+    }
   } else if (dbRole === 'manager') {
     ;({ rows: [profile] } = await pool.query(
       `INSERT INTO managers ("user_id", "full_name") VALUES ($1, $2) RETURNING "manager_id", "user_id"`,

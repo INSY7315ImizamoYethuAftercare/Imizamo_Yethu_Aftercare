@@ -79,11 +79,11 @@ export function useStaff() {
   const base = useSyncExternalStore(subscribe, getSnapshot);
   const { user } = useSession();
   useEffect(() => {
-    if (user?.role === "manager" && !loaded && !loading) refreshStaff();
+    if (user?.appRole === "manager" && !loaded && !loading) refreshStaff();
   }, [user]);
   return useMemo(
     () =>
-      user?.role === "manager"
+      user?.appRole === "manager"
         ? [...base, { id: `manager-${user.userId}`, name: user.fullName, role: "Manager", status: "Active" }]
         : base,
     [base, user],

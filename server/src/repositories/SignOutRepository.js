@@ -80,6 +80,26 @@ class SignOutRepository {
   }
 
   /**
+   * One learner's sign-outs from a date onwards, with who collected them
+   * (null guardian = walked home alone). Dates as YYYY-MM-DD text.
+   *
+   * @param {number} learnerId
+   * @param {string} fromDate - YYYY-MM-DD (inclusive)
+   * @returns {Promise<Array<{ record_date: string, time_out: string, guardian_name: string|null }>>}
+   */
+  async findByLearnerSince(learnerId, fromDate) {
+    const result = await this.pool.query(
+      `SELECT s."record_date"::text AS "record_date", s."time_out", g."full_name" AS "guardian_name"
+       FROM sign_out_records s
+       LEFT JOIN guardians g ON g."guardian_id" = s."guardian_id"
+       WHERE s."learner_id" = $1 AND s."record_date" >= $2
+       ORDER BY s."record_date" DESC`,
+      [learnerId, fromDate]
+    );
+    return result.rows;
+  }
+
+  /**
    * Every sign-out on one date, with who collected the learner (null
    * guardian = walked home alone). Feeds the Sign-Out page's
    * "already collected today" list.

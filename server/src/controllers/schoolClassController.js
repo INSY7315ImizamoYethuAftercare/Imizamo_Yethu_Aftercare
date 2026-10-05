@@ -41,7 +41,7 @@ export async function createClass(req, res, next) {
 
   try {
 
-    const { teacherId, className, gradeRange } = req.body ?? {}
+    const { teacherId, className, gradeRange, colour } = req.body ?? {}
 
     if (!className || !gradeRange) {
       const err = new Error('className and gradeRange are required')
@@ -53,6 +53,7 @@ export async function createClass(req, res, next) {
       teacherId: validate.optionalId(teacherId, 'teacherId') ?? null,
       className: validate.text(className, 'className', { max: validate.LIMITS.className }),
       gradeRange: validate.text(gradeRange, 'gradeRange', { max: validate.LIMITS.gradeRange }),
+      colour: validate.hexColour(colour) ?? null,
     })
     res.status(201).json(schoolClass)
   } catch (err) {
@@ -64,13 +65,15 @@ export async function updateClass(req, res, next) {
 
   try {
 
-    const { className, gradeRange, teacherId } = req.body ?? {}
+    const { className, gradeRange, teacherId, colour } = req.body ?? {}
 
     const fields = {}
     if (className !== undefined) fields.class_name = validate.text(className, 'className', { max: validate.LIMITS.className })
     if (gradeRange !== undefined) fields.grade_range = validate.text(gradeRange, 'gradeRange', { max: validate.LIMITS.gradeRange })
     // null unassigns the teacher.
     if (teacherId !== undefined) fields.teacher_id = validate.optionalId(teacherId, 'teacherId') ?? null
+    // null clears it (the class then uses the colour matching its name).
+    if (colour !== undefined) fields.colour = validate.hexColour(colour)
 
     const updated = await schoolClassService.updateClass({
       userId: req.user.userId,
