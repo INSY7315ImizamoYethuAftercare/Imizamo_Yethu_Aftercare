@@ -76,19 +76,19 @@ jobs:
         with:
           node-version-file: '.nvmrc'
 
-      - name: Build client
-        working-directory: client
-        run: |
-          npm ci
-          npm run build
+      # One install for both workspaces (the only lockfile is at the root).
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Install server production dependencies
-        working-directory: server
-        run: npm ci --omit=dev
+      # Builds deploy/: the React app, the API and production dependencies
+      # only (~6 MB). See scripts/build-deploy.mjs.
+      - name: Build deploy package
+        run: npm run build:deploy
 
       - name: Deploy to Azure App Service
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'imizamo-yethu-aftercare'
+          # Must match the Web App the publish profile secret belongs to.
+          app-name: 'Imizamo-Yethu-Aftercare-WebApp'
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
-          package: server
+          package: deploy

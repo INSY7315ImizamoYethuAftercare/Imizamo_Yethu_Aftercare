@@ -24,7 +24,9 @@ if (missing.length > 0) {
 
 export const env = {
   nodeEnv: process.env.NODE_ENV ?? 'development',
-  port: Number(process.env.PORT),
+  // A number locally and on Linux. On a Windows Azure Web App, IIS hands
+  // Node a named pipe (e.g. \\.\pipe\abc...) instead, which listen() accepts.
+  port: /^\d+$/.test(process.env.PORT) ? Number(process.env.PORT) : process.env.PORT,
   clientOrigin: process.env.CLIENT_ORIGIN,
   databaseUrl: process.env.DATABASE_URL ?? null,
   // Azure PostgreSQL needs SSL. Set DB_SSL=true when pointing a dev machine at Azure.

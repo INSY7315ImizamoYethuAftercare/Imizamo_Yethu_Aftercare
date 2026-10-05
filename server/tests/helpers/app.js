@@ -10,7 +10,7 @@ import { fileURLToPath } from 'node:url'
 const rateLimiterPath = fileURLToPath(new URL('../../src/middleware/rateLimiter.js', import.meta.url))
 const loggerPath = fileURLToPath(new URL('../../src/middleware/logger.js', import.meta.url))
 
-export async function loadApp({ rateLimit = false } = {}) {
+export async function loadApp({ rateLimit = false, ...appOptions } = {}) {
   // morgan writes straight to stdout; keep test output readable.
   jest.unstable_mockModule(loggerPath, () => ({ requestLogger: (req, res, next) => next() }))
   if (!rateLimit) {
@@ -20,5 +20,5 @@ export async function loadApp({ rateLimit = false } = {}) {
     }))
   }
   const { createApp } = await import('../../src/app.js')
-  return createApp()
+  return createApp(appOptions)
 }

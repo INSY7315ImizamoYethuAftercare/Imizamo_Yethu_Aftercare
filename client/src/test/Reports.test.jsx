@@ -161,6 +161,8 @@ describe('Reports', () => {
   it('works for an admin role label', async () => {
     await renderReports('admin')
     await screen.findByText('Total Learners')
-    expect(statValue('Total Learners')).toHaveTextContent('6')
+    // The card can show before the numbers arrive (slow under a full test
+    // run), so wait for the value rather than checking it straight away.
+    await waitFor(() => expect(statValue('Total Learners')).toHaveTextContent('6'))
   })
 })
