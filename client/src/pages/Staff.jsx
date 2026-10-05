@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { useStaff, setStaffStatus, createTeacher } from "./UseTeachers";
 import { useClasses } from "./UseClasses";
 import { useHeader } from "./UseHeader";
+import AccountsSection from "./AccountsSection";
+import { isMasterAdmin, useSession } from "../services/session";
 
 function Staff() {
   const { displayName, displayRole } = useHeader();
@@ -11,6 +13,7 @@ function Staff() {
   const [banner, setBanner] = useState("");
   const staff = useStaff();
   const classes = useClasses();
+  const { user } = useSession();
 
   // "Add teacher" form. The new teacher signs in with this email and the
   // starting password the manager gives them.
@@ -175,6 +178,8 @@ function Staff() {
             </div>
           ))}
         </div>
+
+        {isMasterAdmin(user) && <AccountsSection />}
       </div>
     </div>
   );

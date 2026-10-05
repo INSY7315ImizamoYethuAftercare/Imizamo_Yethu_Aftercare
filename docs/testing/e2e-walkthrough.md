@@ -10,10 +10,13 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 
 1. **Point your local API at a local database.** Use `imizamo_dev` or `imizamo_test`; never Azure. The seed script refuses anything else. Your `server/.env` controls which database `npm run dev:server` uses.
 
-2. **One-off: update an existing database.** If your local database was created before the sign-out change (managers can sign out), run the migration once. It is safe to run again:
+2. **One-off: update an existing database.** If your local database was created before these changes, run the migrations once, in order. They are safe to run again:
 
    ```powershell
    & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/001_signout_by_manager.sql
+   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/002_pickups_without_accounts.sql
+   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/003_class_colour.sql
+   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/004_master_admin_manages.sql
    ```
 
    A database built fresh from `schema.sql` already has it.
@@ -76,6 +79,7 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 | T6 | Tap **Save Attendance** without changing anything. | *"Nothing new to save. Mark learners present or absent first."* |
 | T7 | Change **Amahle Zulu** to **Present** and tap **Save Attendance**. | *"Attendance saved"*. The counters update to Present 3, Absent 0 for Yellow. Refreshing the page keeps it. |
 | T8 | Tap **All**, mark **Chloe Adams** (Orange, not marked) **Present**, and save. | *"Attendance saved"*. On the **Classes** page, Orange shows 2/2 present. |
+| T8a | Tap **Home** in the bottom nav. | Today's date and *"Good afternoon, Thandeka! 👋"*, with *"Yellow class • N of M present"* and Present / Absent / Signed out counts for **Yellow only**. Keep this tab open: when the manager adds or moves a learner into Yellow (M3, M3b), coming back to this tab updates the total, and marking someone absent on **Attendance** updates the Absent count. |
 | T9 | Open **Learners**. | All 13 learners. Ethan Fortuin is shown greyed out (deactivated). |
 | T10 | Open **Sign Out**. | Everyone marked present today who hasn't gone yet (8 learners after steps T7–T8). Under **ALREADY COLLECTED TODAY**: *Bongani Khumalo, 16:10 • Walked home alone*. |
 | T11 | Tap **Sign Out** next to Aisha Petersen. | The authorised pickups are buttons: **Fatima Petersen** (Mother), **Ahmed Petersen** (Father), and **Walking Home**. Nobody from another family appears. |
@@ -96,7 +100,9 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 | M1 | Sign in as `manager@iylh.test`. | You land on `/manager`. The Class Overview shows all 5 classes with present/active bars. |
 | M2 | Open **Attendance**. | The page says *"… learners • view only"*. You see statuses but no Present/Absent buttons and no Save. |
 | M3 | Open **Learners** and add **Sizwe Ndlovu**, Yellow class. | Sizwe appears in the list. The Yellow learner count goes up on **Classes**. |
-| M4 | On **Classes**, try to remove/deactivate **Orange**. | Error: *"Cannot deactivate this class - there are active learners enrolled in it"*. |
+| M3a | On **Classes**, tap **+ Add Class**. Type **Brown**, choose **Gr 5-6** and the purple colour, then tap **Add Classroom**. | The preview card shows *Brown* / *Gr 5-6* in purple as you go. Brown appears in the list with a purple bar; adding **yellow** (any letter case) says *"There's already a class called yellow."* Escape or Cancel closes the form. |
+| M3b | Open **Sizwe Ndlovu**, go to **Profile**, tap **Edit details**, change **Class** to **Green**, and tap **Save**. | *"Learner details saved"*. The banner and the Class row show **Green**. On **Classes**, Yellow's count goes down by one and Green's goes up. |
+| M4 | On **Classes**, tap 🗑 on **Orange**. | *"2 learners are still in this class. Move them to another class first."* with a **Move all 2 to** box. **Move & remove** stays greyed out until you choose a class. Tap **Cancel** for now (M11 does the real removal). |
 | M5 | Open **Staff**. | 5 teachers are listed with their active status. |
 | M5a | Tap **+ Add teacher**, enter **Sipho Ndlovu**, `sipho.ndlovu@iylh.test` and a starting password of 8+ characters, then tap **Add teacher**. | *"Sipho Ndlovu was added. Give them their email and starting password to sign in."* He appears in the list as Active. |
 | M5b | Add a teacher with the same email again (any letter case). | *"An account with this email already exists"*, and the form stays open with what you typed. |
@@ -107,39 +113,58 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 | M8a | Start a sign-out for **Keanu Abrahams**, type an unknown name, and tap **Verify**. | **"Override and approve"** is visible but greyed out, with *"Override isn't available yet: it needs the approval queue."* |
 | M9 | Open **Reports**. | Tabs: Overview, Trends, Donor Report, Board Report. (The figures are currently static placeholders, not live data.) |
 | M10 | Open `http://localhost:5173/admin`. | You're sent back to `/manager`. |
+| M11 | On **Classes**, tap 🗑 on **Orange**, choose **Blue**, and tap **Move & remove**. | Orange disappears. Lwazi and Chloe are now in Blue (check **Learners**, and Blue's count on **Classes**). Teachers no longer see an Orange filter. To get Orange back for the next run, re-run the demo seed with `--reset`. |
+| M11a | Open any learner's **Edit details**. | Orange is no longer offered as a class. |
 
 ---
 
 ## 3. Admin (master): Nomvula Dube
 
+The master admin can do **everything the manager can**, and is the only one who can create manager and standard admin accounts.
+
 | # | Step | Expected |
 |---|---|---|
-| A1 | Sign in as `master.admin@iylh.test`. | You land on `/admin`. |
-| A2 | Open **Attendance** and **Learners**. | The lists are **empty**. Admins can't read individual learner data (the API returns 403). This is intended under POPIA. |
-| A3 | Open **Reports**. | The Reports page loads. (The donor API returns aggregate counts only: no names or IDs.) |
-| A4 | Open `http://localhost:5173/home` and `/manager`. | You're sent back to `/admin`. |
+| A1 | Sign in as `master.admin@iylh.test`. | You land on the **manager dashboard** (`/manager`). The header says *Nomvula Dube / Master Admin*. The bottom tabs are the manager's: Home, Attendance, Learners, Classes, Sign Out, Reports. |
+| A2 | Repeat a few manager steps: add a learner (M3), add a class (M3a), add a teacher (M5a), sign a learner out (M8). | They all work exactly as for the manager. A sign-out you record is saved against your name. |
+| A3 | Open **Staff**. Scroll down to **Managers & admins**. | You see Nomvula Dube (Master admin), Pieter Jacobs (Standard admin) and Sarah Botha (Manager), each with their email and *Active*. |
+| A4 | Tap **+ Add account**, keep **Manager**, enter **Thabo Manager**, `thabo.manager@iylh.test` and a starting password of 8+ characters, then tap **Add manager**. | *"Thabo Manager was added as a manager. Give them their email and starting password to sign in."* He appears in the list. |
+| A4a | Tap **+ Add account** again, choose **Standard admin**, enter **Lerato Admin**, `lerato.admin@iylh.test` and a password, then tap **Add standard admin**. | *"Lerato Admin was added as a standard admin…"* |
+| A4b | Add an account with an email that's already used (e.g. `MANAGER@iylh.test`). | *"An account with this email already exists"*, and the form keeps what you typed. |
+| A4c | In a private window, sign in as `thabo.manager@iylh.test`, then as `lerato.admin@iylh.test`. | Thabo lands on `/manager` as a Manager, with **no** Managers & admins section on Staff. Lerato lands on `/admin` (totals only, step S1). |
+| A5 | Open `http://localhost:5173/admin` and `/home`. | You're sent back to `/manager`. |
 
 ## 4. Admin (standard): Pieter Jacobs
 
+A standard admin sees **totals only**, never individual learners (POPIA).
+
 | # | Step | Expected |
 |---|---|---|
-| S1 | Repeat A1–A4 as `admin@iylh.test`. | The same results as the master admin. `access_level` isn't enforced anywhere yet, so both admin levels can do exactly the same things. |
-
----
+| S1 | Sign in as `admin@iylh.test`. | You land on `/admin`: today's date, *"Good afternoon, Pieter! 👋"* (morning/evening by the time), and *"8 of 12 learners present today"* (7 if you skipped T8, and of 13 if you added Sizwe in M3). The Present Today, Signed Out and Total Learners cards show real numbers. The header says *Admin*. |
+| S1a | Look at **Class Overview**. | Every class with *present / active learners* bars, in the **same colours as on Reports**. |
+| S2 | Look at the bottom tabs and Quick Actions. | Tabs: **Home, Reports, Settings**. Quick Actions: Reports and Settings. **No Learners or Attendance.** |
+| S2a | Type `http://localhost:5173/admin/learners`, `/admin/attendance`, `/manager` and `/home`. | You're sent back to `/admin` each time. |
+| S3 | Open **Reports**. | The Reports page loads. (The donor API returns aggregate counts only: no names or IDs.) |
 
 ## 5. Guardian: Fatima Petersen
 
 | # | Step | Expected |
 |---|---|---|
-| G1 | Sign in as `fatima.petersen@iylh.test` (any role card works: you land on your real role's page). | You land on `/parent`, showing **Aisha Petersen**. |
-| G2 | Sign out and sign in as `grace.ntombela@iylh.test`. | You **should** see Zoe Ntombela. ⚠️ The parent home page is static and shows *Aisha Petersen* for every guardian (see "Static screens" in known-bugs.md). The API itself only returns Grace's own child. |
+| G1 | Sign in as `fatima.petersen@iylh.test` (any role card works: you land on your real role's page). | You land on `/parent`: *"Welcome, Fatima! 💛 Here's how Aisha is doing"*. The card shows **Aisha Petersen**, *Gr 1-2 · Yellow*, an attendance % for the last 30 days, **Present ✓** today, and the number of updates. |
+| G1a | Read the status box under the card. | Because the teacher signed Aisha out in T12: *"👋 Aisha has been collected"*, *"Signed out by Fatima Petersen at HH:MM"*. (On fresh demo data, before T12, it says *"✅ Aisha is at aftercare today"*, *"Arrived at 14:05"*.) |
+| G1b | Look at **Teacher Observations**. | The latest observation, with its category, date and teacher's name. **+ 1 more observation →** or **View all** shows the rest. |
+| G1c | Look at **Authorised Pickups** and **This Week**. | Pickups: Fatima Petersen (you), Ahmed Petersen and Zainab Hendricks. This Week: the last few days, with one **Absent** and the others showing who collected Aisha and when. |
+| G1d | Tap **+ Add Person**. Enter **Thandi Petersen**, relationship **Grandmother**, a contact number, and tap **Submit Request**. | The form closes and *"Thandi Petersen can now collect Aisha."* appears. She's in the pickup list. Submit stays greyed out until name, relationship and number are filled in. There's no ID number field. |
+| G1e | Tap **+ Add Person** again and enter **ahmed petersen**. | *"Ahmed Petersen is already on the pickup list."* Tap **Cancel**. |
+| G1f | Check the teacher side. In Postman, sign in as `t.nkosi@iylh.test` and call `GET /api/signout/today`. | Aisha's `pickups` include **Thandi Petersen**: what a parent adds is used by the sign-out check. (On fresh demo data, before T12, you can also see her as a button on the teacher's **Sign Out** page for Aisha.) |
+| G2 | Sign out and sign in as `grace.ntombela@iylh.test`. | You see **Zoe Ntombela**, never Aisha. |
+| G2a | Sign in as `thabo.mokoena@iylh.test`. | Two tabs at the top, **Naledi** and **Lwazi**; tapping one switches the whole page to that child. |
 | G3 | Open `http://localhost:5173/attendance`, `/manager` and `/admin`. | You're sent back to `/parent` every time. |
 | G4 | Sign in as `karen.vdberg@iylh.test`. | *"This account has been deactivated"*. |
 | G5 | Sign out. On the sign-in page, tap **Create an account →**. | A parent-only form: *"Parent / Guardian"* and *"Staff accounts are created by the manager."* No Teacher, Manager or Admin options. |
 | G6 | Tap **Create Account** with the form empty. | *"Please fill in every field."* Nothing is sent. |
 | G7 | Fill in: Nandi Zulu, `nandi.zulu@example.com`, phone `082 555 0101`, relationship **Mother**, child **Amahle Zulu**, date of birth **2019-01-22** (one day wrong), and an 8+ character password twice. Tap **Create Account**. | *"We couldn't find a learner with that name and date of birth…"* |
 | G8 | Change the date of birth to **2019-01-21** and tap **Create Account**. | Back on the sign-in page with *"Account created. Please sign in."* |
-| G9 | Sign in as `nandi.zulu@example.com`. | You land on `/parent`. (The API returns only Amahle as her child; the parent home page itself is still placeholder data.) |
+| G9 | Sign in as `nandi.zulu@example.com`. | You land on `/parent` and see **Amahle Zulu**, with Nandi on her pickup list. |
 | G10 | Sign out, open **Create an account →** again, and register `nandi.zulu@example.com` a second time. | *"An account with this email already exists"* |
 
 ---

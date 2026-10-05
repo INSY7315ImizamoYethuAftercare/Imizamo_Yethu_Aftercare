@@ -335,7 +335,7 @@ function Reports({ role = "Manager" }) {
                         className="h-full rounded-full transition-all"
                         style={{
                           width: `${c.rate}%`,
-                          backgroundColor: colourForClass(c.name),
+                          backgroundColor: colourForClass(c.name, c.colour),
                         }}
                       />
                     </div>
@@ -418,7 +418,7 @@ function Reports({ role = "Manager" }) {
                           <span className="inline-flex items-center gap-2">
                             <span
                               className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
-                              style={{ backgroundColor: colourForClass(cls.name) }}
+                              style={{ backgroundColor: colourForClass(cls.name, cls.colour) }}
                             />
                             {cls.name}
                           </span>

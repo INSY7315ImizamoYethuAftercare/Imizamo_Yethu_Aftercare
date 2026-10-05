@@ -15,6 +15,7 @@ import SignOut from '../pages/SignOut'
 import Staff from '../pages/Staff'
 import { ApiError, onApi, resetApi } from './api-mock'
 import { itKnownBug } from './knownBug'
+import { AISHA_OVERVIEW } from './parent-fixtures'
 import { CLASSES, LEARNERS, signInAs, signOutCompletely } from './session-helpers'
 
 vi.mock('../services/apiClient', async () => (await import('./api-mock')).apiClientModule)
@@ -40,6 +41,8 @@ beforeEach(() => {
   onApi('GET', '/attendance/class/2', [])
   onApi('GET', '/signout/today', { date: '2026-10-05', learners: [] })
   onApi('GET', '/teacher', [])
+  onApi('GET', '/guardian/children', [{ learner_id: 3, first_name: 'Aisha', last_name: 'Petersen' }])
+  onApi('GET', '/guardian/children/3/overview', AISHA_OVERVIEW)
 })
 
 async function axeViolations(role, Page) {

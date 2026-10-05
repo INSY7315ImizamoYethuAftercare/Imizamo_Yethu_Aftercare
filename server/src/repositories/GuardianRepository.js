@@ -61,6 +61,23 @@ class GuardianRepository {
   }
 
   /**
+   * Creates a pickup person who has no login account (user_id NULL), e.g.
+   * an aunt a parent authorises to collect their child.
+   *
+   * @param {{ fullName: string, relationship: string, contactNumber: string }} params
+   * @returns {Promise<Object>} The new guardian record.
+   */
+  async createPickupPerson({ fullName, relationship, contactNumber }) {
+    const result = await this.pool.query(
+      `INSERT INTO guardians ("user_id", "full_name", "contact_number", "relationship")
+       VALUES (NULL, $1, $2, $3)
+       RETURNING "guardian_id", "user_id", "full_name", "contact_number", "relationship"`,
+      [fullName, contactNumber, relationship]
+    );
+    return result.rows[0];
+  }
+
+  /**
      * Updates one or more fields on an existing guardian record. 
      * Only columns in the allowed whitelist can be modified, preventing callers
      * from injecting arbitrary column names into the update.

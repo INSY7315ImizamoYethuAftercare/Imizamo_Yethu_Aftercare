@@ -5,6 +5,7 @@ import AddClassSheet, { colourForClass, UNASSIGNED_GRADE } from "./AddClassSheet
 import EditClassSheet from "./EditClassSheet.jsx";
 import { addClass, removeClass, updateClassGrade, assignTeacher, learnerCount, useClasses, useClassesLoading } from "./UseClasses";
 import { useHeader } from "./UseHeader";
+import { getLearners, moveLearners, refreshLearners } from "./UseLearners";
 
 function Classes({ role = "Teacher" }) {
   const navigate = useNavigate();
@@ -23,9 +24,16 @@ function Classes({ role = "Teacher" }) {
   const [toRemove, setToRemove] = useState(null);
   const [toEdit, setToEdit] = useState(null);
   const blockedBy = toRemove ? learnerCount(toRemove) : 0;
+  // Learners still in the class being removed (active or deactivated), and
+  // where the manager wants them moved before the class goes.
+  const otherClasses = toRemove ? classes.filter((c) => c.id !== toRemove.id) : [];
+  const [moveTo, setMoveTo] = useState("");
+  const [moving, setMoving] = useState(false);
+  const [moveError, setMoveError] = useState("");
 
-  const handleAdd = ({ name, grade }) => {
-    addClass({ name, grade, teacher: "Unassigned", present: "0/0" });
+  // Throws if the server refuses (the sheet shows the message and stays open).
+  const handleAdd = async ({ name, grade, colour }) => {
+    await addClass({ name, grade, colour });
     setShowAdd(false);
   };
 
@@ -37,9 +45,41 @@ function Classes({ role = "Teacher" }) {
 
   const gradeLabel = (grade) => (grade === UNASSIGNED_GRADE ? "No grade assigned" : grade);
 
+  const startRemove = (cls) => {
+    setMoveTo("");
+    setMoveError("");
+    setToRemove(cls);
+  };
+
+  const closeRemove = () => {
+    if (!moving) setToRemove(null);
+  };
+
   const confirmRemove = () => {
     removeClass(toRemove.name);
     setToRemove(null);
+  };
+
+  // Move every learner to the chosen class, then remove the now-empty class.
+  // If a move fails the class is kept, so nobody is left in a removed class.
+  const moveAndRemove = async () => {
+    const target = otherClasses.find((c) => String(c.id) === moveTo);
+    if (!target) { setMoveError("Choose the class to move them to."); return; }
+    setMoving(true);
+    setMoveError("");
+    try {
+      // Read the latest list, so nobody added since the page loaded is missed.
+      await refreshLearners();
+      const ids = getLearners().filter((l) => l.classId === toRemove.id).map((l) => l.id);
+      await moveLearners(ids, target.id);
+    } catch (e) {
+      setMoveError(e?.message || "Couldn't move the learners. Please try again.");
+      setMoving(false);
+      return;
+    }
+    const removed = await removeClass(toRemove.name);
+    setMoving(false);
+    if (removed) setToRemove(null);
   };
 
   return (
@@ -96,7 +136,7 @@ function Classes({ role = "Teacher" }) {
                 <div className="flex items-center gap-3">
                   <span
                     className="w-3 h-10 rounded-full border border-gray-300"
-                    style={{ backgroundColor: colourForClass(cls.name) }}
+                    style={{ backgroundColor: colourForClass(cls.name, cls.colour) }}
                   ></span>
                   <div>
                     <p className="font-semibold text-gray-900">{cls.name}</p>
@@ -122,7 +162,7 @@ function Classes({ role = "Teacher" }) {
                     <button
                       type="button"
                       aria-label={`Remove ${cls.name}`}
-                      onClick={(e) => { e.stopPropagation(); setToRemove(cls); }}
+                      onClick={(e) => { e.stopPropagation(); startRemove(cls); }}
                       className="w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition"
                     >
                       🗑
@@ -153,30 +193,56 @@ function Classes({ role = "Teacher" }) {
       )}
 
       {isManager && toRemove && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => setToRemove(null)}>
-          <div className="w-full max-w-lg bg-white rounded-t-3xl px-5 pt-3 pb-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={closeRemove}>
+          <div role="dialog" aria-label={`Remove ${toRemove.name}`} className="w-full max-w-lg bg-white rounded-t-3xl px-5 pt-3 pb-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
             <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4"></div>
 
             {blockedBy > 0 ? (
               <>
-                <h2 className="text-lg font-bold text-gray-900 text-center">Can't remove {toRemove.name}</h2>
-                <p className="text-sm text-gray-500 text-center mt-2 mb-5">
+                <h2 className="text-lg font-bold text-gray-900 text-center">Remove {toRemove.name}?</h2>
+                <p className="text-sm text-gray-500 text-center mt-2 mb-4">
                   {blockedBy} learner{blockedBy === 1 ? " is" : "s are"} still in this class. Move them to another class first.
                 </p>
+                {otherClasses.length === 0 ? (
+                  <p className="text-sm text-gray-500 text-center mb-5">There's no other class to move them to. Add a class first.</p>
+                ) : (
+                  <label className="block text-sm mb-4">
+                    <span className="text-gray-500">Move {blockedBy === 1 ? "them" : `all ${blockedBy}`} to</span>
+                    <select
+                      value={moveTo}
+                      onChange={(e) => setMoveTo(e.target.value)}
+                      disabled={moving}
+                      className="w-full mt-1 px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300"
+                    >
+                      <option value="">Choose a class</option>
+                      {otherClasses.map((c) => (
+                        <option key={c.id} value={String(c.id)}>{c.name} ({gradeLabel(c.grade)})</option>
+                      ))}
+                    </select>
+                  </label>
+                )}
+                {moveError && <div role="alert" className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-3 py-2 mb-4">{moveError}</div>}
                 <div className="flex gap-3">
-                  <button onClick={() => setToRemove(null)} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition">Close</button>
-                  <button onClick={() => navigate(`${learnersPath}?group=${toRemove.name}`)} className="flex-1 py-3 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md active:scale-95 transition">View learners</button>
+                  <button onClick={closeRemove} disabled={moving} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition disabled:opacity-50">Cancel</button>
+                  {otherClasses.length > 0 && (
+                    <button onClick={moveAndRemove} disabled={moving || !moveTo} className="flex-1 py-3 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md active:scale-95 transition disabled:opacity-50">
+                      {moving ? "Moving..." : "Move & remove"}
+                    </button>
+                  )}
                 </div>
+                <button onClick={() => navigate(`${learnersPath}?group=${toRemove.name}`)} disabled={moving} className="w-full mt-3 text-xs font-semibold text-orange-500 underline">
+                  Or view the learners and move them one by one
+                </button>
               </>
             ) : (
               <>
                 <h2 className="text-lg font-bold text-gray-900 text-center">Remove Class?</h2>
                 <div className="flex items-center gap-3 bg-orange-50 border border-orange-100 rounded-2xl px-3 py-3 my-4">
-                  <span className="w-2 h-8 rounded-full border border-gray-300" style={{ backgroundColor: colourForClass(toRemove.name) }}></span>
+                  <span className="w-2 h-8 rounded-full border border-gray-300" style={{ backgroundColor: colourForClass(toRemove.name, toRemove.colour) }}></span>
                   <p className="text-sm font-semibold text-gray-900">{toRemove.name} ({toRemove.grade})</p>
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={() => setToRemove(null)} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
+                  <button onClick={closeRemove} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
                   <button onClick={confirmRemove} className="flex-1 py-3 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md active:scale-95 transition">Remove</button>
                 </div>
               </>

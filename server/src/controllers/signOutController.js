@@ -14,6 +14,7 @@ import LearnerRepository from '../repositories/LearnerRepository.js'
 import AttendanceRepository from '../repositories/AttendanceRepository.js'
 import { pool } from '../db/pool.js'
 import * as validate from '../utils/validation.js'
+import { actingRole } from '../middleware/auth.js'
 
 const signOutService = new SignOutService({
   signOutRepository: new SignOutRepository(pool),
@@ -31,7 +32,7 @@ const signOutService = new SignOutService({
  */
 export async function getToday(req, res, next) {
   try {
-    res.json(await signOutService.getDay({ userId: req.user.userId, role: req.user.role, date: todayInSA() }))
+    res.json(await signOutService.getDay({ userId: req.user.userId, role: actingRole(req.user), date: todayInSA() }))
   } catch (err) {
     next(err)
   }
@@ -53,7 +54,7 @@ export async function verifyGuardian(req, res, next) {
     }
     const result = await signOutService.verifyGuardian({
       userId: req.user.userId,
-      role: req.user.role,
+      role: actingRole(req.user),
       learnerId: validate.parseId(learnerId, 'learnerId'),
       guardianId: validate.parseId(guardianId, 'guardianId'),
     })
@@ -84,7 +85,7 @@ export async function confirmSignOut(req, res, next) {
     // in UTC on Azure), so the "present today" check looks at the right day.
     const record = await signOutService.confirmSignOut({
       userId: req.user.userId,
-      role: req.user.role,
+      role: actingRole(req.user),
       learnerId: validate.parseId(learnerId, 'learnerId'),
       guardianId: guardianId === null ? null : validate.parseId(guardianId, 'guardianId'),
       timeOut: validate.timeOfDay(timeOut, 'timeOut') ?? nowInSA(),

@@ -60,6 +60,25 @@ class AttendanceRepository {
   }
 
   /**
+   * One learner's attendance from a date onwards, newest first. Dates come
+   * back as YYYY-MM-DD text so they never shift a day in other time zones.
+   *
+   * @param {number} learnerId
+   * @param {string} fromDate - YYYY-MM-DD (inclusive)
+   * @returns {Promise<Array<{ record_date: string, status: string, time_in: string|null }>>}
+   */
+  async findByLearnerSince(learnerId, fromDate) {
+    const result = await this.pool.query(
+      `SELECT "record_date"::text AS "record_date", "status", "time_in"
+       FROM attendance_records
+       WHERE "learner_id" = $1 AND "record_date" >= $2
+       ORDER BY "record_date" DESC`,
+      [learnerId, fromDate],
+    )
+    return result.rows
+  }
+
+  /**
    * Every active learner marked present on a date, with their class, for
    * the Sign-Out page ("who is here and still to be collected").
    *

@@ -13,6 +13,7 @@ import TeacherRepository from '../repositories/TeacherRepository.js'
 import LearnerRepository from '../repositories/LearnerRepository.js'
 import { pool } from '../db/pool.js'
 import * as validate from '../utils/validation.js'
+import { actingRole } from '../middleware/auth.js'
 
 const attendanceService = new AttendanceService({
   attendanceRepository: new AttendanceRepository(pool),
@@ -83,7 +84,7 @@ export async function getClassAttendance(req, res, next) {
     const classId = validate.parseId(req.params.classId, 'classId')
     const date = validate.isoDate(req.query.date, 'date', { required: false }) ?? todayInSA()
     const records = await attendanceService.getClassAttendance({
-      userId: req.user.userId, role: req.user.role, classId, date,
+      userId: req.user.userId, role: actingRole(req.user), classId, date,
     })
     res.json(records)
   } catch (err) {

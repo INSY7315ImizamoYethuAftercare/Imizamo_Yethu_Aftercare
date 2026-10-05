@@ -1,6 +1,6 @@
 # Known bugs and open issues
 
-**Status:** **25 bugs** found so far (24 by the Sprint 5 test suite, 1 by hand). **All 25 are fixed**, and each one now has a passing test that stops it from coming back. No known-bug tests are skipped right now.
+**Status:** **28 bugs** found so far (25 by the Sprint 5 test suite, 3 by hand). **All 28 are fixed**, and each one now has a passing test that stops it from coming back. No known-bug tests are skipped right now.
 
 Still open: two features that aren't built yet, some screens that still show placeholder data, and a few hardening ideas. They're listed below.
 
@@ -40,13 +40,14 @@ These are features, not bugs. The screens exist, but there's no backend yet. Wor
 
 These look finished but show hard-coded data. Don't demo them as real:
 
-- `client/src/pages/ParentHome.jsx`: **every** guardian sees "Aisha Petersen", whoever their child is. The API (`GET /api/guardian/children`) is correct and only returns the guardian's own children.
-- `client/src/pages/Home.jsx`: the teacher greeting ("Thandi") and the activity feed are fixed text.
 - `client/src/pages/Reports.jsx`: the report figures are fixed. `GET /api/reports/donor` isn't called.
 - `client/src/pages/Escalations.jsx`: the sign-out queue is fixed data.
 - `client/src/App.jsx`: `/manager/observations` is declared twice.
 
 ## Hardening ideas (not covered by tests)
+
+- **Removing a pickup person.** Parents can add people to the pickup list but not remove them yet; a manager would have to do it in the database. Worth adding a "Remove" button (and an endpoint) next.
+- **Manager approval of parent-added pickups.** People a parent adds are authorised straight away, as agreed. If the hub later wants to approve them first, `pickup_permissions` needs a status column and the Sign-Out check should only use approved ones.
 
 - **Two sign-outs at the same instant.** A second sign-out on the same day is blocked in code (BUG-11), but two "Confirm" taps within milliseconds could both get through. A unique index on `sign_out_records (learner_id, record_date)` would close this completely. It would also need the `23505` error mapped to a 409.
 - **Two accounts at the same instant with different-case emails.** Login and registration now ignore letter case (BUG-4), but the database's unique rule is still case-sensitive. A unique index on `LOWER(email)` would close this. Check first that no existing accounts differ only in letter case.
@@ -84,6 +85,9 @@ These look finished but show hard-coded data. Don't demo them as real:
 | BUG-23 | Login's email and password labels weren't linked to their inputs (screen readers) | `htmlFor` / `id` added |
 | BUG-24 | 5 logins from the same Wi-Fi in 15 minutes locked **everyone** out | Only failed logins count: 5 per account per IP, 30 per IP; `trust proxy` set for Azure |
 | BUG-25 | Admins, managers and guardians couldn't log out: "Log out" on the Settings pages only went to the sign-in page, which saw the still-valid session and sent them straight back (found by hand) | `Settings.jsx` and `ParentSettings.jsx` end the session first, like the ⋮ menu; covered by `client/src/test/Logout.test.jsx` |
+| BUG-26 | Opening a learner's page directly (refresh, or a link) could stay on "Loading learner..." forever, when the full learner list finished loading before the single-learner fetch | `Observations.jsx`: a learner found in the list is never "loading"; covered by `client/src/test/ClassMoves.test.jsx` |
+| BUG-27 | The teacher home page was placeholder text ("Yellow class • 2 of 2 present", fixed Present/Absent/Signed out numbers and activity), so moving or adding learners, or marking anyone absent, never changed it (found by hand) | `Home.jsx` shows the teacher's own class: present / absent / not marked from today's attendance, today's sign-outs, real date and greeting; covered by `client/src/test/TeacherHome.test.jsx` |
+| BUG-28 | The class and learner lists loaded once per login, so a learner the manager added or moved didn't reach the teacher's pages (register, totals) until they signed out and in again (found by hand) | `UseClasses.jsx` / `UseLearners.jsx` reload whenever a page opens and when the tab gets focus (requests made at the same time are shared) |
 
 Extra fixes found along the way: requests with no JSON body now get 400 instead of 500 on every route.
 
@@ -91,5 +95,12 @@ Extra fixes found along the way: requests with no JSON body now get 400 instead 
 
 - **Create an account** (`Register.jsx`): parent/guardian registration through `POST /api/auth/register`. Staff role cards and the demo access code are removed, since staff can't self-register. The child's date of birth and the parent's relationship were added because the server needs them to link the account to the right child. Tests: `client/src/test/Register.test.jsx`.
 - **Add teacher** (`Staff.jsx`): managers create teacher accounts through `POST /api/teacher`. Tests: `client/src/test/Staff.test.jsx`.
+
+- **Parent home page** (`ParentHome.jsx`): real data from `GET /api/guardian/children/:id/overview` (today's status, 30-day attendance, the last 7 days, pickups, class teacher contact, observations with the teacher's name), plus **+ Add Person** through `POST /api/guardian/children/:id/pickups`. Parents register their child's pickups themselves; a pickup person doesn't need an account, and is authorised straight away (needs migration `002_pickups_without_accounts.sql`). Tests: `server/tests/api/guardianPortal.test.js`, `client/src/test/ParentHome.test.jsx`.
+
+- **Add New Classroom** (`AddClassSheet.jsx`): redesigned. The class name is now typed (before, it could only be one of the five colour names), with a grade range and one of 8 colours. The colour is saved in the new `school_classes.colour` column (needs migration `003_class_colour.sql`); the original five classes have none and keep the colour of their name. Tests: `server/tests/api/classMoves.test.js`, `client/src/test/AddClass.test.jsx`.
+- **Master admin**: can do everything the manager can (the route guard lets a master admin through wherever a manager may go, and every master admin also has a `managers` row, added by migration `004_master_admin_manages.sql`), and creates manager and standard admin accounts on **Staff → Managers & admins** (`GET`/`POST /api/accounts`, master admin only, users + profile written in one transaction). Login and `/auth/me` now return `accessLevel` for admins. Tests: `server/tests/api/accounts.test.js`, `client/src/test/MasterAdmin.test.jsx`.
+- **Admin home** (`AdminHome.jsx`): the Class Overview was empty for admins (it used `GET /api/classes`, which admins aren't allowed). It now reads a new `today` section of `GET /api/reports/overview`: counts only, no names. The date, greeting and the three cards are real too. Admins no longer have Learners or Attendance tabs or routes (POPIA). Class Overview bars on the admin and manager homes now use the same colours as Reports. Tests: `server/tests/api/adminHome.test.js`, `client/src/test/AdminHome.test.jsx`, `client/src/test/ProtectedRoutes.test.jsx`.
+- **Moving learners between classes** (manager): **Class** box in a learner's **Edit details** (`Observations.jsx`), saved through `PATCH /api/learners/:id`. Removing a class that still has learners now offers **Move & remove** (`Classes.jsx`): it moves every learner to the chosen class, then removes the class; if a move fails, the class is kept. The server now refuses moving or adding a learner to a removed class (409). Tests: `server/tests/api/classMoves.test.js`, `client/src/test/ClassMoves.test.jsx`.
 
 **Worth knowing:** a parent can only register if their child's record has a date of birth that matches exactly. Learners imported without a date of birth can't be matched until a manager adds it.

@@ -10,6 +10,7 @@ import UserRepository from '../repositories/UserRepository.js'
 import GuardianRepository from '../repositories/GuardianRepository.js'
 import LearnerRepository from '../repositories/LearnerRepository.js'
 import PickupPermissionRepository from '../repositories/PickupPermissionRepository.js'
+import AdminRepository from '../repositories/AdminRepository.js'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import * as validate from '../utils/validation.js'
@@ -22,6 +23,7 @@ const authService = new AuthService({
   guardianRepository: new GuardianRepository(pool),
   learnerRepository: new LearnerRepository(pool),
   pickupPermissionRepository: new PickupPermissionRepository(pool),
+  adminRepository: new AdminRepository(pool),
   // Registration writes users + guardians + pickup_permissions as one unit.
   runInTransaction: (work) =>
     withTransaction((client) =>
@@ -121,7 +123,10 @@ export async function me(req, res, next) {
       err.status = 401
       throw err
     }
-    res.json({ user: { userId: user.user_id, email: user.email, role: user.role, fullName: user.full_name } })
+    const profile = { userId: user.user_id, email: user.email, role: user.role, fullName: user.full_name }
+    // authenticate() looked up the admin's access level.
+    if (req.user.accessLevel) profile.accessLevel = req.user.accessLevel
+    res.json({ user: profile })
   } catch (err) {
     next(err)
   }

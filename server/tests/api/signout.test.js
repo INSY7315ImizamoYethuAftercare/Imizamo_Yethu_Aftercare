@@ -94,7 +94,7 @@ describe('POST /api/signout/confirm', () => {
     expect(await signOutCount()).toBe(0)
   })
 
-  it.each(['guardian', 'admin_standard', 'admin_master'])('cannot be performed by a %s (403)', async (role) => {
+  it.each(['guardian', 'admin_standard'])('cannot be performed by a %s (403)', async (role) => {
     const user = role === 'guardian' ? guardian : await createUser(role)
     const res = await confirm({ learnerId: learner.learner_id, guardianId: guardian.profile.guardian_id }, user)
     expect(res.status).toBe(403)
@@ -107,6 +107,14 @@ describe('POST /api/signout/confirm', () => {
     const res = await confirm({ learnerId: learner.learner_id, guardianId: guardian.profile.guardian_id }, manager)
     expect(res.status).toBe(201)
     expect(res.body).toMatchObject({ manager_id: manager.profile.manager_id, teacher_id: null })
+  })
+
+  it('can be performed by the master admin, recorded against their manager profile', async () => {
+    const master = await createUser('admin_master')
+    await markAttendance(learner, teacher)
+    const res = await confirm({ learnerId: learner.learner_id, guardianId: guardian.profile.guardian_id }, master)
+    expect(res.status).toBe(201)
+    expect(res.body).toMatchObject({ manager_id: master.profile.manager_id, teacher_id: null })
   })
 
   it('applies the same rules to a manager (unauthorised guardian -> 403)', async () => {
@@ -283,9 +291,10 @@ describe('GET /api/signout/today', () => {
     expect(res.body.learners).toEqual([])
   })
 
-  it('is open to managers, closed to guardians and admins', async () => {
+  it('is open to managers and the master admin, closed to guardians and standard admins', async () => {
     expect((await today(await createUser('manager'))).status).toBe(200)
+    expect((await today(await createUser('admin_master'))).status).toBe(200)
     expect((await today(guardian)).status).toBe(403)
-    expect((await today(await createUser('admin_master'))).status).toBe(403)
+    expect((await today(await createUser('admin_standard'))).status).toBe(403)
   })
 })

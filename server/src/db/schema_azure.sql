@@ -1016,3 +1016,27 @@ ALTER TABLE sign_out_records
 ALTER TABLE sign_out_records
   ADD CONSTRAINT chk_signout_recorded_by CHECK ((teacher_id IS NULL) <> (manager_id IS NULL));
 CREATE INDEX idx_signout_manager_id ON sign_out_records USING btree (manager_id);
+
+-- ===== Parents register their child's authorised pickups =====
+-- A pickup person doesn't need a login: guardians.user_id is NULL for people
+-- a parent added (e.g. an aunt who collects on Fridays). pickup_permissions
+-- records which parent added each person, for audit.
+-- Existing databases: run migrations/002_pickups_without_accounts.sql instead.
+ALTER TABLE guardians ALTER COLUMN user_id DROP NOT NULL;
+ALTER TABLE pickup_permissions
+  ADD COLUMN added_by_guardian_id integer REFERENCES guardians(guardian_id) ON DELETE SET NULL;
+
+-- ===== Class colour chosen separately from the class name =====
+-- Hex code such as #FFD166. NULL means "use the colour matching the name".
+-- Existing databases: run migrations/003_class_colour.sql instead.
+ALTER TABLE school_classes
+  ADD COLUMN colour varchar(7)
+  CHECK (colour IS NULL OR colour ~ '^#[0-9A-Fa-f]{6}$');
+
+-- ===== A master admin can do everything a manager can =====
+-- Every master admin also has a managers row (seeds and the accounts API
+-- create it). Existing databases: run migrations/004_master_admin_manages.sql.
+INSERT INTO managers (user_id, full_name)
+SELECT a.user_id, a.full_name FROM admins a
+WHERE a.access_level = 'master'
+  AND NOT EXISTS (SELECT 1 FROM managers m WHERE m.user_id = a.user_id);

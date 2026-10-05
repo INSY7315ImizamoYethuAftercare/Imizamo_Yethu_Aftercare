@@ -7,7 +7,9 @@ import { onApi } from './api-mock'
 export const USERS = {
   teacher: { userId: 2, email: 'nkosi@iylh.org', role: 'teacher', fullName: 'Ms Nkosi' },
   manager: { userId: 1, email: 'sarah@iylh.org', role: 'manager', fullName: 'Sarah Botha' },
-  admin: { userId: 3, email: 'admin@iylh.org', role: 'admin', fullName: 'Ada Admin' },
+  admin: { userId: 3, email: 'admin@iylh.org', role: 'admin', accessLevel: 'standard', fullName: 'Ada Admin' },
+  // A master admin uses the manager's pages (see appRoleOf in session.js).
+  masterAdmin: { userId: 5, email: 'master@iylh.org', role: 'admin', accessLevel: 'master', fullName: 'Nomvula Dube' },
   guardian: { userId: 4, email: 'fatima@example.com', role: 'guardian', fullName: 'Fatima Petersen' },
 }
 

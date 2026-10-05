@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { getClasses } from "./UseClasses";
 
 export const GRADE_RANGES = ["Gr R", "Gr 1-2", "Gr 3-4", "Gr 5-6", "Gr 7"];
 export const UNASSIGNED_GRADE = "Unassigned";
 
-// A class's colour is the actual name of the class, so this list drives both both the colour and class name
+// Colours for the five original classes, whose colour is their name. Classes
+// created with the Add Classroom form store their own colour instead.
 export const CLASS_COLOURS = [
   { name: "Yellow", hex: "#FDE047" },
   { name: "Green", hex: "#86EFAC" },
@@ -12,88 +14,159 @@ export const CLASS_COLOURS = [
   { name: "Orange", hex: "#FDBA74" },
 ];
 
-export const colourForClass = (name) =>
-  CLASS_COLOURS.find((c) => c.name.toLowerCase() === name.toLowerCase())?.hex ?? "#9CA3AF";
+// The swatches offered when adding a class.
+export const SWATCHES = [
+  { label: "Yellow", hex: "#FFD166" },
+  { label: "Sky blue", hex: "#4CC9F0" },
+  { label: "Orange", hex: "#FF6B35" },
+  { label: "Teal", hex: "#00C9A7" },
+  { label: "Purple", hex: "#9B5DE5" },
+  { label: "Pink", hex: "#F15BB5" },
+  { label: "Green", hex: "#06D6A0" },
+  { label: "Amber", hex: "#FFB830" },
+];
+
+const NAME_MAX = 100; // school_classes.class_name
+
+// A class's colour: the one saved with it, else the colour matching its
+// name (the original five classes), else grey.
+export const colourForClass = (name, colour) =>
+  colour ??
+  getClasses().find((c) => c.name.toLowerCase() === name?.toLowerCase())?.colour ??
+  CLASS_COLOURS.find((c) => c.name.toLowerCase() === name?.toLowerCase())?.hex ??
+  "#9CA3AF";
+
+const label = "block text-xs font-bold text-gray-500 tracking-wide mb-2";
 
 function AddClassSheet({ existingNames, onAdd, onClose }) {
-  const taken = existingNames.map((n) => n.toLowerCase());
-  const available = CLASS_COLOURS.filter((c) => !taken.includes(c.name.toLowerCase()));
-
-  const [colour, setColour] = useState(available[0] ?? null);
+  const [name, setName] = useState("");
   const [grade, setGrade] = useState("Gr 1-2");
+  const [colour, setColour] = useState(SWATCHES[0].hex);
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const submit = () => {
-    if (!colour) return setError("All five classes already exist.");
-    onAdd({ name: colour.name, grade });
+  useEffect(() => {
+    const onKey = (e) => e.key === "Escape" && !saving && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onClose, saving]);
+
+  const trimmed = name.trim();
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!trimmed) return setError("Enter a class name.");
+    if (existingNames.some((n) => n.toLowerCase() === trimmed.toLowerCase())) {
+      return setError(`There's already a class called ${trimmed}.`);
+    }
+    setSaving(true);
+    setError("");
+    try {
+      await onAdd({ name: trimmed, grade, colour });
+    } catch (err) {
+      setError(err?.message || "Couldn't add the class. Please try again.");
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/40" onClick={() => !saving && onClose()}>
       <div
-        className="w-full max-w-lg bg-white rounded-t-3xl px-5 pt-3 pb-6 shadow-2xl max-h-[92vh] overflow-y-auto"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="add-class-title"
+        className="w-full max-w-lg bg-white rounded-t-3xl px-6 pt-3 pb-6 shadow-2xl max-h-[92vh] overflow-y-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4"></div>
-        <h2 className="text-xl font-bold text-gray-900">Add New Classroom</h2>
-        <p className="text-xs text-gray-500 mb-4">Pick the class colour. It is also the class name.</p>
+        <form onSubmit={submit} noValidate>
+          <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-5"></div>
+          <h2 id="add-class-title" className="text-2xl font-extrabold text-[#2B2A44]">Add New Classroom</h2>
+          <p className="text-sm text-gray-400 mt-1 mb-6">Create a new class group for your learners</p>
 
-        <p className="text-[11px] font-semibold text-gray-500 tracking-wide mb-2">CLASS COLOUR <span className="text-red-500">*</span></p>
-        {available.length === 0 ? (
-          <p className="text-sm text-gray-500 mb-4">All five classes already exist.</p>
-        ) : (
-          <div className="flex flex-wrap gap-3 mb-4">
-            {available.map((c) => (
+          <label htmlFor="class-name" className={label}>
+            CLASS NAME <span className="text-orange-500">*</span>
+          </label>
+          <input
+            id="class-name"
+            type="text"
+            value={name}
+            maxLength={NAME_MAX}
+            autoFocus
+            onChange={(e) => { setName(e.target.value); setError(""); }}
+            placeholder="e.g. Brown, White"
+            className="w-full mb-6 px-4 py-4 rounded-2xl bg-[#F5F0EA] text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-300"
+          />
+
+          <p id="grade-label" className={label}>
+            GRADE RANGE <span className="text-orange-500">*</span>
+          </p>
+          <div role="group" aria-labelledby="grade-label" className="flex flex-wrap gap-2 mb-6">
+            {GRADE_RANGES.map((g) => (
               <button
-                key={c.name}
+                key={g}
                 type="button"
-                onClick={() => { setColour(c); setError(""); }}
-                className="flex flex-col items-center gap-1 active:scale-95 transition"
+                aria-pressed={grade === g}
+                onClick={() => setGrade(g)}
+                className={`px-5 py-3 rounded-2xl text-sm font-bold transition active:scale-95 ${
+                  grade === g ? "bg-[#2B2A44] text-white shadow-md" : "bg-[#F5F0EA] text-gray-500 hover:bg-gray-200"
+                }`}
               >
-                <span
-                  style={{ backgroundColor: c.hex }}
-                  className={`w-12 h-12 rounded-2xl border border-gray-300 ${
-                    colour?.name === c.name ? "ring-2 ring-offset-2 ring-orange-400 scale-105" : ""
-                  }`}
-                ></span>
-                <span className="text-[11px] text-gray-500">{c.name}</span>
+                {g}
               </button>
             ))}
           </div>
-        )}
 
-        <p className="text-[11px] font-semibold text-gray-500 tracking-wide mb-2">GRADE RANGE <span className="text-red-500">*</span></p>
-        <div className="flex flex-wrap gap-2 mb-4">
-          {GRADE_RANGES.map((g) => (
-            <button
-              key={g}
-              type="button"
-              onClick={() => setGrade(g)}
-              className={`px-4 py-2 rounded-full text-xs font-semibold transition ${
-                grade === g ? "bg-[#2B2A44] text-white" : "bg-[#F5F0EA] text-gray-500 hover:bg-gray-200"
-              }`}
-            >
-              {g}
-            </button>
-          ))}
-        </div>
-
-        {colour && (
-          <div className="flex items-center gap-3 bg-orange-50 border border-orange-100 rounded-2xl px-3 py-3 mb-4">
-            <span className="text-xl">🏫</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-gray-900 truncate">{colour.name}</p>
-              <p className="text-xs text-orange-400">{grade}</p>
-            </div>
-            <span className="w-2 h-8 rounded-full border border-gray-300" style={{ backgroundColor: colour.hex }}></span>
+          <p id="colour-label" className={label}>CLASS COLOUR</p>
+          <div role="group" aria-labelledby="colour-label" className="grid grid-cols-5 gap-3 mb-6">
+            {SWATCHES.map((s) => (
+              <button
+                key={s.hex}
+                type="button"
+                aria-label={s.label}
+                aria-pressed={colour === s.hex}
+                onClick={() => setColour(s.hex)}
+                style={{ backgroundColor: s.hex }}
+                className={`aspect-square rounded-2xl transition active:scale-95 ${
+                  colour === s.hex ? "scale-110 shadow-lg ring-2 ring-white ring-offset-2 ring-offset-gray-300" : "hover:scale-105"
+                }`}
+              ></button>
+            ))}
           </div>
-        )}
-        {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
 
-        <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
-          <button onClick={submit} className="flex-1 py-3 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md active:scale-95 transition">Add Classroom</button>
-        </div>
+          {/* Preview of how the class will look in the list. */}
+          <div aria-hidden="true" className="flex items-center gap-3 bg-[#FFFBEB] border-2 border-amber-100 rounded-2xl px-4 py-4 mb-4">
+            <span className="w-12 h-12 rounded-xl bg-amber-100/70 flex items-center justify-center text-xl">🏫</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-base font-bold text-[#2B2A44] truncate">{trimmed || "Class Name"}</p>
+              <p className="text-xs font-semibold" style={{ color: colour }}>{grade}</p>
+            </div>
+            <span className="w-2 h-8 rounded-full" style={{ backgroundColor: colour }}></span>
+          </div>
+
+          {error && (
+            <p role="alert" className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-3 py-2 mb-4">
+              {error}
+            </p>
+          )}
+
+          <div className="flex gap-3 mt-6">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="flex-1 py-4 rounded-2xl bg-[#F5F0EA] text-base font-bold text-gray-500 active:scale-95 transition disabled:opacity-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="flex-1 py-4 rounded-2xl bg-[#FF6B35] text-base font-bold text-white shadow-md hover:bg-orange-600 active:scale-95 transition disabled:opacity-50"
+            >
+              {saving ? "Adding..." : "Add Classroom"}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   );

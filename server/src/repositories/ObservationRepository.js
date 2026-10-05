@@ -40,6 +40,26 @@ class ObservationRepository {
     }
 
     /**
+     * A learner's observations with the observing teacher's name, newest
+     * first, for the parent's view. Dates as YYYY-MM-DD text.
+     *
+     * @param {number} learnerId
+     * @returns {Promise<Array<Object>>}
+     */
+    async findByLearnerIdWithTeacher(learnerId) {
+        const result = await this.pool.query(
+            `SELECT o."observation_id", o."record_date"::text AS "record_date", o."category", o."rating", o."notes",
+                    t."full_name" AS "teacher_name"
+            FROM development_observations o
+            LEFT JOIN teachers t ON t."teacher_id" = o."teacher_id"
+            WHERE o."learner_id" = $1
+            ORDER BY o."record_date" DESC, o."observation_id" DESC`,
+            [learnerId]
+        );
+        return result.rows;
+    }
+
+    /**
      * Creates a new observation record and links it to a specified learner.
      *
      * @param {Object} params - The new observation's details.

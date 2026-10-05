@@ -38,7 +38,7 @@ function EditClassSheet({ cls, classes = [], onSave, onClose }) {
               {grade === UNASSIGNED_GRADE ? "No grade assigned" : grade} • {teacher}
             </p>
           </div>
-          <span className="w-2 h-8 rounded-full border border-gray-300" style={{ backgroundColor: colourForClass(cls.name) }}></span>
+          <span className="w-2 h-8 rounded-full border border-gray-300" style={{ backgroundColor: colourForClass(cls.name, cls.colour) }}></span>
         </div>
 
         <p className="text-[11px] font-semibold text-gray-500 tracking-wide mb-2">GRADE RANGE</p>

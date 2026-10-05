@@ -87,10 +87,11 @@ export class SchoolClassService {
    * @param {number} params.teacherId - The unique identifier of the teacher that is assigned to the new class.
    * @param {Object} params.className - The name of the new class.
    * @param {Object} params.gradeRange - The grade range of the new class.
+   * @param {string|null} [params.colour] - The class colour as a hex code (e.g. #FFD166).
    * 
    * @returns {Promise<Object>} The new class record.
    */
-  async createClass({ userId, teacherId, className, gradeRange }) {
+  async createClass({ userId, teacherId, className, gradeRange, colour = null }) {
 
     await this.#assertIsManager(userId)
 
@@ -104,7 +105,7 @@ export class SchoolClassService {
     }
 
     try {
-      return await this.schoolClassRepository.create({ teacherId: teacherId ?? null, className, gradeRange })
+      return await this.schoolClassRepository.create({ teacherId: teacherId ?? null, className, gradeRange, colour })
     } catch (err) {
       if (err.code === '23505') {
         const conflictErr = new Error('An active class with this name already exists')
