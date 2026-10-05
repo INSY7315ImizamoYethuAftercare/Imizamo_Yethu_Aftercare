@@ -457,12 +457,12 @@ please refer to the **Part 1 planning and design document**.
 
 ### 🌐 Live Web Application
 
-https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites .net 
+https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net 
 
 ### ▶️ YouTube Demonstration
-https://youtu.be/dpp4UZbB32g
+App Demo Only: https://youtu.be/dpp4UZbB32g
 
-//link
+Full Video: https://youtu.be/2XYmDj81yUY
 
 ---
 
