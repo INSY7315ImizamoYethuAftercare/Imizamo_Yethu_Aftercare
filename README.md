@@ -32,7 +32,7 @@ The application has been designed with simplicity and accessibility in mind, par
 ### 🌐 Running Web Application
 
 > **Live Application:**  
-> `PASTE-YOUR-AZURE-WEB-APP-LINK-HERE`
+> https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net
 
 ---
 
@@ -151,10 +151,7 @@ The required Node.js version is also specified in the `.nvmrc` file.
 
 ## 1. Clone the Repository
 
-```bash
-git clone YOUR-GITHUB-REPOSITORY-URL
-cd YOUR-REPOSITORY-NAME
-```
+Link to Repository: https://github.com/INSY7315ImizamoYethuAftercare/Imizamo_Yethu_Aftercare.git
 
 ---
 
