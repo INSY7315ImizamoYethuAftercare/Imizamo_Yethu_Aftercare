@@ -1,4 +1,6 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
+import { restoreSession, homePathFor, useSession } from "./services/session";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -111,17 +113,13 @@ function AdminBottomNav() {
         <span className="text-lg">🏠</span>
         <span className={`text-[10px] ${isActive("/admin") ? "font-semibold" : ""}`}>Home</span>
       </button>
-      <button onClick={() => navigate("/admin/attendance")} className={navBtn(isActive("/admin/attendance"), "text-green-500")}>
-        <span className="text-lg">✓</span>
-        <span className={`text-[10px] ${isActive("/admin/attendance") ? "font-semibold" : ""}`}>Attendance</span>
-      </button>
-      <button onClick={() => navigate("/admin/learners")} className={navBtn(isActive("/admin/learners"))}>
-        <span className="text-lg">🎒</span>
-        <span className={`text-[10px] ${isActive("/admin/learners") ? "font-semibold" : ""}`}>Learners</span>
-      </button>
       <button onClick={() => navigate("/admin/reports")} className={navBtn(isActive("/admin/reports"))}>
         <span className="text-lg">📊</span>
         <span className={`text-[10px] ${isActive("/admin/reports") ? "font-semibold" : ""}`}>Reports</span>
+      </button>
+      <button onClick={() => navigate("/admin/settings")} className={navBtn(isActive("/admin/settings"))}>
+        <span className="text-lg">⚙️</span>
+        <span className={`text-[10px] ${isActive("/admin/settings") ? "font-semibold" : ""}`}>Settings</span>
       </button>
     </NavShell>
   );
@@ -144,39 +142,59 @@ function ParentBottomNav() {
   );
 }
 
+// Only lets the right kind of logged-in user through. Asks the server once
+// per page load whether the session cookie is still valid.
+function Protected({ role, children }) {
+  const { user, status } = useSession();
+  useEffect(() => {
+    restoreSession();
+  }, []);
+
+  if (status === "unknown") {
+    return (
+      <div className="min-h-screen bg-[#FFFBF5] flex items-center justify-center">
+        <p className="text-sm text-gray-400">Loading...</p>
+      </div>
+    );
+  }
+  if (!user) return <Navigate to="/" replace />;
+  if (user.appRole !== role) return <Navigate to={homePathFor(user.appRole)} replace />;
+  return children;
+}
+
 function TeacherLayout({ children }) {
   return (
-    <div>
+    <Protected role="teacher">
       {children}
       <TeacherBottomNav />
-    </div>
+    </Protected>
   );
 }
 
 function ManagerLayout({ children }) {
   return (
-    <div>
+    <Protected role="manager">
       {children}
       <ManagerBottomNav />
-    </div>
+    </Protected>
   );
 }
 
 function AdminLayout({ children }) {
   return (
-    <div>
+    <Protected role="admin">
       {children}
       <AdminBottomNav />
-    </div>
+    </Protected>
   );
 }
 
 function ParentLayout({ children }) {
   return (
-    <div>
+    <Protected role="guardian">
       {children}
       <ParentBottomNav />
-    </div>
+    </Protected>
   );
 }
 
@@ -194,22 +212,24 @@ function App() {
         <Route path="/signout" element={<TeacherLayout><SignOut /></TeacherLayout>} />
         <Route path="/observations" element={<TeacherLayout><Observations /></TeacherLayout>} />
 
+        <Route path="/manager/observations" element={<ManagerLayout><Observations role="Manager" /></ManagerLayout>} />
         <Route path="/manager" element={<ManagerLayout><ManagerHome /></ManagerLayout>} />
         <Route path="/manager/attendance" element={<ManagerLayout><Attendance role="Manager" /></ManagerLayout>} />
         <Route path="/manager/learners" element={<ManagerLayout><Learners role="Manager" /></ManagerLayout>} />
         <Route path="/manager/classes" element={<ManagerLayout><Classes role="Manager" /></ManagerLayout>} />
         <Route path="/manager/signout" element={<ManagerLayout><SignOut role="Manager" /></ManagerLayout>} />
         <Route path="/manager/escalations" element={<ManagerLayout><Escalations /></ManagerLayout>} />
+        <Route path="/manager/observations" element={<ManagerLayout><Observations role="Manager" /></ManagerLayout>} />
         <Route path="/manager/staff" element={<ManagerLayout><Staff /></ManagerLayout>} />
         <Route path="/reports" element={<ManagerLayout><Reports /></ManagerLayout>} />
         <Route path="/settings" element={<ManagerLayout><Settings /></ManagerLayout>} />
 
         <Route path="/admin" element={<AdminLayout><AdminHome /></AdminLayout>} />
-        <Route path="/admin/attendance" element={<AdminLayout><Attendance role="Admin" /></AdminLayout>} />
-        <Route path="/admin/learners" element={<AdminLayout><Learners role="Admin" /></AdminLayout>} />
         <Route path="/admin/reports" element={<AdminLayout><Reports role="Admin" /></AdminLayout>} />
         <Route path="/admin/settings" element={<AdminLayout><Settings role="Admin" /></AdminLayout>} />
-        <Route path="/admin/observations" element={<AdminLayout><Observations role="Admin" /></AdminLayout>} />
+        {/* Admins see totals only, never individual learners or the register
+            (POPIA): old links to those pages go back to the admin home. */}
+        <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
 
         <Route path="/parent" element={<ParentLayout><ParentHome /></ParentLayout>} />
         <Route path="/parent/settings" element={<ParentLayout><ParentSettings /></ParentLayout>} />

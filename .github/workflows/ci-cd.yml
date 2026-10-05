@@ -1,0 +1,94 @@
+name: CI/CD
+
+# No develop branch: personal branches open PRs straight to main (#4).
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    name: Lint and Test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    # Throwaway Postgres for the integration tests. TEST-ONLY credentials,
+    # matching the default in server/tests/test-config.js; never a real secret.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: imizamo_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/imizamo_test
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: npm
+
+      # One install for both workspaces (the only lockfile is at the root).
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint client
+        working-directory: client
+        run: npx oxlint
+
+      - name: Run server tests (unit + integration against Postgres)
+        run: npm run test:server
+
+      - name: Run client tests
+        run: npm run test:client
+
+      - name: Build client
+        working-directory: client
+        run: npm run build
+
+  deploy:
+    name: Deploy to Azure
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Build client
+        working-directory: client
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install server production dependencies
+        working-directory: server
+        run: npm ci --omit=dev
+
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: 'imizamo-yethu-aftercare'
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: server

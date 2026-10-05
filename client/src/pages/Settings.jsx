@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { logout } from "../services/session";
+import { useClasses } from "./UseClasses";
+import { useHeader } from "./UseHeader";
 
 function Settings({ role = "Manager" }) {
   const navigate = useNavigate();
   const isAdmin = role === "Admin";
   const homePath = isAdmin ? "/admin" : "/manager";
-  const displayName = isAdmin ? "System Admin" : "Sarah Botha";
-  const displayRole = isAdmin ? "Admin" : "Manager";
+  const { displayName, displayRole } = useHeader();
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const primary = "w-full py-3 rounded-full bg-orange-400 text-white font-semibold shadow-lg hover:bg-orange-500 active:scale-[0.98] transition";
   const input = "w-full px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md bg-white focus:outline-none focus:ring-2 focus:ring-orange-300";
@@ -18,7 +20,8 @@ function Settings({ role = "Manager" }) {
   const [year, setYear] = useState("2025");
   const [activeTerm, setActiveTerm] = useState("Term 3");
   const [newClass, setNewClass] = useState("");
-  const [classes, setClasses] = useState(["Yellow", "Green", "Red", "Blue"]);
+  const sharedClasses = useClasses();
+  const [classes, setClasses] = useState(sharedClasses.map((c) => c.name));
   const [saved, setSaved] = useState("");
 
   const showSaved = (text) => {
@@ -153,7 +156,12 @@ function Settings({ role = "Manager" }) {
         <div className={card}>
           <h2 className="font-semibold text-gray-900 mb-3">Account</h2>
           <button
-            onClick={() => navigate("/")}
+            onClick={async () => {
+              // End the session first; otherwise the sign-in page sees a valid
+              // cookie and sends the user straight back here.
+              await logout();
+              navigate("/", { replace: true });
+            }}
             className="w-full py-3 rounded-full bg-white text-red-500 font-semibold border border-red-200 shadow-lg hover:shadow-xl active:scale-[0.98] transition"
           >
             Log out

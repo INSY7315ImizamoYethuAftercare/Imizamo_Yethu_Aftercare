@@ -12,11 +12,20 @@
     "dev:server": "npm run dev --workspace server",
     "build:client": "npm run build --workspace client",
     "start:server": "npm run start --workspace server",
-    "test": "npm run test --workspaces --if-present"
+    "test": "npm run test:server && npm run test:client",
+    "test:server": "npm run test --workspace server",
+    "test:client": "npm run test --workspace client",
+    "test:coverage": "npm run test:coverage --workspace server && npm run test:coverage --workspace client",
+    "seed:demo": "npm run seed:demo --workspace server --"
   },
   "license": "UNLICENSED",
   "dependencies": {
     "@react-pdf/renderer": "^4.9.0",
     "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "cross-env": "^10.1.0",
+    "jest": "^30.5.2",
+    "supertest": "^7.2.2"
   }
 }

@@ -1,18 +1,24 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
 
-const data = [
-  { day: "Mon", present: 5 },
-  { day: "Tue", present: 5 },
-  { day: "Wed", present: 5 },
-  { day: "Thu", present: 4 },
-  { day: "Fri", present: 4 },
-];
+/**
+ * @param {{ data?: Array<{ day: string, present: number }> }} props
+ */
+function WeeklyChart({ data }) {
+  const chartData =
+    data && data.length > 0
+      ? data
+      : [
+          { day: "Mon", present: 0 },
+          { day: "Tue", present: 0 },
+          { day: "Wed", present: 0 },
+          { day: "Thu", present: 0 },
+          { day: "Fri", present: 0 },
+        ];
 
-function WeeklyChart() {
   return (
     <div className="h-48">
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data}>
+        <BarChart data={chartData}>
           <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
           <XAxis dataKey="day" tick={{ fontSize: 11 }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />

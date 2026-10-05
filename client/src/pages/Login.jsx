@@ -1,11 +1,17 @@
-import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { login, restoreSession, homePathFor, useSession } from "../services/session";
 
 function Login() {
   const navigate = useNavigate();
+  // e.g. "Account created. Please sign in." after registering.
+  const notice = useLocation().state?.message;
+  const { user, status } = useSession();
   const [role, setRole] = useState("Teacher");
-  const [email, setEmail] = useState("nkosi@iylh.org");
-  const [password, setPassword] = useState("••••••••");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const roles = [
     { name: "Teacher", icon: "🍎" },
@@ -14,11 +20,28 @@ function Login() {
     { name: "Parent", icon: "💛" },
   ];
 
-  const handleSignIn = () => {
-    if (role === "Manager") navigate("/manager");
-    else if (role === "Admin") navigate("/admin");
-    else if (role === "Parent") navigate("/parent");
-    else navigate("/home");
+  // Already signed in (e.g. refreshed the page)? Go straight to your home page.
+  useEffect(() => {
+    restoreSession();
+  }, []);
+  useEffect(() => {
+    if (status === "authed" && user) navigate(homePathFor(user.appRole), { replace: true });
+  }, [status, user, navigate]);
+
+  const handleSignIn = async (e) => {
+    e?.preventDefault();
+    if (!email.trim() || !password) return setError("Please enter your email and password.");
+    setBusy(true);
+    setError("");
+    try {
+      const signedIn = await login(email.trim(), password);
+      // Where you land depends on your real account role, not the card picked above.
+      navigate(homePathFor(signedIn.appRole), { replace: true });
+    } catch (err) {
+      setError(err.message || "Could not sign in. Please try again.");
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -53,10 +76,13 @@ function Login() {
           ))}
         </div>
 
+        <form onSubmit={handleSignIn}>
         <div className="mb-4">
-          <label className="text-xs font-medium text-gray-500 mb-1 block">EMAIL</label>
+          <label htmlFor="login-email" className="text-xs font-medium text-gray-500 mb-1 block">EMAIL</label>
           <input
+            id="login-email"
             type="email"
+            autoComplete="username"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
@@ -64,25 +90,28 @@ function Login() {
         </div>
 
         <div className="mb-6">
-          <label className="text-xs font-medium text-gray-500 mb-1 block">PASSWORD</label>
+          <label htmlFor="login-password" className="text-xs font-medium text-gray-500 mb-1 block">PASSWORD</label>
           <input
+            id="login-password"
             type="password"
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             className="w-full px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-300"
           />
         </div>
 
-        <button
-          onClick={handleSignIn}
-          className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 active:scale-[0.98] transition mb-4"
-        >
-          Sign In
-        </button>
+        {notice && !error && <p role="status" className="text-sm text-center text-green-600 mb-4">{notice}</p>}
+        {error && <p className="text-sm text-center text-red-500 mb-4">{error}</p>}
 
-        <p className="text-xs text-center text-gray-400 mb-3">
-          Demo: select any role above and tap Sign In
-        </p>
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold text-base shadow-md hover:bg-orange-500 active:scale-[0.98] transition mb-4 disabled:opacity-60"
+        >
+          {busy ? "Signing in..." : "Sign In"}
+        </button>
+        </form>
 
         <p className="text-sm text-center text-gray-500">
           New to the hub?{" "}
