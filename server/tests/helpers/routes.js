@@ -40,6 +40,9 @@ export const PROTECTED_ROUTES = [
     () => ({ category: 'Reading', rating: 8 })),
   route('DELETE /api/observations/:observationId', ['teacher'], (w) => `/api/observations/${w.observationA.observation_id}`),
 
+  // Live dashboard + donor report (manager + admins only)
+  route('GET /api/reports/overview', ['manager', ...ADMINS],
+    () => '/api/reports/overview'),
   route('GET /api/reports/donor', ['manager', ...ADMINS],
     () => '/api/reports/donor?periodStart=2026-01-01&periodEnd=2026-12-31'),
 

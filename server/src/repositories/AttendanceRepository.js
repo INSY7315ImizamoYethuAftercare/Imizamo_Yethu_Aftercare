@@ -176,6 +176,85 @@ class AttendanceRepository {
     )
     return result.rows[0]
   }
+
+  /**
+   * Present counts per calendar day for a date range (weekly chart).
+   * @param {string} periodStart - YYYY-MM-DD
+   * @param {string} periodEnd - YYYY-MM-DD
+   * @returns {Promise<Array<{ record_date: string, present_count: string }>>}
+   */
+  async getDailyPresentCounts(periodStart, periodEnd) {
+    const result = await this.pool.query(
+      `SELECT "record_date"::text AS record_date,
+              COUNT(*) FILTER (WHERE "status" = 'present') AS present_count
+       FROM attendance_records
+       WHERE "record_date" BETWEEN $1 AND $2
+       GROUP BY "record_date"
+       ORDER BY "record_date"`,
+      [periodStart, periodEnd],
+    )
+    return result.rows
+  }
+
+  /**
+   * Attendance rate + active learner count per class for a date range.
+   * @param {string} periodStart - YYYY-MM-DD
+   * @param {string} periodEnd - YYYY-MM-DD
+   * @returns {Promise<Array<{ class_name: string, learner_count: string, present_count: string, total_count: string }>>}
+   */
+  async getAttendanceByClass(periodStart, periodEnd) {
+    const result = await this.pool.query(
+      `SELECT c."class_name",
+              COUNT(DISTINCT l."learner_id") FILTER (WHERE l."is_active") AS learner_count,
+              COUNT(*) FILTER (WHERE a."status" = 'present') AS present_count,
+              COUNT(*) AS total_count
+       FROM attendance_records a
+       JOIN learners l ON l."learner_id" = a."learner_id"
+       JOIN school_classes c ON c."class_id" = l."class_id"
+       WHERE a."record_date" BETWEEN $1 AND $2
+       GROUP BY c."class_name"
+       ORDER BY c."class_name"`,
+      [periodStart, periodEnd],
+    )
+    return result.rows
+  }
+
+  /**
+   * Organisation-wide attendance rate for a date range (0–100), or null if no records.
+   * @param {string} periodStart - YYYY-MM-DD
+   * @param {string} periodEnd - YYYY-MM-DD
+   * @returns {Promise<number|null>}
+   */
+  async getAttendanceRate(periodStart, periodEnd) {
+    const result = await this.pool.query(
+      `SELECT
+         COUNT(*) FILTER (WHERE "status" = 'present') AS total_present,
+         COUNT(*) AS total_count
+       FROM attendance_records
+       WHERE "record_date" BETWEEN $1 AND $2`,
+      [periodStart, periodEnd],
+    )
+    const present = Number(result.rows[0].total_present)
+    const total = Number(result.rows[0].total_count)
+    if (total === 0) return null
+    return Math.round((present / total) * 100)
+  }
+
+  /**
+   * Distinct days that have at least one attendance record in the range.
+   * @param {string} periodStart - YYYY-MM-DD
+   * @param {string} periodEnd - YYYY-MM-DD
+   * @returns {Promise<number>}
+   */
+  async getDaysWithAttendance(periodStart, periodEnd) {
+    const result = await this.pool.query(
+      `SELECT COUNT(DISTINCT "record_date") AS days
+       FROM attendance_records
+       WHERE "record_date" BETWEEN $1 AND $2`,
+      [periodStart, periodEnd],
+    )
+    return Number(result.rows[0].days)
+  }
 }
 
 export default AttendanceRepository
