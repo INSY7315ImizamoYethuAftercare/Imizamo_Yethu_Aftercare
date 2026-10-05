@@ -457,7 +457,7 @@ please refer to the **Part 1 planning and design document**.
 
 ### 🌐 Live Web Application
 
-//link
+https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites .net 
 
 ### ▶️ YouTube Demonstration
 
