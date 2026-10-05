@@ -1,147 +1,475 @@
 # Imizamo Yethu Aftercare Management System
 
-Part 2. React + Tailwind client, Node.js/Express API,
-managed as an npm workspaces monorepo. See the Part 1 planning document for full
-architecture, data schema, and design pattern decisions - this README covers day-to-day
-setup only.
+**Part 2 – Implementation**  
+**NovaTech Solutions**  
+**INSY7315 – Work Integrated Learning**
 
-## Structure
+---
 
+## 🌍 Project Overview
+
+The **Imizamo Yethu Aftercare Management System** is a full-stack web application developed and donated by **NovaTech Solutions** to support the daily operations of the Imizamo Yethu Aftercare.
+
+The system replaces manual, paper-based processes with a centralised digital platform for managing:
+
+- Learner attendance
+- Digital learner sign-out
+- Guardian verification
+- Developmental observations
+- Class and learner management
+- Role-based access
+- Management reporting
+- Donor and organisational reporting
+
+This implementation represents **Part 2 of the project** and realises the requirements, architecture, database design, design patterns, and non-functional requirements established during the Part 1 planning and design phase.
+
+The application has been designed with simplicity and accessibility in mind, particularly considering that teachers primarily use smartphones while management requires more comprehensive access through laptops or other larger devices.
+
+---
+
+## 🚀 Live Application
+
+### 🌐 Running Web Application
+
+> **Live Application:**  
+> `PASTE-YOUR-AZURE-WEB-APP-LINK-HERE`
+
+---
+
+## 🎥 Demonstration Video
+
+A demonstration of the completed application can be viewed below.
+
+> **YouTube Demo:**  
+> `PASTE-YOUR-YOUTUBE-LINK-HERE`
+
+The demonstration showcases the implemented functionality, user roles, navigation, attendance management, learner sign-out, observations, and management functionality.
+
+---
+
+# 🛠️ Technology Stack
+
+| Layer | Technology |
+|---|---|
+| **Frontend** | React (Vite) + Tailwind CSS |
+| **Backend** | Node.js 22 + Express |
+| **Database** | PostgreSQL |
+| **Architecture** | Layered Architecture |
+| **Design Patterns** | Repository Pattern, Middleware / Chain of Responsibility |
+| **Monorepo** | npm Workspaces |
+| **Authentication** | Role-Based Access Control |
+| **Deployment** | Microsoft Azure |
+| **Version Control** | Git + GitHub |
+
+### Architecture
+
+The application follows a layered architecture:
+
+```text
+Routes
+   ↓
+Controllers
+   ↓
+Services
+   ↓
+Repositories
+   ↓
+PostgreSQL Database
 ```
+
+This separation ensures that routing, request handling, business logic, and database access remain independent and maintainable.
+
+The architectural decisions, technology evaluation, cloud architecture, security measures, and design patterns are documented in the **Part 1 submission**.
+
+---
+
+# 📁 Repository Structure
+
+```text
 .
-├── client/            React app (Vite + Tailwind CSS)
+├── client/                         # React frontend (Vite + Tailwind CSS)
 │   └── src/
-│       ├── components/    Reusable UI pieces
-│       ├── pages/         Route-level screens (Teacher/Manager/Admin/Guardian views)
-│       ├── hooks/         Custom React hooks
-│       └── services/      API client, auth helpers
-├── server/            Express API
+│       ├── components/             # Reusable UI components
+│       ├── pages/                  # Role-specific screens
+│       │   ├── Teacher/
+│       │   ├── Manager/
+│       │   ├── Admin/
+│       │   └── Guardian/
+│       ├── hooks/                  # Custom React hooks
+│       └── services/               # API client and authentication helpers
+│
+├── server/                         # Express backend API
 │   └── src/
-│       ├── routes/        Route definitions only — no logic
-│       ├── controllers/   Request/response handling, calls into services
-│       ├── services/      Business logic (framework-agnostic)
-│       ├── repositories/  Data access layer (Repository pattern, wraps PostgreSQL)
-│       ├── middleware/    Logger, auth, error handling, rate limiting
-│       ├── config/        Environment loading/validation
-│       └── db/            Migrations and seed scripts 
-└── package.json       Root workspace config
+│       ├── routes/                 # API route definitions
+│       ├── controllers/            # Request handling
+│       ├── services/               # Business logic
+│       ├── repositories/           # Database access layer
+│       ├── middleware/             # Authentication, authorisation,
+│       │                            # logging and error handling
+│       ├── config/                 # Environment configuration
+│       └── db/                     # Database-related scripts
+│
+├── database/                       # Database schema and scripts
+│
+├── package.json                    # Root workspace configuration
+└── .nvmrc                          # Node.js version specification
 ```
 
-This mirrors the Layered pattern (Routes/Controllers → Services → Repositories) and the
-middleware Chain of Responsibility (logger → authenticate → authorize → handler) from the
-System Architecture doc.
+The layered structure and middleware chain directly implement the **System Architecture** and **Design Patterns** specified in the Part 1 documentation.
 
-## Prerequisites
+---
 
-- Node.js 22 (see `.nvmrc` - run `nvm use` if you have nvm installed)
-- npm 10+ (ships with Node 22)
+# 👥 User Roles
 
-## Getting started
+The system implements role-based access control to ensure that users only have access to functionality appropriate to their responsibilities.
+
+| Role | Access Level |
+|---|---|
+| **Master Administrator** | Full system configuration and development/handover functionality |
+| **Administrator** | Organisation-wide reporting and high-level settings |
+| **Manager** | Operational oversight across all classes |
+| **Teacher** | Attendance, observations, learner management and digital sign-out |
+| **Parent / Guardian** | Access to their own child/children's profiles, attendance and permissions |
+
+---
+
+# 💻 Prerequisites
+
+Before running the application locally, ensure that the following software is installed:
+
+- **Node.js 22**
+- **npm 10+**
+- **PostgreSQL**
+- **Git**
+- A code editor such as **Visual Studio Code**
+
+The required Node.js version is also specified in the `.nvmrc` file.
+
+---
+
+# ⚙️ Local Setup
+
+## 1. Clone the Repository
 
 ```bash
-# from the repo root - installs both client and server dependencies
+git clone YOUR-GITHUB-REPOSITORY-URL
+cd YOUR-REPOSITORY-NAME
+```
+
+---
+
+## 2. Install Dependencies
+
+Install all dependencies from the repository root:
+
+```bash
 npm install
-
-# copy env templates and fill in real values
-cp server/.env.example server/.env
-cp client/.env.example client/.env.local   # optional - defaults work for local dev
 ```
 
-Run both apps in separate terminals:
+Because the project uses **npm workspaces**, this installs the required dependencies for both the frontend and backend.
+
+---
+
+## 3. Configure Environment Variables
+
+Create the server environment file:
 
 ```bash
-npm run dev:server   # http://localhost:4000
-npm run dev:client   # http://localhost:5173
+cp server/.env.example server/.env
 ```
 
-The client's dev server proxies `/api/*` requests to the server automatically (see
-`client/vite.config.js`), so components can call `apiClient.get('/health')` without any
-CORS configuration during local development.
+Create the client environment file:
 
-Confirm both are wired up correctly:
+```bash
+cp client/.env.example client/.env.local
+```
+
+Update the environment variables with the appropriate local PostgreSQL and application configuration.
+
+> **Important:** Environment files containing credentials or secrets should never be committed to GitHub.
+
+---
+
+# 🗄️ Database Setup
+
+The project uses **PostgreSQL** as its relational database.
+
+## 1. Create the Development Database
+
+From a PostgreSQL-enabled terminal:
+
+```bash
+psql -U postgres -c "CREATE DATABASE imizamo_dev;"
+```
+
+This only needs to be performed once.
+
+## 2. Apply the Database Schema
+
+```bash
+psql -U postgres -d imizamo_dev -f database/schema.sql
+```
+
+The `database/schema.sql` file acts as the source of truth for the database structure.
+
+---
+
+# ▶️ Running the Application
+
+The frontend and backend are run separately during local development.
+
+### Terminal 1 — Backend
+
+```bash
+npm run dev:server
+```
+
+The API will run on:
+
+```text
+http://localhost:4000
+```
+
+### Terminal 2 — Frontend
+
+```bash
+npm run dev:client
+```
+
+The React application will run on:
+
+```text
+http://localhost:5173
+```
+
+The Vite development server proxies `/api/*` requests to the backend, helping to prevent CORS issues during local development.
+
+---
+
+# 🩺 API Health Check
+
+Once the backend is running, the API can be tested using:
 
 ```bash
 curl http://localhost:4000/api/health
-# {"status":"ok","timestamp":"..."}
 ```
 
-## Environment variables
+A successful response should look similar to:
 
-Never commit a real `.env` file - `.env.example` files document what's needed and are
-safe to commit. See `server/.env.example` and `client/.env.example` for the full list.
-In production, these are set via Azure App Service → Configuration, not committed files.
+```json
+{
+  "status": "ok",
+  "timestamp": "..."
+}
+```
 
-## Scripts (from repo root)
+---
+
+# 📜 Available Scripts
 
 | Command | Description |
 |---|---|
-| `npm run dev:server` | Start the API with auto-reload (nodemon) |
-| `npm run dev:client` | Start the Vite dev server |
-| `npm run build:client` | Production build of the React app |
-| `npm run start:server` | Start the API without auto-reload (production mode) |
-| `npm test` | Run tests in every workspace that has them |
+| `npm run dev:server` | Starts the Express API with hot reload |
+| `npm run dev:client` | Starts the React/Vite development server |
+| `npm run build:client` | Creates a production build of the frontend |
+| `npm run start:server` | Starts the API in production mode |
+| `npm test` | Runs the test suites across the workspaces |
 
-## Database Setup (Local Development - for now)
+---
 
-The full database schema is committed at `database/schema.sql`. Run this once
-against your local PostgreSQL to create all tables.
+# 🔑 Key Implementation Features
 
-### Prerequisites
-- PostgreSQL installed locally (with `psql` available)
-- A local database named 'imizamo_dev'
+### Role-Based Access Control
 
-### Steps
+Users are assigned roles that determine which areas of the application they can access. This ensures that sensitive functionality is restricted to authorised users.
 
-1. Create an empty local database (only needed once):
-```powershell
-   psql.exe -U postgres -c "CREATE DATABASE imizamo_dev;"
+### Attendance Management
+
+Teachers can digitally record learner attendance, replacing the existing paper-based attendance registers.
+
+### Digital Learner Sign-Out
+
+The system supports digital learner sign-out with guardian verification, improving accountability and reducing the reliance on physical sign-out sheets.
+
+### Developmental Observations
+
+Teachers can record developmental observations about learners, allowing relevant information to be stored digitally and accessed by authorised users.
+
+### Reporting
+
+Managers and administrators can access information and reports to support operational decision-making and organisational oversight.
+
+### Responsive Design
+
+The frontend follows a mobile-first approach to accommodate teachers who primarily access the system using smartphones while still providing an effective experience on laptops and larger screens.
+
+### Repository Pattern
+
+Database access is isolated within repositories, preventing database-specific logic from being directly embedded within controllers or frontend components.
+
+### Middleware / Chain of Responsibility
+
+Middleware is used to process requests through a sequence of responsibilities including:
+
+```text
+Request
+   ↓
+Logging
+   ↓
+Authentication
+   ↓
+Authorisation
+   ↓
+Controller
+   ↓
+Service
+   ↓
+Repository
+   ↓
+Database
 ```
-2. Run the schema file against it:
-```powershell
-   psql.exe -U postgres -d imizamo_dev -f database/schema.sql
+
+This improves separation of concerns, security, maintainability, and testability.
+
+---
+
+# 🔐 Security & Configuration
+
+Sensitive configuration information is stored using environment variables rather than being hard-coded into the application.
+
+Examples include:
+
+```text
+DATABASE_URL
+JWT_SECRET
+API configuration
+Authentication credentials
 ```
-3. Update your local `.env` file with your database connection details
-   (see `.env.example` for the required variables).
 
-### If `psql` isn't recognized
+Environment files are excluded from version control through `.gitignore`.
 
-Add PostgreSQL's `bin` folder to your PATH, or call it directly:
-```powershell
-& "C:\Program Files\PostgreSQL\17\bin\psql.exe" -U postgres -d imizamo_dev -f server/src/db/schema.sql
+For the deployed Azure application, environment variables are configured through the **Azure App Service Environment Variables** rather than exposing credentials within the source code.
+
+---
+
+# ☁️ Deployment
+
+The application is deployed using **Microsoft Azure**.
+
+The deployed architecture consists of:
+
+```text
+User
+  │
+  ▼
+Azure App Service
+  │
+  ├── React Frontend
+  │
+  └── Node.js / Express Backend
+          │
+          ▼
+      PostgreSQL
 ```
 
-### Keeping schema.sql up to date
+The application is accessible through the live Azure deployment link provided at the beginning of this README.
 
-If you change the database structure locally (e.g. add a column or table),
-re-export it and commit the updated file so the rest of the team stays in
-sync:
-```powershell
-pg_dump.exe -U postgres -d imizamo_dev --schema-only -f server/src/db/schema.sql
-```
-Flag the change to the team (in WhatsApp) so everyone knows to re-run
-step 2 above against their own local database.
+---
 
-## Branching & team workflow
+# 📐 Relationship to Part 1
 
-There is no `develop` branch. Each team member works on their own personal branch
-(`Thomas-backend`, `Michaela-backend`, `Justin-frontend`, `Nomsa-Frontend`, etc.),
-branched from and merged back into `main` via pull request.
+The Part 2 implementation corresponds directly to the artefacts and decisions produced during Part 1.
 
-**A note on enforcement:** GitHub Free for organizations does not support branch
-protection rules on private repositories (this requires GitHub Team or above), so
-none of the rules below are technically enforced by GitHub - they're a team agreement
-everyone commits to following manually:
+These include:
 
-- Never push directly to `main` - always open a pull request, even for small changes.
-- Pull the latest `main` into your branch before opening a PR, to catch conflicts early
-  rather than at merge time.
-- Get at least one teammate's review/approval on a PR before merging it, even though
-  GitHub won't block the merge if you skip this.
-- Keep commits scoped and clearly described (what changed and why), so `git log` stays
-  useful for the team and for the module's Proof of Collaboration evidence.
+- User Roles
+- User Stories
+- Domain Class Diagram
+- Design Class Diagram
+- Entity Relationship Diagram
+- Database Schema
+- Sequence Diagrams
+- State Diagrams
+- System Architecture
+- Cloud Architecture
+- Design Patterns
+- Non-Functional Requirements
+- Security Requirements
+- DevOps Decisions
+- Cost Analysis
+- Change Management Plan
 
-## Contributing
+The working application demonstrates the practical implementation and realisation of these design decisions.
 
-- Keep controllers thin - business logic belongs in `services/`, data access in
-  `repositories/`. This keeps everything testable without a real database connection.
-- Add new environment variables to the relevant `.env.example` in the same PR that
+---
+
+# 📋 Non-Functional Requirements
+
+The implementation considers the following non-functional requirements:
+
+| Requirement | Implementation |
+|---|---|
+| **Performance** | Efficient API structure and database access |
+| **Security** | Authentication, authorisation and environment-based secrets |
+| **Usability** | Simple, responsive and role-specific interfaces |
+| **Reliability** | Structured backend architecture and error handling |
+| **Scalability** | Layered architecture and cloud deployment |
+| **Maintainability** | Separation of controllers, services and repositories |
+| **Portability** | Web-based application accessible across modern devices |
+
+---
+
+# 👨‍💻 Team
+
+## NovaTech Solutions
+
+| Student Number | Team Member |
+|---|---|
+| **ST10445500** | Isabelle Kathryn Devlin |
+| **ST10068995** | Thomas Pheiffer |
+| **ST10325652** | Michaela Ferraris |
+| **ST10301146** | Nomsa Mkoka |
+| **ST10280758** | Justin Fussell |
+
+---
+
+# 📚 Documentation
+
+This README accompanies the **Part 2 – Implementation** submission.
+
+For a complete explanation of the project's:
+
+- Requirements analysis
+- User research
+- Design artefacts
+- Architecture
+- Technology evaluation
+- Cloud architecture
+- Security decisions
+- Design patterns
+- Non-functional requirements
+- Cost projections
+- Change management
+- Implementation decisions
+
+please refer to the **Part 1 planning and design document**.
+
+---
+
+# 🎬 Project Links
+
+### 🌐 Live Web Application
+
+//link
+
+### ▶️ YouTube Demonstration
+
+//link
+
+---
+
+## 💙 NovaTech Solutions
+
+*Developed and donated by NovaTech Solutions to support the digital transformation of the Imizamo Yethu Aftercare.*
+
+**INSY7315 – Work Integrated Learning | Part 2 – Implementation**
