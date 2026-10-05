@@ -244,7 +244,8 @@ function Reports({ role = "Manager" }) {
         </div>
       </div>
 
-      <div className="flex-1 px-4 pt-5 pb-32 max-w-5xl mx-auto w-full">
+      {/* pb-36 keeps content clear of the floating bottom nav */}
+      <div className="flex-1 px-4 pt-5 pb-36 max-w-5xl mx-auto w-full min-w-0">
         <div className="mb-4">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
             Reports <span>📊</span>
@@ -257,7 +258,7 @@ function Reports({ role = "Manager" }) {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 min-w-[72px] py-2.5 px-2 rounded-xl text-xs font-semibold transition active:scale-[0.97] flex items-center justify-center gap-1 ${
+              className={`flex-1 min-w-[72px] py-2.5 px-2 rounded-xl text-xs font-semibold transition active:scale-[0.97] flex items-center justify-center gap-1 whitespace-nowrap ${
                 activeTab === tab.id
                   ? "bg-orange-400 text-white shadow-md"
                   : "text-gray-500 hover:bg-orange-50 hover:text-orange-500"
@@ -280,10 +281,10 @@ function Reports({ role = "Manager" }) {
 
         {/* ── Overview ── */}
         {activeTab === "Overview" && (
-          <div className="space-y-4">
+          <div className="space-y-4 w-full pb-8">
             <div className="grid grid-cols-2 gap-3">
               {overviewStats.map((row) => (
-                <div key={row.label} className={`${card} flex flex-col gap-1`}>
+                <div key={row.label} className={`${card} flex flex-col gap-1 min-w-0`}>
                   <div className="flex items-center justify-between">
                     <span className="text-lg">{row.icon}</span>
                   </div>
@@ -302,11 +303,11 @@ function Reports({ role = "Manager" }) {
                   <p className="text-xs text-gray-400">No attendance recorded this week yet.</p>
                 )}
                 {weeklyDays.map((d) => (
-                  <div key={d.label} className="flex-1 text-center">
+                  <div key={d.label} className="flex-1 text-center min-w-0">
                     <p className="text-lg font-bold" style={{ color: d.color }}>
                       {d.value}
                     </p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">{d.label}</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5 truncate">{d.label}</p>
                   </div>
                 ))}
               </div>
@@ -323,9 +324,9 @@ function Reports({ role = "Manager" }) {
                 )}
                 {attendanceByClass.map((c) => (
                   <div key={c.name}>
-                    <div className="flex items-center justify-between mb-1">
-                      <span className="text-sm font-semibold text-gray-800">{c.name}</span>
-                      <span className="text-xs text-gray-500">
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="text-sm font-semibold text-gray-800 truncate">{c.name}</span>
+                      <span className="text-xs text-gray-500 shrink-0">
                         {c.rate}% · {c.learners} learner{c.learners === 1 ? "" : "s"}
                       </span>
                     </div>
@@ -353,8 +354,8 @@ function Reports({ role = "Manager" }) {
                 )}
                 {devCategories.map((cat) => (
                   <div key={cat.name} className="flex items-center gap-3">
-                    <span className="text-sm text-gray-700 w-24 shrink-0">{cat.name}</span>
-                    <div className="flex-1 h-2.5 rounded-full bg-gray-100 overflow-hidden">
+                    <span className="text-sm text-gray-700 w-20 sm:w-24 shrink-0 truncate">{cat.name}</span>
+                    <div className="flex-1 h-2.5 rounded-full bg-gray-100 overflow-hidden min-w-0">
                       <div
                         className="h-full rounded-full"
                         style={{
@@ -363,7 +364,7 @@ function Reports({ role = "Manager" }) {
                         }}
                       />
                     </div>
-                    <span className="text-sm font-semibold text-gray-800 w-6 text-right">
+                    <span className="text-sm font-semibold text-gray-800 w-6 text-right shrink-0">
                       {cat.count}
                     </span>
                   </div>
@@ -379,9 +380,9 @@ function Reports({ role = "Manager" }) {
 
         {/* ── Trends ── */}
         {activeTab === "Trends" && (
-          <div className="space-y-5">
+          <div className="space-y-5 w-full pb-8">
             <div className={card}>
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
                 <h3 className="font-semibold text-gray-900">Organisation trend</h3>
                 <button
                   onClick={() => exportChart("org-trend")}
@@ -394,8 +395,8 @@ function Reports({ role = "Manager" }) {
             </div>
             <div className={card}>
               <h3 className="font-semibold text-gray-900 mb-3">Cross-class attendance</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+              <div className="overflow-x-auto -mx-1 px-1">
+                <table className="w-full text-sm min-w-[280px]">
                   <thead>
                     <tr className="text-left text-gray-500 border-b border-gray-100">
                       <th className="py-2 font-medium">Class</th>
@@ -413,12 +414,14 @@ function Reports({ role = "Manager" }) {
                     )}
                     {classRows.map((cls) => (
                       <tr key={cls.name} className="border-b border-gray-50">
-                        <td className="py-2 font-medium flex items-center gap-2">
-                          <span
-                            className="w-2.5 h-2.5 rounded-full inline-block"
-                            style={{ backgroundColor: colourForClass(cls.name) }}
-                          />
-                          {cls.name}
+                        <td className="py-2 font-medium">
+                          <span className="inline-flex items-center gap-2">
+                            <span
+                              className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
+                              style={{ backgroundColor: colourForClass(cls.name) }}
+                            />
+                            {cls.name}
+                          </span>
                         </td>
                         <td className="py-2">{pct(cls.thisWeek)}</td>
                         <td className="py-2">{pct(cls.lastWeek)}</td>
@@ -436,26 +439,28 @@ function Reports({ role = "Manager" }) {
 
         {/* ── Donor Report ── */}
         {activeTab === "Donor Report" && (
-          <div className="space-y-4 max-w-3xl">
-            <div className="bg-purple-50 rounded-2xl p-6 text-center shadow-lg border border-purple-100">
-              <div className="text-3xl mb-2">💼</div>
-              <h2 className="font-bold text-orange-500 text-lg">Donor Impact Report</h2>
-              <p className="text-sm text-gray-500 mt-1">{periodLabel}</p>
+          <div className="space-y-4 w-full pb-8">
+            <div className="bg-purple-50 rounded-2xl p-4 sm:p-6 text-center shadow-lg border border-purple-100">
+              <div className="text-2xl sm:text-3xl mb-2">💼</div>
+              <h2 className="font-bold text-orange-500 text-base sm:text-lg">Donor Impact Report</h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">{periodLabel}</p>
             </div>
 
             <div className={card}>
               <h3 className="font-semibold text-gray-900 mb-3">Key Impact Metrics</h3>
-              <div className="space-y-3">
+              <div className="space-y-1">
                 {donorMetrics.map((m) => (
                   <div
                     key={m.label}
-                    className="flex items-center justify-between gap-3 py-1 border-b border-gray-50 last:border-0"
+                    className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-3 py-2.5 border-b border-gray-50 last:border-0"
                   >
                     <div className="flex items-center gap-2 min-w-0">
                       <span className="text-base shrink-0">{m.icon}</span>
-                      <span className="text-sm text-gray-600">{m.label}</span>
+                      <span className="text-sm text-gray-600 break-words">{m.label}</span>
                     </div>
-                    <span className="text-sm font-bold text-orange-500 shrink-0">{m.value}</span>
+                    <span className="text-sm font-bold text-orange-500 sm:shrink-0 sm:text-right pl-7 sm:pl-0">
+                      {m.value}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -484,11 +489,11 @@ function Reports({ role = "Manager" }) {
 
         {/* ── Board Report ── */}
         {activeTab === "Board Report" && (
-          <div className="space-y-4 max-w-3xl">
-            <div className="bg-orange-50 rounded-2xl p-6 text-center shadow-lg border border-orange-100">
-              <div className="text-3xl mb-2">📋</div>
-              <h2 className="font-bold text-orange-500 text-lg">Board Report</h2>
-              <p className="text-sm text-gray-500 mt-1">{periodLabel}</p>
+          <div className="space-y-4 w-full pb-8">
+            <div className="bg-orange-50 rounded-2xl p-4 sm:p-6 text-center shadow-lg border border-orange-100">
+              <div className="text-2xl sm:text-3xl mb-2">📋</div>
+              <h2 className="font-bold text-orange-500 text-base sm:text-lg">Board Report</h2>
+              <p className="text-xs sm:text-sm text-gray-500 mt-1">{periodLabel}</p>
             </div>
 
             <div className={card}>
@@ -496,8 +501,8 @@ function Reports({ role = "Manager" }) {
               <ul className="space-y-2">
                 {boardEnrolment.map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="text-orange-400 mt-0.5">●</span>
-                    {item}
+                    <span className="text-orange-400 mt-0.5 shrink-0">●</span>
+                    <span className="min-w-0 break-words">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -508,8 +513,8 @@ function Reports({ role = "Manager" }) {
               <ul className="space-y-2">
                 {boardOperations.map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="text-orange-400 mt-0.5">●</span>
-                    {item}
+                    <span className="text-orange-400 mt-0.5 shrink-0">●</span>
+                    <span className="min-w-0 break-words">{item}</span>
                   </li>
                 ))}
               </ul>
@@ -520,8 +525,8 @@ function Reports({ role = "Manager" }) {
               <ul className="space-y-2">
                 {boardWellbeing.map((item) => (
                   <li key={item} className="flex items-start gap-2 text-sm text-gray-700">
-                    <span className="text-orange-400 mt-0.5">●</span>
-                    {item}
+                    <span className="text-orange-400 mt-0.5 shrink-0">●</span>
+                    <span className="min-w-0 break-words">{item}</span>
                   </li>
                 ))}
               </ul>
