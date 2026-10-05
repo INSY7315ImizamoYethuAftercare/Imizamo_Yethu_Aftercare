@@ -41,7 +41,7 @@ The application has been designed with simplicity and accessibility in mind, par
 A demonstration of the completed application can be viewed below.
 
 > **YouTube Demo:**  
-> `PASTE-YOUR-YOUTUBE-LINK-HERE`
+> https://youtu.be/2XYmDj81yUY
 
 The demonstration showcases the implemented functionality, user roles, navigation, attendance management, learner sign-out, observations, and management functionality.
 
