@@ -42,3 +42,18 @@ describe('login rate limiting', () => {
     expect(res.status).toBe(200)
   })
 })
+
+describe('change-password rate limiting', () => {
+  const change = (u, currentPassword) =>
+    request(app).post('/api/auth/change-password').set('Cookie', u.cookie).send({ currentPassword, newPassword: 'Brand-new-pass-1' })
+
+  it('allows 5 wrong current passwords per account, then blocks even the right one (429)', async () => {
+    const user = await createUser('teacher')
+    for (let i = 0; i < 5; i += 1) expect((await change(user, 'wrong')).status).toBe(400)
+    expect((await change(user, TEST_PASSWORD)).status).toBe(429)
+
+    // Counted per account: someone else on the same network is unaffected.
+    const other = await createUser('teacher')
+    expect((await change(other, TEST_PASSWORD)).status).toBe(200)
+  })
+})

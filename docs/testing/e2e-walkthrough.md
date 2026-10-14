@@ -17,6 +17,7 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
    & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/002_pickups_without_accounts.sql
    & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/003_class_colour.sql
    & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/004_master_admin_manages.sql
+   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/005_password_security.sql
    ```
 
    A database built fresh from `schema.sql` already has it.

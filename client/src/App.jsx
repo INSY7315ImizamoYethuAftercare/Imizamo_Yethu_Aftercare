@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, useLocation } from "react-router-dom";
-import { restoreSession, homePathFor, useSession } from "./services/session";
+import { restoreSession, homePathFor, useSession, CHOOSE_PASSWORD_PATH } from "./services/session";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -18,6 +18,8 @@ import Reports from "./pages/Reports";
 import Settings from "./pages/Settings";
 import Escalations from "./pages/Escalations";
 import Staff from "./pages/Staff";
+import TeacherSettings from "./pages/TeacherSettings";
+import ChoosePassword from "./pages/ChoosePassword";
 
 const navBtn = (active, activeColor = "text-orange-500") =>
   `flex flex-col items-center gap-0.5 px-2 py-1 rounded-xl transition active:scale-95 ${
@@ -158,6 +160,8 @@ function Protected({ role, children }) {
     );
   }
   if (!user) return <Navigate to="/" replace />;
+  // After a master admin's reset: choose your own password first.
+  if (user.mustChangePassword) return <Navigate to={CHOOSE_PASSWORD_PATH} replace />;
   if (user.appRole !== role) return <Navigate to={homePathFor(user.appRole)} replace />;
   return children;
 }
@@ -211,6 +215,8 @@ function App() {
         <Route path="/classes" element={<TeacherLayout><Classes /></TeacherLayout>} />
         <Route path="/signout" element={<TeacherLayout><SignOut /></TeacherLayout>} />
         <Route path="/observations" element={<TeacherLayout><Observations /></TeacherLayout>} />
+        <Route path="/teacher/settings" element={<TeacherLayout><TeacherSettings /></TeacherLayout>} />
+        <Route path={CHOOSE_PASSWORD_PATH} element={<ChoosePassword />} />
 
         <Route path="/manager/observations" element={<ManagerLayout><Observations role="Manager" /></ManagerLayout>} />
         <Route path="/manager" element={<ManagerLayout><ManagerHome /></ManagerLayout>} />

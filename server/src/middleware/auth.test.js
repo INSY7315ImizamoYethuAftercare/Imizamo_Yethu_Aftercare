@@ -43,6 +43,54 @@ describe('authenticate', () => {
     expect(req.user).toBeUndefined()
   })
 
+  describe('after a password change', () => {
+    const changedAt = new Date('2026-10-14T09:00:00.123Z')
+    const changedTeacher = { ...activeTeacher, password_changed_at: changedAt }
+
+    it('rejects a session started before the change (no password version)', async () => {
+      const req = { cookies: { token: tokenFor({ userId: 1, role: 'teacher' }) } }
+      const next = jest.fn()
+      await authenticateWith(changedTeacher)(req, {}, next)
+      expect(next).toHaveBeenCalledWith(expect.objectContaining({ status: 401, message: 'Session is no longer valid' }))
+    })
+
+    it('rejects a session from an earlier change', async () => {
+      const req = { cookies: { token: tokenFor({ userId: 1, role: 'teacher', pwv: changedAt.getTime() - 60_000 }) } }
+      const next = jest.fn()
+      await authenticateWith(changedTeacher)(req, {}, next)
+      expect(next).toHaveBeenCalledWith(expect.objectContaining({ status: 401 }))
+    })
+
+    it('accepts a session issued after the latest change', async () => {
+      const req = { cookies: { token: tokenFor({ userId: 1, role: 'teacher', pwv: changedAt.getTime() }) } }
+      const next = jest.fn()
+      await authenticateWith(changedTeacher)(req, {}, next)
+      expect(next).toHaveBeenCalledWith()
+    })
+  })
+
+  describe('when the user must choose a new password (after a reset)', () => {
+    const resetTeacher = { ...activeTeacher, must_change_password: true }
+    const req = () => ({ cookies: { token: tokenFor({ userId: 1, role: 'teacher' }) } })
+
+    it('refuses them on ordinary routes (403)', async () => {
+      const r = req()
+      const next = jest.fn()
+      await authenticateWith(resetTeacher)(r, {}, next)
+      expect(next).toHaveBeenCalledWith(expect.objectContaining({ status: 403, message: 'Please choose a new password before continuing' }))
+      expect(r.user).toBeUndefined()
+    })
+
+    it('lets them through where allowed (/me, /change-password), flagged', async () => {
+      const allowing = createAuthenticate({ findUserById: jest.fn(async () => resetTeacher), allowPendingPasswordChange: true })
+      const r = req()
+      const next = jest.fn()
+      await allowing(r, {}, next)
+      expect(next).toHaveBeenCalledWith()
+      expect(r.user).toMatchObject({ userId: 1, mustChangePassword: true })
+    })
+  })
+
   it('passes a database error on (500), rather than letting the request through', async () => {
     const failing = createAuthenticate({ findUserById: jest.fn(async () => { throw new Error('db down') }) })
     const req = { cookies: { token: tokenFor({ userId: 1, role: 'teacher' }) } }

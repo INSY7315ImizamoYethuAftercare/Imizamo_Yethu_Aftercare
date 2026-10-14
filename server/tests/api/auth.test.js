@@ -360,3 +360,97 @@ describe('JWT handling on protected routes', () => {
     expect(res.status).toBe(401)
   })
 })
+
+describe('POST /api/auth/login with the role card picked', () => {
+  const loginAs = (u, role) => request(app).post('/api/auth/login').send({ email: u.email, password: TEST_PASSWORD, role })
+
+  it.each([
+    ['teacher', 'teacher'],
+    ['guardian', 'guardian'],
+    ['admin_master', 'admin'],
+  ])('a %s signs in with the %s card', async (role, card) => {
+    const res = await loginAs(await createUser(role), card)
+    expect(res.status).toBe(200)
+    expect(tokenCookie(res)).toBeDefined()
+  })
+
+  it.each([
+    ['admin_standard', 'guardian'],
+    ['teacher', 'manager'],
+    ['admin_master', 'manager'],
+  ])('a %s picking the %s card is refused (403) with no session cookie', async (role, card) => {
+    const res = await loginAs(await createUser(role), card)
+    expect(res.status).toBe(403)
+    expect(res.body.message).toMatch(/Wrong account type/)
+    expect(tokenCookie(res)).toBeUndefined()
+  })
+
+  it('a wrong password is reported as such, whatever card was picked', async () => {
+    const u = await createUser('teacher')
+    const res = await request(app).post('/api/auth/login').send({ email: u.email, password: 'wrong-password', role: 'guardian' })
+    expect(res.status).toBe(401)
+    expect(res.body.message).toBe('Invalid email or password')
+  })
+})
+
+describe('POST /api/auth/change-password', () => {
+  const change = (u, body) => request(app).post('/api/auth/change-password').set('Cookie', u.cookie).send(body)
+  const login = (email, password) => request(app).post('/api/auth/login').send({ email, password })
+
+  it.each(['teacher', 'manager', 'admin_standard', 'admin_master', 'guardian'])(
+    'a %s changes their own password: the new one signs in, the old one no longer does',
+    async (role) => {
+      const u = await createUser(role)
+      const res = await change(u, { currentPassword: TEST_PASSWORD, newPassword: 'Brand-new-pass-1' })
+      expect(res.status).toBe(200)
+      expect((await login(u.email, 'Brand-new-pass-1')).status).toBe(200)
+      expect((await login(u.email, TEST_PASSWORD)).status).toBe(401)
+    },
+  )
+
+  it('refuses a wrong current password (400, so the session is kept) and changes nothing', async () => {
+    const u = await createUser('teacher')
+    const res = await change(u, { currentPassword: 'not-my-password', newPassword: 'Brand-new-pass-1' })
+    expect(res.status).toBe(400)
+    expect(res.body.message).toBe('Your current password is incorrect')
+    expect((await login(u.email, TEST_PASSWORD)).status).toBe(200)
+  })
+
+  it.each([
+    [{ newPassword: 'Brand-new-pass-1' }, /required/],
+    [{ currentPassword: TEST_PASSWORD }, /required/],
+    [{ currentPassword: TEST_PASSWORD, newPassword: 'short' }, /at least 8/],
+    [{ currentPassword: TEST_PASSWORD, newPassword: TEST_PASSWORD }, /different/],
+  ])('validates %o (400)', async (body, message) => {
+    const res = await change(await createUser('guardian'), body)
+    expect(res.status).toBe(400)
+    expect(res.body.message).toMatch(message)
+  })
+
+  it('needs a signed-in session (401)', async () => {
+    const res = await request(app).post('/api/auth/change-password').send({ currentPassword: 'x', newPassword: 'Brand-new-pass-1' })
+    expect(res.status).toBe(401)
+  })
+
+  it('signs out every other session, but keeps this one signed in with a fresh cookie', async () => {
+    const u = await createUser('teacher')
+    const otherDevice = (await login(u.email, TEST_PASSWORD)).headers['set-cookie']
+    expect((await request(app).get('/api/classes').set('Cookie', otherDevice)).status).toBe(200)
+
+    const res = await change(u, { currentPassword: TEST_PASSWORD, newPassword: 'Brand-new-pass-1' })
+    expect(res.status).toBe(200)
+    const fresh = tokenCookie(res)
+    expect(fresh).toBeDefined()
+
+    expect((await request(app).get('/api/classes').set('Cookie', fresh)).status).toBe(200)
+    expect((await request(app).get('/api/classes').set('Cookie', otherDevice)).status).toBe(401)
+    expect((await request(app).get('/api/classes').set('Cookie', u.cookie)).status).toBe(401)
+  })
+
+  it('only ever changes your own password', async () => {
+    const me = await createUser('teacher')
+    const other = await createUser('teacher')
+    await change(me, { currentPassword: TEST_PASSWORD, newPassword: 'Brand-new-pass-1' })
+    expect((await login(other.email, TEST_PASSWORD)).status).toBe(200)
+  })
+})

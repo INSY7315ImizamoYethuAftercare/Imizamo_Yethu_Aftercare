@@ -25,6 +25,7 @@ const getLoading = () => loading;
 
 const toTeacher = (t) => ({
   id: t.teacher_id,
+  userId: t.user_id, // for the master admin's account editing
   name: t.full_name,
   email: t.contact_email,
   role: "Teacher",

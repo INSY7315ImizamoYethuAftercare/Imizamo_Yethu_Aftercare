@@ -62,6 +62,7 @@ $azure = "host=imizamo-yethu.postgres.database.azure.com port=5432 dbname=imizam
 & "C:/Program Files/PostgreSQL/17/bin/psql.exe" $azure -f server/src/db/migrations/002_pickups_without_accounts.sql
 & "C:/Program Files/PostgreSQL/17/bin/psql.exe" $azure -f server/src/db/migrations/003_class_colour.sql
 & "C:/Program Files/PostgreSQL/17/bin/psql.exe" $azure -f server/src/db/migrations/004_master_admin_manages.sql
+& "C:/Program Files/PostgreSQL/17/bin/psql.exe" $azure -f server/src/db/migrations/005_password_security.sql
 ```
 
 Never run `npm run seed:demo` against Azure (it refuses to).

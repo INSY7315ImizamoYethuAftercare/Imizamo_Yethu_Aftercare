@@ -49,10 +49,19 @@ export async function classIdByName(name) {
  * The trigger is always removed afterwards. Test database only.
  */
 export async function withFailingInsert(table, message, fn) {
+  return withFailing('INSERT', table, message, fn)
+}
+
+/** Like withFailingInsert, but every UPDATE of `table` fails. */
+export async function withFailingUpdate(table, message, fn) {
+  return withFailing('UPDATE', table, message, fn)
+}
+
+async function withFailing(event, table, message, fn) {
   if (!/^[a-z_]+$/.test(table)) throw new Error(`Bad table name: ${table}`)
   await pool.query(`CREATE OR REPLACE FUNCTION test_force_failure() RETURNS trigger LANGUAGE plpgsql AS $$
     BEGIN RAISE EXCEPTION '%', TG_ARGV[0]; END $$`)
-  await pool.query(`CREATE TRIGGER test_force_failure BEFORE INSERT ON ${table}
+  await pool.query(`CREATE TRIGGER test_force_failure BEFORE ${event} ON ${table}
     FOR EACH ROW EXECUTE FUNCTION test_force_failure('${message.replaceAll("'", "''")}')`)
   try {
     return await fn()

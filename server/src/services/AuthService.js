@@ -15,8 +15,7 @@
  *    deleting historical records.
  */
 import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import { env } from '../config/env.js'
+import { signSessionToken } from '../utils/sessionToken.js'
 
 const SALT_ROUNDS = 10
 
@@ -147,17 +146,57 @@ export class AuthService {
       throw err
     }
 
-    const token = jwt.sign(
-      { userId: user.user_id, role: user.role },
-      env.jwtSecret,
-      { expiresIn: '8h' },
-    )
+    return { token: signSessionToken(user), user: await this.#profile(user) }
+  }
+
+  /** What the app is told about the signed-in user (no password hash). */
+  async #profile(user) {
     const profile = { userId: user.user_id, email: user.email, role: user.role, fullName: user.full_name }
     // Admins also get their access level: a master admin can do everything a
     // manager can, and create manager and admin accounts.
     if (user.role === 'admin' && this.adminRepository) {
       profile.accessLevel = (await this.adminRepository.findByUserId(user.user_id))?.access_level ?? 'standard'
     }
-    return { token, user: profile }
+    // After a master admin's reset, the app asks for a new password first.
+    if (user.must_change_password) profile.mustChangePassword = true
+    return profile
+  }
+
+  /**
+   * Lets a signed-in user change their own password. They must give their
+   * current password, so someone using a device left signed in can't
+   * take over the account. Every other session for the account ends; the
+   * returned token keeps this one signed in. Clears "must change password".
+   *
+   * @returns {Promise<{ token: string, user: Object }>}
+   * @throws {Error} 400 if the current password is wrong or the new one is the same.
+   */
+  async changePassword({ userId, currentPassword, newPassword }) {
+    const account = await this.userRepository.findById(userId)
+    // findById leaves out the hash; findByEmail includes it.
+    const user = account && (await this.userRepository.findByEmail(account.email))
+    if (!user) {
+      const err = new Error('Account not found')
+      err.status = 404
+      throw err
+    }
+
+    // 400, not 401: a 401 would make the app treat the session as expired.
+    if (!(await bcrypt.compare(currentPassword, user.password_hash))) {
+      const err = new Error('Your current password is incorrect')
+      err.status = 400
+      throw err
+    }
+    if (currentPassword === newPassword) {
+      const err = new Error('The new password must be different from your current one')
+      err.status = 400
+      throw err
+    }
+
+    const updated = await this.userRepository.setPassword(userId, await bcrypt.hash(newPassword, SALT_ROUNDS), {
+      changedAt: new Date(),
+      mustChangePassword: false,
+    })
+    return { token: signSessionToken(updated), user: await this.#profile(updated) }
   }
     }

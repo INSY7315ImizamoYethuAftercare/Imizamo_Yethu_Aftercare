@@ -1040,3 +1040,13 @@ INSERT INTO managers (user_id, full_name)
 SELECT a.user_id, a.full_name FROM admins a
 WHERE a.access_level = 'master'
   AND NOT EXISTS (SELECT 1 FROM managers m WHERE m.user_id = a.user_id);
+
+-- ===== Safer password changes =====
+-- password_changed_at: sessions started before it are refused, so a password
+-- change or reset signs the account out everywhere else (NULL = never changed).
+-- must_change_password: set by a master admin's reset; the user must choose
+-- their own password before using the app.
+-- Existing databases: run migrations/005_password_security.sql.
+ALTER TABLE users
+  ADD COLUMN password_changed_at timestamptz,
+  ADD COLUMN must_change_password boolean NOT NULL DEFAULT false;

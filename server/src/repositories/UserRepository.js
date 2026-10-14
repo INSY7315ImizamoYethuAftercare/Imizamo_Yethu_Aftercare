@@ -14,7 +14,8 @@ class UserRepository {
      */
     async findByEmail(email) {
          const result = await this.pool.query(
-            `SELECT "user_id", "email", "password_hash", "role", "full_name", "is_active"
+            `SELECT "user_id", "email", "password_hash", "role", "full_name", "is_active",
+                    "password_changed_at", "must_change_password"
             FROM users
             WHERE LOWER("email") = LOWER($1)`,
             [email]
@@ -30,7 +31,8 @@ class UserRepository {
      */
     async findById(userId) {
         const result = await this.pool.query(
-            `SELECT "user_id", "email", "role", "full_name", "is_active"
+            `SELECT "user_id", "email", "role", "full_name", "is_active",
+                    "password_changed_at", "must_change_password"
             FROM users
             WHERE "user_id" = $1`,
             [userId]
@@ -103,6 +105,57 @@ class UserRepository {
         WHERE "email" = $${keys.length + 1} 
         RETURNING "user_id", "email", "role", "full_name"`,
         [...values, email]
+        );
+        return result.rows[0] || null;
+    }
+
+    /**
+     * Sets a new password. Also records when (which ends every session
+     * started before now) and whether the user must choose their own
+     * password before using the app (true after a master admin's reset).
+     *
+     * @param {number} userId - The unique identifier of the user.
+     * @param {string} passwordHash - The bcrypt hash of the new password.
+     * @param {Object} options
+     * @param {Date} options.changedAt - When it changed (the app's clock, matching session tokens).
+     * @param {boolean} options.mustChangePassword
+     * @returns {Promise<Object|null>} The updated user (no password hash), or null if none exists.
+     */
+    async setPassword(userId, passwordHash, { changedAt, mustChangePassword }) {
+        const result = await this.pool.query(
+        `UPDATE users
+         SET "password_hash" = $2, "password_changed_at" = $3, "must_change_password" = $4
+         WHERE "user_id" = $1
+         RETURNING "user_id", "email", "role", "full_name", "is_active",
+                   "password_changed_at", "must_change_password"`,
+        [userId, passwordHash, changedAt, mustChangePassword]
+        );
+        return result.rows[0] || null;
+    }
+
+    /**
+     * Updates one or more fields on a user, found by their user id. Only
+     * whitelisted columns can be modified (any of: email, full_name).
+     * Passwords go through setPassword.
+     *
+     * @param {number} userId - The unique identifier of the user to update.
+     * @param {Object} fields - A partial object of the columns to update.
+     * @returns {Promise<Object|null>} The updated user record (no password hash),
+     * the unchanged record if no valid fields were provided, or null if the user does not exist.
+     */
+    async updateById(userId, fields) {
+        const allowed = ['email', 'full_name'];
+        const keys = Object.keys(fields).filter(k => allowed.includes(k));
+        if (keys.length === 0) return this.findById(userId);
+
+        const setClause = keys.map((k, i) => `"${k}" = $${i + 1}`).join(', ');
+        const values = keys.map(k => fields[k]);
+
+        const result = await this.pool.query(
+        `UPDATE users SET ${setClause}
+        WHERE "user_id" = $${keys.length + 1}
+        RETURNING "user_id", "email", "role", "full_name", "is_active"`,
+        [...values, userId]
         );
         return result.rows[0] || null;
     }

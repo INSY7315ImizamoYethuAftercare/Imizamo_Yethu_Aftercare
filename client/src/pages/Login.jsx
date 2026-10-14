@@ -124,7 +124,7 @@ function Login() {
         </p>
       </div>
 
-      <p className="text-xs text-gray-400 mt-8">© 2025 Imizamo Yethu Learning Hub</p>
+      <p className="text-xs text-gray-400 mt-8">© Imizamo Yethu Learning Hub</p>
     </div>
   );
 }

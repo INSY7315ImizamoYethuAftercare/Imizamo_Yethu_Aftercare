@@ -43,6 +43,13 @@ export const getSessionRole = () => state.user?.appRole ?? null
 export const homePathFor = (role) =>
   ({ manager: '/manager', teacher: '/home', admin: '/admin', guardian: '/parent' })[role] ?? '/'
 
+/** Each role's Settings page. */
+export const settingsPathFor = (role) =>
+  ({ manager: '/settings', teacher: '/teacher/settings', admin: '/admin/settings', guardian: '/parent/settings' })[role] ?? '/'
+
+/** After a master admin's reset, the user must choose a new password here first. */
+export const CHOOSE_PASSWORD_PATH = '/choose-password'
+
 /** Asks the server whether the cookie is still good (once per page load). */
 export async function restoreSession() {
   if (state.status !== 'unknown') return state
@@ -61,6 +68,16 @@ export async function login(email, password, role) {
   resetters.forEach((fn) => fn())
   set({ user: withAppRole(user), status: 'authed' })
   return state.user
+}
+
+/**
+ * Changes the signed-in user's own password. The server ends every other
+ * session, keeps this one (with a new cookie) and returns the updated
+ * profile, which also clears mustChangePassword after a reset.
+ */
+export async function changePassword(currentPassword, newPassword) {
+  const { user } = await apiClient.post('/auth/change-password', { currentPassword, newPassword })
+  if (user) set({ user: withAppRole(user), status: 'authed' })
 }
 
 export async function logout() {

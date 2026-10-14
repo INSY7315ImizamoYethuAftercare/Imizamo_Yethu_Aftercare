@@ -1,11 +1,11 @@
 /**
  * Auth routes: /api/auth/*
  * register and login are public. logout is public (clears a cookie that
- * may or may not exist). /me requires a valid session.
+ * may or may not exist). /me and /change-password require a valid session.
  */
 import { Router } from 'express'
-import { register, login, logout, me } from '../controllers/authController.js'
-import { authenticate } from '../middleware/auth.js'
+import { register, login, logout, me, changePassword } from '../controllers/authController.js'
+import { authenticateAllowingPasswordChange } from '../middleware/auth.js'
 import { clientIpKey, createRateLimiter } from '../middleware/rateLimiter.js'
 
 export const authRouter = Router()
@@ -36,4 +36,16 @@ const loginIpLimiter = createRateLimiter({
 authRouter.post('/register', register)
 authRouter.post('/login', loginIpLimiter, loginAccountLimiter, login)
 authRouter.post('/logout', logout)
-authRouter.get('/me', authenticate, me)
+// Both allow a user who must choose a new password (after a master admin's
+// reset): /me so the app knows to ask, /change-password so they can.
+authRouter.get('/me', authenticateAllowingPasswordChange, me)
+
+// 5 wrong current passwords per account per 15 minutes, so a device left
+// signed in can't be used to guess the password.
+const changePasswordLimiter = createRateLimiter({
+  windowMs: FIFTEEN_MINUTES,
+  max: 5,
+  skipSuccessfulRequests: true,
+  keyGenerator: (req) => `user:${req.user.userId}`,
+})
+authRouter.post('/change-password', authenticateAllowingPasswordChange, changePasswordLimiter, changePassword)
