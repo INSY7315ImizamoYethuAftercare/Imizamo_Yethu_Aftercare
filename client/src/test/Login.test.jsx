@@ -53,37 +53,44 @@ describe('Login', () => {
     expect(apiClient.post).not.toHaveBeenCalledWith('/auth/login', expect.anything())
   })
 
-  it('posts the trimmed email and password', async () => {
+  it('posts the trimmed email, password and picked role', async () => {
     onApi('POST', '/auth/login', { user: USERS.teacher })
     const c = await renderLogin()
     await userEvent.type(emailInput(c), '  nkosi@iylh.org  ')
     await userEvent.type(passwordInput(c), 'secret-pw')
     await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
-    expect(apiClient.post).toHaveBeenCalledWith('/auth/login', { email: 'nkosi@iylh.org', password: 'secret-pw' })
+    expect(apiClient.post).toHaveBeenCalledWith('/auth/login', { email: 'nkosi@iylh.org', password: 'secret-pw', role: 'teacher' })
   })
 
   it.each([
-    ['teacher', 'teacher home'],
-    ['manager', 'manager home'],
-    ['admin', 'admin home'],
-    ['guardian', 'parent home'],
-  ])('sends a %s to their home page', async (role, landing) => {
-    onApi('POST', '/auth/login', { user: USERS[role] })
+    ['teacher', 'Teacher', 'teacher home'],
+    ['manager', 'Manager', 'manager home'],
+    ['admin', 'Admin', 'admin home'],
+    ['guardian', 'Parent/Guardian', 'parent home'],
+    // A master admin picks Admin but uses the manager pages.
+    ['masterAdmin', 'Admin', 'manager home'],
+  ])('sends a %s who picked %s to their home page', async (user, card, landing) => {
+    onApi('POST', '/auth/login', { user: USERS[user] })
     const c = await renderLogin()
-    await userEvent.type(emailInput(c), USERS[role].email)
+    await userEvent.click(screen.getByRole('button', { name: new RegExp(card) }))
+    await userEvent.type(emailInput(c), USERS[user].email)
     await userEvent.type(passwordInput(c), 'pw')
     await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
     expect(await screen.findByText(landing)).toBeInTheDocument()
+    expect(apiClient.post).toHaveBeenCalledWith('/auth/login', expect.objectContaining({ role: USERS[user].role }))
   })
 
-  it('lands on the real account role, not the card that was picked', async () => {
-    onApi('POST', '/auth/login', { user: USERS.guardian })
+  it('shows the wrong-account-type error and stays on the login page', async () => {
+    const message = 'Wrong account type for the role selected. Please choose the correct role and try again.'
+    onApi('POST', '/auth/login', new ApiError(message, 403))
     const c = await renderLogin()
-    await userEvent.click(screen.getByRole('button', { name: /Admin/ }))
-    await userEvent.type(emailInput(c), USERS.guardian.email)
+    await userEvent.click(screen.getByRole('button', { name: /Parent/ }))
+    await userEvent.type(emailInput(c), USERS.admin.email)
     await userEvent.type(passwordInput(c), 'pw')
     await userEvent.click(screen.getByRole('button', { name: 'Sign In' }))
-    expect(await screen.findByText('parent home')).toBeInTheDocument()
+    expect(await screen.findByText(message)).toBeInTheDocument()
+    expect(apiClient.post).toHaveBeenCalledWith('/auth/login', expect.objectContaining({ role: 'guardian' }))
+    expect(screen.queryByText('admin home')).not.toBeInTheDocument()
   })
 
   it.each([

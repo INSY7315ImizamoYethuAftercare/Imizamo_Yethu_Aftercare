@@ -83,7 +83,7 @@ export async function register(req, res, next) {
 export async function login(req, res, next) {
   try {
 
-    const { email, password } = req.body ?? {}
+    const { email, password, role } = req.body ?? {}
     if (!email || !password) {
       const err = new Error('email and password are required')
       err.status = 400
@@ -96,7 +96,10 @@ export async function login(req, res, next) {
       throw err
     }
 
-    const { token, user } = await authService.login({ email, password })
+    // Optional: the role card picked on the login screen.
+    if (role !== undefined) validate.text(role, 'role', { max: 20 })
+
+    const { token, user } = await authService.login({ email, password, role })
     res.cookie('token', token, cookieOptions)
     res.json({ user })
   } catch (err) {

@@ -112,9 +112,10 @@ export class AuthService {
 
   /**
    * Verifies credentials and issues a session token. Rejects unknown
-   * emails, wrong passwords, and deactivated accounts.
+   * emails, wrong passwords, and deactivated accounts. If `role` (the card
+   * picked on the login screen) is given, it must match the account's role.
    */
-  async login({ email, password }) {
+  async login({ email, password, role }) {
     const user = await this.userRepository.findByEmail(email)
 
     // Same message for "no such account" and "wrong password" so the login
@@ -134,6 +135,14 @@ export class AuthService {
     // false means the account has been deactivated.
     if (user.is_active === false) {
       const err = new Error('This account has been deactivated')
+      err.status = 403
+      throw err
+    }
+
+    // Checked only after the password, so it can't reveal what role an email
+    // has. A master admin's role is 'admin', so they pick the Admin card.
+    if (role !== undefined && role !== user.role) {
+      const err = new Error('Wrong account type for the role selected. Please choose the correct role and try again.')
       err.status = 403
       throw err
     }

@@ -116,5 +116,48 @@ describe('AuthService', () => {
       expect(result.token).toBeDefined()
       expect(result.user).toMatchObject({ role: 'teacher', fullName: 'T' })
     })
+
+    describe('with the role card picked on the login screen', () => {
+      const signInAs = async (accountRole, pickedRole, password = 'correctpassword') => {
+        userRepository.findByEmail.mockResolvedValue({
+          user_id: 1, email: 'a@b.org', password_hash: await bcrypt.hash('correctpassword', 10),
+          role: accountRole, full_name: 'T', is_active: true,
+        })
+        return authService.login({ email: 'a@b.org', password, role: pickedRole })
+      }
+
+      it('signs in when the picked role matches the account', async () => {
+        const result = await signInAs('guardian', 'guardian')
+        expect(result.token).toBeDefined()
+        expect(result.user).toMatchObject({ role: 'guardian' })
+      })
+
+      it.each([
+        ['admin', 'guardian'],
+        ['guardian', 'teacher'],
+        ['teacher', 'manager'],
+        ['manager', 'admin'],
+      ])('rejects a %s account signing in as %s', async (accountRole, pickedRole) => {
+        await expect(signInAs(accountRole, pickedRole)).rejects.toMatchObject({
+          status: 403,
+          message: expect.stringMatching(/Wrong account type/),
+        })
+      })
+
+      it('reports a wrong password before a wrong role, so roles are not revealed', async () => {
+        await expect(signInAs('admin', 'guardian', 'wrongpassword')).rejects.toMatchObject({
+          status: 401, message: 'Invalid email or password',
+        })
+      })
+
+      it('lets a master admin sign in with the Admin card only', async () => {
+        authService = new AuthService({
+          userRepository,
+          adminRepository: { findByUserId: jest.fn().mockResolvedValue({ access_level: 'master' }) },
+        })
+        expect((await signInAs('admin', 'admin')).user).toMatchObject({ role: 'admin', accessLevel: 'master' })
+        await expect(signInAs('admin', 'manager')).rejects.toMatchObject({ status: 403 })
+      })
+    })
   })
 })

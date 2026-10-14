@@ -55,8 +55,9 @@ export async function restoreSession() {
   return state
 }
 
-export async function login(email, password) {
-  const { user } = await apiClient.post('/auth/login', { email, password })
+/** `role` is the card picked on the login screen; the server rejects a mismatch. */
+export async function login(email, password, role) {
+  const { user } = await apiClient.post('/auth/login', { email, password, role })
   resetters.forEach((fn) => fn())
   set({ user: withAppRole(user), status: 'authed' })
   return state.user
