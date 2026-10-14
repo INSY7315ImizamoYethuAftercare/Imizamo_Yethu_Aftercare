@@ -26,6 +26,7 @@ beforeEach(() => {
   onApi('GET', '/learners', LEARNERS)
   onApi('GET', '/teacher', [])
   onApi('GET', '/accounts', ACCOUNTS)
+  onApi('GET', '/reports/overview', { totals: {}, today: { date: '2026-10-05', present: 3, activeLearners: 4, signedOut: 1, classes: [] } })
 })
 
 async function renderStaff(role = 'masterAdmin') {

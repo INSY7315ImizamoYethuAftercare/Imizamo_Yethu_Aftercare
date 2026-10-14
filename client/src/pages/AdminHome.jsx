@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSession } from "../services/session";
 import { apiClient } from "../services/apiClient";
 import { classOverviewRows } from "./UseClasses";
 import { useHeader } from "./UseHeader";
-import { greeting, hourInSA, longDate } from "../utils/dates";
+import { greeting, longDate, todayInSA } from "../utils/dates";
 
 // Admin dashboard. Admins can't see individual learners or the register
 // (POPIA), so everything here is a total from GET /reports/overview.
@@ -12,6 +13,7 @@ const percent = (part, whole) => (whole > 0 ? `${Math.round((part / whole) * 100
 
 function AdminHome() {
   const { displayName, displayRole } = useHeader();
+  const { user } = useSession();
   const navigate = useNavigate();
   const [today, setToday] = useState(null);
   const [error, setError] = useState("");
@@ -29,7 +31,7 @@ function AdminHome() {
     return () => { cancelled = true; };
   }, []);
 
-  const firstName = displayName?.split(" ")[0] || "there";
+  const firstName = user?.fullName?.split(" ")[0] || "there";
   const classOverview = today
     ? classOverviewRows(today.classes.map((c) => ({ name: c.name, colour: c.colour, present: `${c.present}/${c.activeLearners}` })))
     : [];
@@ -54,8 +56,8 @@ function AdminHome() {
 
       <div className="flex-1 px-4 pt-5 pb-32 max-w-5xl mx-auto w-full">
         <div className="bg-gradient-to-r from-orange-400 to-orange-300 rounded-2xl p-5 mb-5 text-white shadow-lg">
-          {today && <p className="text-sm opacity-90">{longDate(today.date)}</p>}
-          <h1 className="text-xl font-bold mt-1">{greeting(hourInSA())}, {firstName}! 👋</h1>
+          {today && <p className="text-sm opacity-90">{longDate(todayInSA())}</p>}
+          <h1 className="text-xl font-bold mt-1">{greeting()}, {firstName}! 👋</h1>
           {today && (
             <p className="text-sm mt-1 opacity-90">
               {today.present} of {today.activeLearners} learners present today
