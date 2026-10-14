@@ -1,6 +1,6 @@
 // Manager home (also the master admin's dashboard): greeting and today's
 // totals from GET /reports/overview, not placeholder text.
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ManagerHome from '../pages/ManagerHome'
@@ -17,11 +17,64 @@ async function renderHome(role = 'manager') {
   render(<MemoryRouter><ManagerHome /></MemoryRouter>)
 }
 
+const learner = (learnerId, name, signedOut = null) => ({ learnerId, name, className: 'Yellow', pickups: [], signedOut })
+
 beforeEach(() => {
   resetApi()
   onApi('GET', '/classes', CLASSES)
   onApi('GET', '/learners', LEARNERS)
   onApi('GET', '/reports/overview', { totals: {}, today: TODAY })
+  onApi('GET', '/signout/today', { date: '2026-10-05', learners: [] })
+})
+
+describe('Recent Activity', () => {
+  const recent = async () => (await screen.findByRole('heading', { name: 'Recent Activity' })).nextElementSibling
+
+  it("lists today's real sign-outs, latest first, and not who is still here", async () => {
+    onApi('GET', '/signout/today', {
+      date: '2026-10-05',
+      learners: [
+        learner(1, 'Aisha Petersen', { timeOut: '16:42', collectedBy: 'Fatima Petersen', recordedBy: 'Ms Nkosi' }),
+        learner(2, 'Still Here'),
+        learner(3, 'Zoe Ntombela', { timeOut: '17:05', collectedBy: 'Walked home alone', recordedBy: 'Sarah Botha' }),
+      ],
+    })
+    await renderHome()
+    const list = await recent()
+    await within(list).findByText('Zoe Ntombela signed out')
+    const rows = within(list).getAllByText(/signed out$/).map((el) => el.textContent)
+    expect(rows).toEqual(['Zoe Ntombela signed out', 'Aisha Petersen signed out'])
+    expect(within(list).getByText('Walked home alone • Yellow')).toBeInTheDocument()
+    expect(within(list).getByText('Collected by Fatima Petersen • Yellow')).toBeInTheDocument()
+    expect(within(list).getByText('16:42')).toBeInTheDocument()
+    expect(within(list).getByText('Signed out by Ms Nkosi')).toBeInTheDocument()
+    expect(within(list).getByText('Signed out by Sarah Botha')).toBeInTheDocument()
+    expect(within(list).queryByText(/Still Here/)).not.toBeInTheDocument()
+    expect(screen.queryByText(/flagged/)).not.toBeInTheDocument()
+  })
+
+  it('shows at most the 5 latest', async () => {
+    onApi('GET', '/signout/today', {
+      date: '2026-10-05',
+      learners: [1, 2, 3, 4, 5, 6, 7].map((n) => learner(n, `Learner ${n}`, { timeOut: `16:0${n}`, collectedBy: 'A Parent' })),
+    })
+    await renderHome()
+    const list = await recent()
+    await within(list).findByText('Learner 7 signed out')
+    expect(within(list).getAllByText(/signed out$/)).toHaveLength(5)
+    expect(within(list).queryByText('Learner 2 signed out')).not.toBeInTheDocument()
+  })
+
+  it('says when nobody has been signed out yet', async () => {
+    await renderHome()
+    expect(await within(await recent()).findByText('No sign-outs yet today.')).toBeInTheDocument()
+  })
+
+  it("says so if today's sign-outs can't be loaded", async () => {
+    onApi('GET', '/signout/today', new ApiError('Server unavailable', 503))
+    await renderHome()
+    expect(await within(await recent()).findByRole('alert')).toHaveTextContent('Server unavailable')
+  })
 })
 
 describe('Manager home', () => {

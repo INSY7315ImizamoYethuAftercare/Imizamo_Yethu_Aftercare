@@ -101,17 +101,21 @@ class SignOutRepository {
 
   /**
    * Every sign-out on one date, with who collected the learner (null
-   * guardian = walked home alone). Feeds the Sign-Out page's
-   * "already collected today" list.
+   * guardian = walked home alone) and the teacher or manager who recorded
+   * it. Feeds the Sign-Out page's "already collected today" list and the
+   * manager dashboard's Recent Activity.
    *
    * @param {string} date - YYYY-MM-DD
    * @returns {Promise<Array<Object>>}
    */
   async findByDate(date) {
     const result = await this.pool.query(
-      `SELECT s."record_id", s."learner_id", s."guardian_id", s."time_out", g."full_name" AS "guardian_name"
+      `SELECT s."record_id", s."learner_id", s."guardian_id", s."time_out", g."full_name" AS "guardian_name",
+              COALESCE(t."full_name", m."full_name") AS "recorded_by_name"
        FROM sign_out_records s
        LEFT JOIN guardians g ON g."guardian_id" = s."guardian_id"
+       LEFT JOIN teachers t ON t."teacher_id" = s."teacher_id"
+       LEFT JOIN managers m ON m."manager_id" = s."manager_id"
        WHERE s."record_date" = $1
        ORDER BY s."time_out"`,
       [date]

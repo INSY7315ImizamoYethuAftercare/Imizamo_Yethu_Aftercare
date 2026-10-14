@@ -271,7 +271,15 @@ describe('SignOutRepository: who recorded it', () => {
     await signOuts.create({ learnerId: b.learner_id, teacherId: teacher.profile.teacher_id, guardianId: null, recordDate: '2026-03-02', timeOut: '16:30:00' })
     const rows = await signOuts.findByDate('2026-03-02')
     expect(rows.map((r) => r.guardian_name)).toEqual([guardian.user.full_name, null])
+    expect(rows.map((r) => r.recorded_by_name)).toEqual([teacher.user.full_name, teacher.user.full_name])
     expect(await signOuts.findByDate('2026-03-03')).toEqual([])
+  })
+
+  it('findByDate names the manager when a manager recorded the sign-out', async () => {
+    const m = await createUser('manager', { fullName: 'Sarah Botha' })
+    const l = await createLearner()
+    await signOuts.create({ learnerId: l.learner_id, managerId: m.profile.manager_id, guardianId: null, recordDate: '2026-03-04', timeOut: '16:00:00' })
+    expect((await signOuts.findByDate('2026-03-04'))[0].recorded_by_name).toBe('Sarah Botha')
   })
 })
 

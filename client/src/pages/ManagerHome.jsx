@@ -23,6 +23,25 @@ function ManagerHome() {
       .catch((e) => { if (!cancelled) setError(e?.message || "Couldn't load today's numbers."); });
     return () => { cancelled = true; };
   }, []);
+
+  // Recent Activity: today's sign-outs (GET /signout/today), latest first.
+  const [activity, setActivity] = useState(null);
+  const [activityError, setActivityError] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    apiClient
+      .get("/signout/today")
+      .then(({ learners }) => {
+        if (cancelled) return;
+        const signedOut = learners
+          .filter((l) => l.signedOut)
+          .sort((a, b) => b.signedOut.timeOut.localeCompare(a.signedOut.timeOut))
+          .slice(0, 5);
+        setActivity(signedOut);
+      })
+      .catch((e) => { if (!cancelled) setActivityError(e?.message || "Couldn't load today's sign-outs."); });
+    return () => { cancelled = true; };
+  }, []);
   const navigate = useNavigate();
   const classOverview = classOverviewRows(useClasses());
   const comingSoon = () => alert("Coming soon");
@@ -140,17 +159,22 @@ function ManagerHome() {
           <div>
             <h2 className="font-semibold text-gray-900 mb-3">Recent Activity</h2>
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 divide-y divide-gray-100">
-              {[
-                { title: "Zoe Ntombela — flagged unknown collector", sub: "Ms Williams", time: "17:42" },
-                { title: "Sipho Dlamini — walking home flagged", sub: "Mr Naidoo", time: "17:20" },
-                { title: "Aisha Petersen signed out", sub: "Ms Nkosi", time: "17:15" },
-              ].map((item) => (
-                <div key={item.title} className="px-4 py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                    <p className="text-xs text-gray-500">{item.sub}</p>
+              {activityError && <p role="alert" className="px-4 py-3 text-sm text-red-500">{activityError}</p>}
+              {!activity && !activityError && <p className="px-4 py-3 text-sm text-gray-400">Loading today's sign-outs...</p>}
+              {activity?.length === 0 && <p className="px-4 py-3 text-sm text-gray-400">No sign-outs yet today.</p>}
+              {activity?.map((l) => (
+                <div key={l.learnerId} className="px-4 py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{l.name} signed out</p>
+                    <p className="text-xs text-gray-500">
+                      {l.signedOut.collectedBy === "Walked home alone" ? "Walked home alone" : `Collected by ${l.signedOut.collectedBy}`}
+                      {l.className ? ` • ${l.className}` : ""}
+                    </p>
+                    {l.signedOut.recordedBy && (
+                      <p className="text-xs text-gray-400">Signed out by {l.signedOut.recordedBy}</p>
+                    )}
                   </div>
-                  <span className="text-xs text-gray-400">{item.time}</span>
+                  <span className="text-xs text-gray-400 shrink-0">{l.signedOut.timeOut}</span>
                 </div>
               ))}
             </div>

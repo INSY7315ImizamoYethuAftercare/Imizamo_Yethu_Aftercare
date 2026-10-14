@@ -269,14 +269,24 @@ describe('GET /api/signout/today', () => {
       { guardianId: dad.profile.guardian_id, fullName: 'Ahmed Petersen', relationship: 'Parent', isPrimaryContact: false },
     ])
     const bongani = res.body.learners.find((l) => l.name === 'Bongani Khumalo')
-    expect(bongani.signedOut).toEqual({ timeOut: expect.stringMatching(/^\d{2}:\d{2}$/), collectedBy: 'Walked home alone' })
+    expect(bongani.signedOut).toEqual({
+      timeOut: expect.stringMatching(/^\d{2}:\d{2}$/), collectedBy: 'Walked home alone', recordedBy: teacher.user.full_name,
+    })
   })
 
-  it('shows the guardian who collected', async () => {
+  it('shows the guardian who collected, and the teacher who signed them out', async () => {
     await markAttendance(learner, teacher)
     await confirm({ learnerId: learner.learner_id, guardianId: guardian.profile.guardian_id })
     const res = await today()
-    expect(res.body.learners[0].signedOut.collectedBy).toBe('Fatima Petersen')
+    expect(res.body.learners[0].signedOut).toMatchObject({ collectedBy: 'Fatima Petersen', recordedBy: teacher.user.full_name })
+  })
+
+  it('shows the manager who signed them out', async () => {
+    const manager = await createUser('manager', { fullName: 'Sarah Botha' })
+    await markAttendance(learner, teacher)
+    await confirm({ learnerId: learner.learner_id, guardianId: guardian.profile.guardian_id }, manager)
+    const res = await today(manager)
+    expect(res.body.learners[0].signedOut.recordedBy).toBe('Sarah Botha')
   })
 
   it('never includes guardian contact numbers or emails (POPIA)', async () => {

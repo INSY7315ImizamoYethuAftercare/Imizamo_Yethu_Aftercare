@@ -86,7 +86,11 @@ export class SignOutService {
             isPrimaryContact: p.is_primary_contact,
           })),
         signedOut: out
-          ? { timeOut: String(out.time_out).slice(0, 5), collectedBy: out.guardian_name ?? 'Walked home alone' }
+          ? {
+              timeOut: String(out.time_out).slice(0, 5),
+              collectedBy: out.guardian_name ?? 'Walked home alone',
+              recordedBy: out.recorded_by_name ?? null, // the teacher or manager who signed them out
+            }
           : null,
       }
     })
