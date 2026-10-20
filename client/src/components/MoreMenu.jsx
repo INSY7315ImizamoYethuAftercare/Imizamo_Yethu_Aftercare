@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../services/session";
+import { logout, settingsPathFor, useSession } from "../services/session";
 
 function MoreMenu() {
   const navigate = useNavigate();
+  const { user } = useSession();
   const [open, setOpen] = useState(false);
 
   return (
@@ -24,6 +25,15 @@ function MoreMenu() {
             aria-label="Close menu"
           />
           <div className="absolute right-0 mt-2 w-40 bg-white rounded-2xl shadow-lg border border-gray-200 z-50 overflow-hidden">
+            {user && (
+              <button
+                type="button"
+                onClick={() => navigate(settingsPathFor(user.appRole))}
+                className="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-gray-50 border-b border-gray-100"
+              >
+                Settings
+              </button>
+            )}
             <button
               type="button"
               onClick={async () => { await logout(); navigate("/", { replace: true }); }}

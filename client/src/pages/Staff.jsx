@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useStaff, setStaffStatus, createTeacher } from "./UseTeachers";
-import { useClasses } from "./UseClasses";
+import { useStaff, setStaffStatus, createTeacher, refreshStaff } from "./UseTeachers";
+import { useClasses, refreshClasses } from "./UseClasses";
 import { useHeader } from "./UseHeader";
 import AccountsSection from "./AccountsSection";
+import EditAccountForm from "./EditAccountForm";
+import ResetPasswordForm from "./ResetPasswordForm";
 import { isMasterAdmin, useSession } from "../services/session";
 
 function Staff() {
@@ -57,6 +59,23 @@ function Staff() {
   // there shows up here too.
   const groupFor = (person) =>
     person.role === "Manager" ? "All classes" : classes.find((c) => c.teacher === person.name)?.name ?? "No class";
+
+  // Master admin only: the teacher being edited or having their password
+  // reset, as { id, mode: "edit" | "reset" }.
+  const [open, setOpen] = useState(null);
+  const close = () => setOpen(null);
+  const handleEdited = async (updated) => {
+    close();
+    setBanner(updated.fullName + "'s account was updated.");
+    setTimeout(() => setBanner(""), 3000);
+    // Classes show their teacher by name, so reload both after a rename.
+    await Promise.all([refreshStaff(), refreshClasses()]);
+  };
+  const handleReset = (account) => {
+    close();
+    setBanner(account.fullName + "'s password was reset. Ask them to change it in Settings.");
+    setTimeout(() => setBanner(""), 5000);
+  };
 
   const toggle = (person) => {
     const next = person.status === "Active" ? "Suspended" : "Active";
@@ -149,7 +168,24 @@ function Staff() {
         </div>
 
         <div className="space-y-3">
-          {staff.map((person) => (
+          {staff.map((person) =>
+            open?.id === person.id ? (
+              open.mode === "edit" ? (
+                <EditAccountForm
+                  key={person.id}
+                  account={{ userId: person.userId, fullName: person.name, email: person.email }}
+                  onSaved={handleEdited}
+                  onCancel={close}
+                />
+              ) : (
+                <ResetPasswordForm
+                  key={person.id}
+                  account={{ userId: person.userId, fullName: person.name }}
+                  onDone={handleReset}
+                  onCancel={close}
+                />
+              )
+            ) : (
             <div
               key={person.id}
               className={`${card} flex items-center justify-between gap-3 hover:shadow-xl hover:border-orange-300 transition`}
@@ -158,7 +194,7 @@ function Staff() {
                 <p className="font-semibold text-gray-900">{person.name}</p>
                 <p className="text-xs text-gray-500">{person.role} • {groupFor(person)}</p>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-end gap-2">
                 <span
                   className={`text-[11px] font-semibold px-2 py-1 rounded-full ${
                     person.status === "Active" ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-600"
@@ -166,6 +202,24 @@ function Staff() {
                 >
                   {person.status}
                 </span>
+                {isMasterAdmin(user) && person.role === "Teacher" && (
+                  <>
+                    <button
+                      onClick={() => setOpen({ id: person.id, mode: "edit" })}
+                      aria-label={`Edit ${person.name}`}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-gray-700 border border-gray-200 shadow-lg hover:border-orange-300 hover:shadow-xl active:scale-95 transition"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => setOpen({ id: person.id, mode: "reset" })}
+                      aria-label={`Reset password for ${person.name}`}
+                      className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-red-500 border border-red-200 shadow-lg hover:shadow-xl active:scale-95 transition"
+                    >
+                      Reset password
+                    </button>
+                  </>
+                )}
                 {person.role !== "Manager" && (
                   <button
                     onClick={() => toggle(person)}
@@ -176,7 +230,8 @@ function Staff() {
                 )}
               </div>
             </div>
-          ))}
+            ),
+          )}
         </div>
 
         {isMasterAdmin(user) && <AccountsSection />}

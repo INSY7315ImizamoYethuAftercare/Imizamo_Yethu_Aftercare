@@ -1,30 +1,10 @@
-import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/session";
+import ChangePasswordForm from "./ChangePasswordForm";
 
 function ParentSettings() {
   const navigate = useNavigate();
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
-  const [current, setCurrent] = useState("");
-  const [next, setNext] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [message, setMessage] = useState("");
-
-  const handlePassword = (e) => {
-    e.preventDefault();
-    if (!current || !next || !confirm) {
-      setMessage("Please fill in all fields.");
-      return;
-    }
-    if (next !== confirm) {
-      setMessage("New passwords do not match.");
-      return;
-    }
-    setMessage("Password updated.");
-    setCurrent("");
-    setNext("");
-    setConfirm("");
-  };
 
   return (
     <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
@@ -51,16 +31,7 @@ function ParentSettings() {
           </div>
         </div>
 
-        <form onSubmit={handlePassword} className={card}>
-          <h2 className="font-semibold text-gray-900 mb-3">Change password</h2>
-          <input type="password" placeholder="Current password" value={current} onChange={(e) => setCurrent(e.target.value)} className="w-full mb-2 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md" />
-          <input type="password" placeholder="New password" value={next} onChange={(e) => setNext(e.target.value)} className="w-full mb-2 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md" />
-          <input type="password" placeholder="Confirm new password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className="w-full mb-3 px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md" />
-          {message && <p className="text-xs text-gray-600 mb-3">{message}</p>}
-          <button type="submit" className="w-full py-3 rounded-full bg-orange-400 text-white font-semibold shadow-lg active:scale-[0.98] transition">
-            Update password
-          </button>
-        </form>
+        <ChangePasswordForm />
 
         <div className={card}>
           <h2 className="font-semibold text-gray-900 mb-3">Account</h2>

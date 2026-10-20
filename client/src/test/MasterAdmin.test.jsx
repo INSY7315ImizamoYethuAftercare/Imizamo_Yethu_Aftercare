@@ -26,6 +26,8 @@ beforeEach(() => {
   onApi('GET', '/learners', LEARNERS)
   onApi('GET', '/teacher', [])
   onApi('GET', '/accounts', ACCOUNTS)
+  onApi('GET', '/reports/overview', { totals: {}, today: { date: '2026-10-05', present: 3, activeLearners: 4, signedOut: 1, classes: [] } })
+  onApi('GET', '/signout/today', { date: '2026-10-05', learners: [] })
 })
 
 async function renderStaff(role = 'masterAdmin') {
@@ -128,6 +130,124 @@ describe('Master admin', () => {
     expect(within(section).getByLabelText('FULL NAME')).toHaveValue('Sarah Two')
   })
 
+  describe('editing accounts', () => {
+    const TEACHERS = [
+      { teacher_id: 21, user_id: 31, full_name: 'Ms Nkosi', contact_email: 'nkosi@iylh.org', is_active: true },
+    ]
+    const accountPatches = () => apiClient.patch.mock.calls.filter(([path]) => path.startsWith('/accounts/'))
+
+    it('edits a teacher\'s name and email, sending only what changed', async () => {
+      onApi('GET', '/teacher', TEACHERS)
+      onApi('PATCH', '/accounts/31', { userId: 31, fullName: 'Thandeka Nkosi', email: 'thandeka@iylh.org', role: 'teacher', isActive: true })
+      await renderStaff()
+      await userEvent.click(await screen.findByRole('button', { name: 'Edit Ms Nkosi' }))
+      const form = screen.getByRole('form', { name: 'Edit Ms Nkosi' })
+      expect(within(form).getByLabelText('FULL NAME')).toHaveValue('Ms Nkosi')
+      await userEvent.clear(within(form).getByLabelText('FULL NAME'))
+      await userEvent.type(within(form).getByLabelText('FULL NAME'), 'Thandeka Nkosi')
+      await userEvent.clear(within(form).getByLabelText('EMAIL (THEY SIGN IN WITH THIS)'))
+      await userEvent.type(within(form).getByLabelText('EMAIL (THEY SIGN IN WITH THIS)'), 'thandeka@iylh.org')
+      await userEvent.click(within(form).getByRole('button', { name: 'Save changes' }))
+
+      expect(accountPatches()).toEqual([
+        ['/accounts/31', { fullName: 'Thandeka Nkosi', email: 'thandeka@iylh.org' }],
+      ])
+      expect(await screen.findByText("Thandeka Nkosi's account was updated.")).toBeInTheDocument()
+    })
+
+    it('has no password field on the edit form, and only sends the changed name', async () => {
+      onApi('PATCH', '/accounts/1', { userId: 1, fullName: 'Sarah B', email: 'sarah@iylh.org', role: 'manager', isActive: true })
+      await renderStaff()
+      const section = accountsSection()
+      await userEvent.click(await within(section).findByRole('button', { name: 'Edit Sarah Botha' }))
+      expect(within(section).queryByLabelText(/PASSWORD/)).not.toBeInTheDocument()
+      const name = within(section).getByLabelText('FULL NAME')
+      await userEvent.clear(name)
+      await userEvent.type(name, 'Sarah B')
+      await userEvent.click(within(section).getByRole('button', { name: 'Save changes' }))
+      expect(accountPatches()).toEqual([['/accounts/1', { fullName: 'Sarah B' }]])
+    })
+
+    it('can edit their own account, but has no Edit button for another master admin', async () => {
+      onApi('GET', '/accounts', [...ACCOUNTS, { userId: 7, fullName: 'Other Master', email: 'om@iylh.org', type: 'master_admin', isActive: true }])
+      await renderStaff()
+      const section = accountsSection()
+      expect(await within(section).findByRole('button', { name: 'Edit Nomvula Dube' })).toBeInTheDocument()
+      expect(within(section).queryByRole('button', { name: 'Edit Other Master' })).not.toBeInTheDocument()
+    })
+
+    it('shows the server message and keeps the form open', async () => {
+      onApi('PATCH', '/accounts/3', new ApiError('An account with this email already exists', 409))
+      await renderStaff()
+      const section = accountsSection()
+      await userEvent.click(await within(section).findByRole('button', { name: 'Edit Pieter Jacobs' }))
+      const email = within(section).getByLabelText('EMAIL (THEY SIGN IN WITH THIS)')
+      await userEvent.clear(email)
+      await userEvent.type(email, 'sarah@iylh.org')
+      await userEvent.click(within(section).getByRole('button', { name: 'Save changes' }))
+      expect(await within(section).findByRole('alert')).toHaveTextContent('An account with this email already exists')
+      expect(within(section).getByLabelText('EMAIL (THEY SIGN IN WITH THIS)')).toHaveValue('sarah@iylh.org')
+    })
+
+  })
+
+  describe('resetting a forgotten password', () => {
+    const TEACHERS = [
+      { teacher_id: 21, user_id: 31, full_name: 'Ms Nkosi', contact_email: 'nkosi@iylh.org', is_active: true },
+    ]
+    const resets = () => apiClient.post.mock.calls.filter(([path]) => path.endsWith('/reset-password'))
+
+    it("resets a teacher's password and reminds them to change it in Settings", async () => {
+      onApi('GET', '/teacher', TEACHERS)
+      onApi('POST', '/accounts/31/reset-password', { message: 'Password reset' })
+      await renderStaff()
+      await userEvent.click(await screen.findByRole('button', { name: 'Reset password for Ms Nkosi' }))
+      const form = screen.getByRole('form', { name: 'Reset password for Ms Nkosi' })
+      await userEvent.type(within(form).getByLabelText('NEW PASSWORD'), 'Temp-password-1')
+      await userEvent.type(within(form).getByLabelText('CONFIRM NEW PASSWORD'), 'Temp-password-1')
+      await userEvent.click(within(form).getByRole('button', { name: 'Reset password' }))
+
+      expect(resets()).toEqual([['/accounts/31/reset-password', { password: 'Temp-password-1' }]])
+      expect(await screen.findByText("Ms Nkosi's password was reset. Ask them to change it in Settings.")).toBeInTheDocument()
+    })
+
+    it('resets a manager from the Managers & admins section', async () => {
+      onApi('POST', '/accounts/1/reset-password', { message: 'Password reset' })
+      await renderStaff()
+      const section = accountsSection()
+      await userEvent.click(await within(section).findByRole('button', { name: 'Reset password for Sarah Botha' }))
+      await userEvent.type(within(section).getByLabelText('NEW PASSWORD'), 'Temp-password-1')
+      await userEvent.type(within(section).getByLabelText('CONFIRM NEW PASSWORD'), 'Temp-password-1')
+      await userEvent.click(within(section).getByRole('button', { name: 'Reset password' }))
+      expect(resets()).toEqual([['/accounts/1/reset-password', { password: 'Temp-password-1' }]])
+    })
+
+    it('offers no reset for your own account or another master admin', async () => {
+      onApi('GET', '/accounts', [...ACCOUNTS, { userId: 7, fullName: 'Other Master', email: 'om@iylh.org', type: 'master_admin', isActive: true }])
+      await renderStaff()
+      const section = accountsSection()
+      await within(section).findByText('Pieter Jacobs')
+      expect(within(section).getByRole('button', { name: 'Reset password for Pieter Jacobs' })).toBeInTheDocument()
+      expect(within(section).queryByRole('button', { name: 'Reset password for Nomvula Dube' })).not.toBeInTheDocument()
+      expect(within(section).queryByRole('button', { name: 'Reset password for Other Master' })).not.toBeInTheDocument()
+    })
+
+    it.each([
+      [['Temp-password-1', 'Different-pass-1'], 'The passwords do not match.'],
+      [['short', 'short'], 'The new password must be at least 8 characters.'],
+      [['', ''], 'Please fill in both fields.'],
+    ])('checks %o before sending', async ([password, confirm], message) => {
+      await renderStaff()
+      const section = accountsSection()
+      await userEvent.click(await within(section).findByRole('button', { name: 'Reset password for Pieter Jacobs' }))
+      if (password) await userEvent.type(within(section).getByLabelText('NEW PASSWORD'), password)
+      if (confirm) await userEvent.type(within(section).getByLabelText('CONFIRM NEW PASSWORD'), confirm)
+      await userEvent.click(within(section).getByRole('button', { name: 'Reset password' }))
+      expect(within(section).getByRole('alert')).toHaveTextContent(message)
+      expect(resets()).toHaveLength(0)
+    })
+  })
+
   it('the accounts section has no accessibility violations', async () => {
     await renderStaff()
     await userEvent.click(await screen.findByRole('button', { name: '+ Add account' }))
@@ -136,6 +256,14 @@ describe('Master admin', () => {
 })
 
 describe('A normal manager', () => {
+  it('has no Edit or Reset password buttons for teachers', async () => {
+    onApi('GET', '/teacher', [{ teacher_id: 21, user_id: 31, full_name: 'Ms Nkosi', contact_email: 'nkosi@iylh.org', is_active: true }])
+    await renderStaff('manager')
+    expect(await screen.findByText('Ms Nkosi')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Edit Ms Nkosi' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Reset password for Ms Nkosi' })).not.toBeInTheDocument()
+  })
+
   it('does not see the accounts section, and never asks for /accounts', async () => {
     await renderStaff('manager')
     await screen.findByText('Staff oversight')

@@ -1,9 +1,47 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClasses, classOverviewRows } from "./UseClasses";
 import { useHeader } from "./UseHeader";
+import { apiClient } from "../services/apiClient";
+import { isMasterAdmin, useSession } from "../services/session";
+import { greeting, longDate, todayInSA } from "../utils/dates";
 
 function ManagerHome() {
   const { displayName, displayRole } = useHeader();
+  const { user } = useSession();
+  // The master admin is greeted by their role, everyone else by first name.
+  const greetName = isMasterAdmin(user) ? "Master Admin" : user?.fullName?.split(" ")[0] || "there";
+
+  // Today's totals (GET /reports/overview), the same numbers the admin sees.
+  const [today, setToday] = useState(null);
+  const [error, setError] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    apiClient
+      .get("/reports/overview")
+      .then((report) => { if (!cancelled) setToday(report.today); })
+      .catch((e) => { if (!cancelled) setError(e?.message || "Couldn't load today's numbers."); });
+    return () => { cancelled = true; };
+  }, []);
+
+  // Recent Activity: today's sign-outs (GET /signout/today), latest first.
+  const [activity, setActivity] = useState(null);
+  const [activityError, setActivityError] = useState("");
+  useEffect(() => {
+    let cancelled = false;
+    apiClient
+      .get("/signout/today")
+      .then(({ learners }) => {
+        if (cancelled) return;
+        const signedOut = learners
+          .filter((l) => l.signedOut)
+          .sort((a, b) => b.signedOut.timeOut.localeCompare(a.signedOut.timeOut))
+          .slice(0, 5);
+        setActivity(signedOut);
+      })
+      .catch((e) => { if (!cancelled) setActivityError(e?.message || "Couldn't load today's sign-outs."); });
+    return () => { cancelled = true; };
+  }, []);
   const navigate = useNavigate();
   const classOverview = classOverviewRows(useClasses());
   const comingSoon = () => alert("Coming soon");
@@ -31,29 +69,41 @@ function ManagerHome() {
 
       <div className="flex-1 px-4 pt-5 pb-32 max-w-5xl mx-auto w-full">
         <div className="bg-gradient-to-r from-orange-400 to-orange-300 rounded-2xl p-5 mb-5 text-white shadow-lg">
-          <p className="text-sm opacity-90">Wednesday, 29 July</p>
-          <h1 className="text-xl font-bold mt-1">Good afternoon, Sarah! 👋</h1>
-          <p className="text-sm mt-1 opacity-90">5 of 6 learners present • 3 sign-outs need review</p>
+          <p className="text-sm opacity-90">{longDate(todayInSA())}</p>
+          <h1 className="text-xl font-bold mt-1">{greeting()}, {greetName}! 👋</h1>
+          {today && (
+            <p className="text-sm mt-1 opacity-90">
+              {today.present} of {today.activeLearners} learners present today • {today.signedOut} signed out
+            </p>
+          )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className={card}>
-            <p className="text-2xl font-bold text-gray-900">5</p>
-            <p className="text-xs text-gray-500">Present Today</p>
+        {error && (
+          <div role="alert" className="mb-5 bg-red-50 border border-red-200 text-red-600 text-sm rounded-2xl px-4 py-3">{error}</div>
+        )}
+        {!today && !error && <p className="text-sm text-gray-400 text-center py-6">Loading today's numbers...</p>}
+
+        {today && (
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+            <div className={card}>
+              <p className="text-2xl font-bold text-gray-900">{today.present}</p>
+              <p className="text-xs text-gray-500">Present Today</p>
+            </div>
+            <div className={card}>
+              <p className="text-2xl font-bold text-gray-900">{today.signedOut}</p>
+              <p className="text-xs text-gray-500">Signed Out</p>
+            </div>
+            <div className={card}>
+              <p className="text-2xl font-bold text-gray-900">{today.activeLearners}</p>
+              <p className="text-xs text-gray-500">Total Learners</p>
+            </div>
+            {/* Placeholder until escalations are stored on the server (the Escalations page is sample data). */}
+            <div className={card}>
+              <p className="text-2xl font-bold text-orange-500">3</p>
+              <p className="text-xs text-gray-500">Escalations</p>
+            </div>
           </div>
-          <div className={card}>
-            <p className="text-2xl font-bold text-gray-900">5</p>
-            <p className="text-xs text-gray-500">Signed Out</p>
-          </div>
-          <div className={card}>
-            <p className="text-2xl font-bold text-gray-900">6</p>
-            <p className="text-xs text-gray-500">Total Learners</p>
-          </div>
-          <div className={card}>
-            <p className="text-2xl font-bold text-orange-500">3</p>
-            <p className="text-xs text-gray-500">Escalations</p>
-          </div>
-        </div>
+        )}
 
         <h2 className="font-semibold text-gray-900 mb-3">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
@@ -70,6 +120,7 @@ function ManagerHome() {
             <span className="text-sm font-semibold text-gray-800">Sign-Out</span>
           </button>
           <button onClick={() => navigate("/manager/escalations")} className={action}>
+            {/* Placeholder count, as on the Escalations card above. */}
             <span className="absolute top-2 right-2 text-[10px] bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center">3</span>
             <span className="text-2xl">🚨</span>
             <span className="text-sm font-semibold text-gray-800">Queue</span>
@@ -108,17 +159,22 @@ function ManagerHome() {
           <div>
             <h2 className="font-semibold text-gray-900 mb-3">Recent Activity</h2>
             <div className="bg-white rounded-2xl shadow-lg border border-gray-200 divide-y divide-gray-100">
-              {[
-                { title: "Zoe Ntombela — flagged unknown collector", sub: "Ms Williams", time: "17:42" },
-                { title: "Sipho Dlamini — walking home flagged", sub: "Mr Naidoo", time: "17:20" },
-                { title: "Aisha Petersen signed out", sub: "Ms Nkosi", time: "17:15" },
-              ].map((item) => (
-                <div key={item.title} className="px-4 py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{item.title}</p>
-                    <p className="text-xs text-gray-500">{item.sub}</p>
+              {activityError && <p role="alert" className="px-4 py-3 text-sm text-red-500">{activityError}</p>}
+              {!activity && !activityError && <p className="px-4 py-3 text-sm text-gray-400">Loading today's sign-outs...</p>}
+              {activity?.length === 0 && <p className="px-4 py-3 text-sm text-gray-400">No sign-outs yet today.</p>}
+              {activity?.map((l) => (
+                <div key={l.learnerId} className="px-4 py-3 flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-gray-900">{l.name} signed out</p>
+                    <p className="text-xs text-gray-500">
+                      {l.signedOut.collectedBy === "Walked home alone" ? "Walked home alone" : `Collected by ${l.signedOut.collectedBy}`}
+                      {l.className ? ` • ${l.className}` : ""}
+                    </p>
+                    {l.signedOut.recordedBy && (
+                      <p className="text-xs text-gray-400">Signed out by {l.signedOut.recordedBy}</p>
+                    )}
                   </div>
-                  <span className="text-xs text-gray-400">{item.time}</span>
+                  <span className="text-xs text-gray-400 shrink-0">{l.signedOut.timeOut}</span>
                 </div>
               ))}
             </div>

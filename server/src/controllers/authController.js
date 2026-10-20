@@ -83,7 +83,7 @@ export async function register(req, res, next) {
 export async function login(req, res, next) {
   try {
 
-    const { email, password } = req.body ?? {}
+    const { email, password, role } = req.body ?? {}
     if (!email || !password) {
       const err = new Error('email and password are required')
       err.status = 400
@@ -96,9 +96,31 @@ export async function login(req, res, next) {
       throw err
     }
 
-    const { token, user } = await authService.login({ email, password })
+    // Optional: the role card picked on the login screen.
+    if (role !== undefined) validate.text(role, 'role', { max: 20 })
+
+    const { token, user } = await authService.login({ email, password, role })
     res.cookie('token', token, cookieOptions)
     res.json({ user })
+  } catch (err) {
+    next(err)
+  }
+}
+
+/** POST /api/auth/change-password - the signed-in user changes their own password. */
+export async function changePassword(req, res, next) {
+  try {
+    const { currentPassword, newPassword } = req.body ?? {}
+    if (!currentPassword || !newPassword) {
+      throw validate.badRequest('currentPassword and newPassword are required')
+    }
+    if (typeof currentPassword !== 'string') throw validate.badRequest('currentPassword must be text')
+    validate.password(newPassword, 'newPassword')
+
+    // Other sessions for this account end; this one gets a fresh token.
+    const { token, user } = await authService.changePassword({ userId: req.user.userId, currentPassword, newPassword })
+    res.cookie('token', token, cookieOptions)
+    res.json({ message: 'Password updated', user })
   } catch (err) {
     next(err)
   }
@@ -126,6 +148,8 @@ export async function me(req, res, next) {
     const profile = { userId: user.user_id, email: user.email, role: user.role, fullName: user.full_name }
     // authenticate() looked up the admin's access level.
     if (req.user.accessLevel) profile.accessLevel = req.user.accessLevel
+    // After a master admin's reset, the app asks for a new password first.
+    if (user.must_change_password) profile.mustChangePassword = true
     res.json({ user: profile })
   } catch (err) {
     next(err)

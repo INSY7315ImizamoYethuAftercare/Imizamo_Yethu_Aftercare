@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { colourForClass } from '../pages/AddClassSheet'
 import AdminHome from '../pages/AdminHome'
+import { longDate, todayInSA } from '../utils/dates'
 import { ApiError, apiClient, onApi, resetApi } from './api-mock'
 import { signInAs } from './session-helpers'
 
@@ -60,7 +61,8 @@ describe('Admin home', () => {
   it("shows today's real totals and the admin's name, not placeholder text", async () => {
     await renderAdmin()
     expect(await screen.findByText('7 of 12 learners present today')).toBeInTheDocument()
-    expect(screen.getByText('Monday, 5 October')).toBeInTheDocument()
+    // The banner shows today's date in SA, not the date in the report.
+    expect(screen.getByText(longDate(todayInSA()))).toBeInTheDocument()
     expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/, Ada! 👋$/)
     expect(screen.getByText('Present Today').previousElementSibling).toHaveTextContent('7')
     expect(screen.getByText('Signed Out').previousElementSibling).toHaveTextContent('3')

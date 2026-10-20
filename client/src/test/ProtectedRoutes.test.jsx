@@ -26,6 +26,8 @@ vi.mock('../pages/Reports', () => stub('reports'))
 vi.mock('../pages/Settings', () => stub('settings'))
 vi.mock('../pages/Escalations', () => stub('escalations'))
 vi.mock('../pages/Staff', () => stub('staff'))
+vi.mock('../pages/TeacherSettings', () => stub('teacher-settings'))
+vi.mock('../pages/ChoosePassword', () => stub('choose-password'))
 
 const visit = (path) => {
   window.history.pushState({}, '', path)
@@ -66,6 +68,29 @@ const CASES = [
     ['/manager', 'manager-home']],
   ['guardian', ['/parent', 'parent-home'], ['/home', '/attendance', '/manager', '/admin/learners'], ['/parent', 'parent-home']],
 ]
+
+describe('Settings pages', () => {
+  it('a teacher can open their own Settings page', async () => {
+    await signInAs('teacher')
+    visit('/teacher/settings')
+    expect(await screen.findByText('page:teacher-settings')).toBeInTheDocument()
+  })
+
+  it.each(['manager', 'guardian'])('a %s is bounced from the teacher Settings page', async (role) => {
+    await signInAs(role)
+    visit('/teacher/settings')
+    expect(await screen.findByText(`page:${role === 'manager' ? 'manager-home' : 'parent-home'}`)).toBeInTheDocument()
+  })
+})
+
+describe('after a master admin reset their password', () => {
+  it.each(['/home', '/attendance', '/teacher/settings'])('%s sends them to choose a new password first', async (path) => {
+    await signInAs('resetTeacher')
+    visit(path)
+    expect(await screen.findByText('page:choose-password')).toBeInTheDocument()
+    expect(window.location.pathname).toBe('/choose-password')
+  })
+})
 
 describe.each(CASES)('%s', (role, [ownPath, ownPage], forbidden, [homePath, homePage]) => {
   it(`can open ${ownPath}`, async () => {

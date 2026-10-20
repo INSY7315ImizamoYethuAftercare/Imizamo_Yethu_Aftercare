@@ -41,6 +41,7 @@ beforeEach(() => {
   onApi('GET', '/attendance/class/2', [])
   onApi('GET', '/signout/today', { date: '2026-10-05', learners: [] })
   onApi('GET', '/teacher', [])
+  onApi('GET', '/reports/overview', { totals: {}, today: { date: '2026-10-05', present: 3, activeLearners: 4, signedOut: 1, classes: [] } })
   onApi('GET', '/guardian/children', [{ learner_id: 3, first_name: 'Aisha', last_name: 'Petersen' }])
   onApi('GET', '/guardian/children/3/overview', AISHA_OVERVIEW)
 })

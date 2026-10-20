@@ -11,6 +11,8 @@ export const USERS = {
   // A master admin uses the manager's pages (see appRoleOf in session.js).
   masterAdmin: { userId: 5, email: 'master@iylh.org', role: 'admin', accessLevel: 'master', fullName: 'Nomvula Dube' },
   guardian: { userId: 4, email: 'fatima@example.com', role: 'guardian', fullName: 'Fatima Petersen' },
+  // A teacher whose password the master admin reset: must choose their own first.
+  resetTeacher: { userId: 6, email: 'reset@iylh.org', role: 'teacher', fullName: 'Ms Reset', mustChangePassword: true },
 }
 
 export async function signInAs(role) {

@@ -13,11 +13,12 @@ function Login() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
+  // `key` is the account role the server checks the picked card against.
   const roles = [
-    { name: "Teacher", icon: "🍎" },
-    { name: "Manager", icon: "📋" },
-    { name: "Admin", icon: "⚙️" },
-    { name: "Parent", icon: "💛" },
+    { name: "Teacher", key: "teacher", icon: "🍎" },
+    { name: "Manager", key: "manager", icon: "📋" },
+    { name: "Admin", key: "admin", icon: "⚙️" },
+    { name: "Parent", key: "guardian", icon: "💛" },
   ];
 
   // Already signed in (e.g. refreshed the page)? Go straight to your home page.
@@ -34,8 +35,10 @@ function Login() {
     setBusy(true);
     setError("");
     try {
-      const signedIn = await login(email.trim(), password);
-      // Where you land depends on your real account role, not the card picked above.
+      const roleKey = roles.find((r) => r.name === role).key;
+      // The server refuses the sign-in if the picked card doesn't match the account.
+      const signedIn = await login(email.trim(), password, roleKey);
+      // A master admin picks Admin but lands on the manager pages (see appRoleOf).
       navigate(homePathFor(signedIn.appRole), { replace: true });
     } catch (err) {
       setError(err.message || "Could not sign in. Please try again.");
@@ -121,7 +124,7 @@ function Login() {
         </p>
       </div>
 
-      <p className="text-xs text-gray-400 mt-8">© 2025 Imizamo Yethu Learning Hub</p>
+      <p className="text-xs text-gray-400 mt-8">© Imizamo Yethu Learning Hub</p>
     </div>
   );
 }

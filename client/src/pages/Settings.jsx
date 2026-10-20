@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { logout } from "../services/session";
 import { useClasses } from "./UseClasses";
 import { useHeader } from "./UseHeader";
+import ChangePasswordForm from "./ChangePasswordForm";
 
 function Settings({ role = "Manager" }) {
   const navigate = useNavigate();
@@ -13,10 +14,6 @@ function Settings({ role = "Manager" }) {
   const primary = "w-full py-3 rounded-full bg-orange-400 text-white font-semibold shadow-lg hover:bg-orange-500 active:scale-[0.98] transition";
   const input = "w-full px-4 py-3 rounded-xl border border-gray-200 text-sm shadow-md bg-white focus:outline-none focus:ring-2 focus:ring-orange-300";
 
-  const [current, setCurrent] = useState("");
-  const [next, setNext] = useState("");
-  const [confirm, setConfirm] = useState("");
-  const [message, setMessage] = useState("");
   const [year, setYear] = useState("2025");
   const [activeTerm, setActiveTerm] = useState("Term 3");
   const [newClass, setNewClass] = useState("");
@@ -27,22 +24,6 @@ function Settings({ role = "Manager" }) {
   const showSaved = (text) => {
     setSaved(text);
     setTimeout(() => setSaved(""), 2200);
-  };
-
-  const handlePassword = (e) => {
-    e.preventDefault();
-    if (!current || !next || !confirm) {
-      setMessage("Please fill in all fields.");
-      return;
-    }
-    if (next !== confirm) {
-      setMessage("New passwords do not match.");
-      return;
-    }
-    setMessage("Password updated.");
-    setCurrent("");
-    setNext("");
-    setConfirm("");
   };
 
   return (
@@ -95,7 +76,7 @@ function Settings({ role = "Manager" }) {
                     : "border-gray-200 bg-white hover:border-orange-300 hover:shadow-xl"
                 }`}
               >
-                {term}{activeTerm === term ? " — current" : ""}
+                {term}{activeTerm === term ? " - current" : ""}
               </button>
             ))}
           </div>
@@ -144,14 +125,7 @@ function Settings({ role = "Manager" }) {
           </div>
         </div>
 
-        <form onSubmit={handlePassword} className={card}>
-          <h2 className="font-semibold text-gray-900 mb-3">Change password</h2>
-          <input type="password" placeholder="Current password" value={current} onChange={(e) => setCurrent(e.target.value)} className={`${input} mb-2`} />
-          <input type="password" placeholder="New password" value={next} onChange={(e) => setNext(e.target.value)} className={`${input} mb-2`} />
-          <input type="password" placeholder="Confirm new password" value={confirm} onChange={(e) => setConfirm(e.target.value)} className={`${input} mb-3`} />
-          {message && <p className="text-xs text-gray-600 mb-3">{message}</p>}
-          <button type="submit" className={primary}>Update password</button>
-        </form>
+        <ChangePasswordForm />
 
         <div className={card}>
           <h2 className="font-semibold text-gray-900 mb-3">Account</h2>

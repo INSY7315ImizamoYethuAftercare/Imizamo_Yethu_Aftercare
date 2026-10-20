@@ -110,7 +110,7 @@ describe('SignOutService', () => {
       { learner_id: 3, guardian_id: 9, full_name: 'Fatima Petersen', relationship: 'Mother', is_primary_contact: true },
     ])
     deps.signOutRepository.findByDate = jest.fn().mockResolvedValue([
-      { learner_id: 5, guardian_id: null, guardian_name: null, time_out: '16:10:00' },
+      { learner_id: 5, guardian_id: null, guardian_name: null, time_out: '16:10:00', recorded_by_name: 'Ms Nkosi' },
     ])
     const day = await service.getDay({ userId: 1, date: '2026-09-21' })
     expect(deps.pickupPermissionRepository.findActiveByLearnerIds).toHaveBeenCalledWith([3, 5])
@@ -124,7 +124,7 @@ describe('SignOutService', () => {
         },
         {
           learnerId: 5, name: 'Bongani Khumalo', className: 'Blue', gradeRange: 'Gr 7', canWalkHomeAlone: true,
-          pickups: [], signedOut: { timeOut: '16:10', collectedBy: 'Walked home alone' },
+          pickups: [], signedOut: { timeOut: '16:10', collectedBy: 'Walked home alone', recordedBy: 'Ms Nkosi' },
         },
       ],
     })
