@@ -13,6 +13,10 @@ const route = (name, allowed, path, body) => {
 
 export const PROTECTED_ROUTES = [
   route('GET /api/auth/me', ALL, () => '/api/auth/me'),
+  // Anyone signed in can change their own password. A wrong current password
+  // (400) still proves the role gate let them through, and changes nothing.
+  route('POST /api/auth/change-password', ALL, () => '/api/auth/change-password',
+    () => ({ currentPassword: 'not-the-current-password', newPassword: 'Long-enough-1' })),
 
   route('POST /api/attendance', ['teacher'], () => '/api/attendance',
     (w) => ({ learnerId: w.learnerFresh.learner_id, status: 'present' })),
@@ -85,6 +89,12 @@ export const PROTECTED_ROUTES = [
   route('GET /api/accounts', ['admin_master'], () => '/api/accounts'),
   route('POST /api/accounts', ['admin_master'], () => '/api/accounts',
     () => ({ type: 'manager', fullName: 'New Manager', email: 'new.manager@test.iylh.org', password: 'Long-enough-1' })),
+  // Editing staff accounts and resetting forgotten passwords: master admin only.
+  route('PATCH /api/accounts/:userId', ['admin_master'], (w) => `/api/accounts/${w.users.teacher.user.user_id}`,
+    () => ({ fullName: 'Renamed Teacher' })),
+  route('POST /api/accounts/:userId/reset-password', ['admin_master'],
+    (w) => `/api/accounts/${w.users.teacher.user.user_id}/reset-password`,
+    () => ({ password: 'Long-enough-1' })),
 ]
 
 /** Sends a catalogue route as the given user (or anonymously when user is null). */
