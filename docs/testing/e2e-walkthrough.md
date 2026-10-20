@@ -42,7 +42,9 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 
    Open http://localhost:5173.
 
-5. **Login limits.** Successful sign-ins never count. After **5 wrong passwords for the same account** in 15 minutes (or 30 wrong passwords across accounts from your machine), login returns *"Too many requests, please try again later."* To reset it while testing, restart `npm run dev:server`.
+5. **Pick the right role card.** The card you choose on the sign-in page must match the account: Teacher, Manager, Admin (standard **and** master admins) or Parent/Guardian. A wrong card shows *"Wrong account type for the role selected. Please choose the correct role and try again."* and doesn't sign you in.
+
+6. **Login limits.** Successful sign-ins never count. After **5 wrong passwords for the same account** in 15 minutes (or 30 wrong passwords across accounts from your machine), login returns *"Too many requests, please try again later."* To reset it while testing, restart `npm run dev:server`.
 
 ### Demo accounts
 
@@ -72,9 +74,10 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 
 | # | Step | Expected |
 |---|---|---|
-| T1 | On the sign-in page, choose **Teacher**, enter `t.nkosi@iylh.test` and the demo password, then click **Sign In**. | You land on `/home`. The header shows **Thandeka Nkosi** and **Teacher • Yellow**. (The greeting "Good afternoon, Thandi!" and the activity feed are static placeholders.) |
-| T2 | Click **Sign In** with an empty password (sign out first via the ⋯ menu). | *"Please enter your email and password."* No request is sent. |
-| T3 | Sign in with a wrong password. | *"Invalid email or password"* |
+| T1 | On the sign-in page, choose **Teacher**, enter `t.nkosi@iylh.test` and the demo password, then click **Sign In**. | You land on `/home`. The header shows **Thandeka Nkosi** and **Teacher • Yellow**. |
+| T2 | Click **Sign In** with an empty password (sign out first via the ⋮ menu). | *"Please enter your email and password."* No request is sent. |
+| T2a | Choose **Parent/Guardian**, then sign in as `t.nkosi@iylh.test` with the correct password. | *"Wrong account type for the role selected. Please choose the correct role and try again."* You stay on the sign-in page. |
+| T3 | Choose **Teacher** and sign in with a wrong password. | *"Invalid email or password"* (a wrong password never shows the role error, whatever card is picked). |
 | T4 | Sign in correctly and tap **Attendance** in the bottom nav. | **12 learners** (Ethan is deactivated so he's hidden). The counters show **Present 7, Absent 2**. Filter buttons: All, Blue, Green, Orange, Red, Yellow. |
 | T5 | Tap **Yellow**. | **3 learners:** Aisha (Present), Liam (Present), Amahle (Absent). |
 | T6 | Tap **Save Attendance** without changing anything. | *"Nothing new to save. Mark learners present or absent first."* |
@@ -91,6 +94,10 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 | T12d | Start a sign-out for **Liam van der Berg**. | *"No-one is on this learner's pickup list yet…"*: his only guardian (Karen) is deactivated. Type **Random Stranger** and tap **Verify**: *"Needs manager approval"*, with no Override button for teachers. **Send to manager queue** shows a note that the queue isn't connected yet and nothing was saved. |
 | T13 | Open `http://localhost:5173/manager` in the address bar. | You're sent back to `/home`. |
 | T14 | Open `http://localhost:5173/parent`. | You're sent back to `/home`. |
+| T15 | Open the ⋮ menu and tap **Settings**. | `/teacher/settings`: your name, email and *Teacher • Yellow*, a note that name and email changes go through the master admin, **Change password** and **Log out**. |
+| T16 | Under **Change password**, enter a wrong current password and a new one (8+ characters) twice, then tap **Update password**. | *"Your current password is incorrect"*. You stay signed in. |
+| T17 | In a private window, sign in as the same teacher. Back in the main window, change the password from the demo password to `Another-Pass-1234`. | *"Password updated. You've been signed out on any other devices."* The main window stays signed in; the private window's next click sends it to the sign-in page. |
+| T18 | Change the password back from `Another-Pass-1234` to the demo password. | *"Password updated…"*. The demo password works again for the rest of the walkthrough. |
 
 ---
 
@@ -98,19 +105,20 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 
 | # | Step | Expected |
 |---|---|---|
-| M1 | Sign in as `manager@iylh.test`. | You land on `/manager`. The Class Overview shows all 5 classes with present/active bars. |
+| M1 | Choose **Manager** and sign in as `manager@iylh.test`. | You land on `/manager`: today's date, *"Good afternoon, Sarah! 👋"* (morning/evening by the time) and *"N of M learners present today • K signed out"*. The Present Today, Signed Out and Total Learners cards match that line (Escalations is still a placeholder **3**). The Class Overview shows all 5 classes with present/active bars. |
+| M1a | Look at **Recent Activity**. | Today's sign-outs, latest time first (up to 5). After T12 and T12a: **Aisha Petersen** (*Collected by Fatima Petersen*) and **Naledi Mokoena** (*Walked home alone*), each with *"Signed out by Thandeka Nkosi"* and the time, plus **Bongani Khumalo** (16:10, from the demo data). No placeholder "flagged" rows. |
 | M2 | Open **Attendance**. | The page says *"… learners • view only"*. You see statuses but no Present/Absent buttons and no Save. |
 | M3 | Open **Learners** and add **Sizwe Ndlovu**, Yellow class. | Sizwe appears in the list. The Yellow learner count goes up on **Classes**. |
 | M3a | On **Classes**, tap **+ Add Class**. Type **Brown**, choose **Gr 5-6** and the purple colour, then tap **Add Classroom**. | The preview card shows *Brown* / *Gr 5-6* in purple as you go. Brown appears in the list with a purple bar; adding **yellow** (any letter case) says *"There's already a class called yellow."* Escape or Cancel closes the form. |
 | M3b | Open **Sizwe Ndlovu**, go to **Profile**, tap **Edit details**, change **Class** to **Green**, and tap **Save**. | *"Learner details saved"*. The banner and the Class row show **Green**. On **Classes**, Yellow's count goes down by one and Green's goes up. |
 | M4 | On **Classes**, tap 🗑 on **Orange**. | *"2 learners are still in this class. Move them to another class first."* with a **Move all 2 to** box. **Move & remove** stays greyed out until you choose a class. Tap **Cancel** for now (M11 does the real removal). |
-| M5 | Open **Staff**. | 5 teachers are listed with their active status. |
+| M5 | Open **Staff**. | 5 teachers are listed with their active status. There are **no Edit or Reset password** buttons and no *Managers & admins* section: those are the master admin's (A6–A8). |
 | M5a | Tap **+ Add teacher**, enter **Sipho Ndlovu**, `sipho.ndlovu@iylh.test` and a starting password of 8+ characters, then tap **Add teacher**. | *"Sipho Ndlovu was added. Give them their email and starting password to sign in."* He appears in the list as Active. |
 | M5b | Add a teacher with the same email again (any letter case). | *"An account with this email already exists"*, and the form stays open with what you typed. |
 | M5c | In a private window, sign in as `sipho.ndlovu@iylh.test` with that starting password. | You land on the teacher home page `/home`. |
 | M6 | Deactivate **Sipho Dlamini**, then sign in as `s.dlamini@iylh.test` in a private window. | *"This account has been deactivated"*. If Sipho was **already** signed in elsewhere, his next click sends him back to the sign-in page. |
 | M7 | Reactivate Sipho. | He can sign in again. |
-| M8 | Open **Sign Out** and sign out **Zoe Ntombela** by tapping **Grace Ntombela**. | *"Zoe is signed out"*. Managers can sign learners out, and the record shows the manager as the person who did it. |
+| M8 | Open **Sign Out** and sign out **Zoe Ntombela** by tapping **Grace Ntombela**. | *"Zoe is signed out"*. Managers can sign learners out, and the record shows the manager as the person who did it: back on **Home**, Zoe appears in Recent Activity with *"Collected by Grace Ntombela"* and *"Signed out by Sarah Botha"*. |
 | M8a | Start a sign-out for **Keanu Abrahams**, type an unknown name, and tap **Verify**. | **"Override and approve"** is visible but greyed out, with *"Override isn't available yet: it needs the approval queue."* |
 | M9 | Open **Reports**. | Tabs: Overview, Trends, Donor Report, Board Report. (The figures are currently static placeholders, not live data.) |
 | M10 | Open `http://localhost:5173/admin`. | You're sent back to `/manager`. |
@@ -125,7 +133,8 @@ The master admin can do **everything the manager can**, and is the only one who 
 
 | # | Step | Expected |
 |---|---|---|
-| A1 | Sign in as `master.admin@iylh.test`. | You land on the **manager dashboard** (`/manager`). The header says *Nomvula Dube / Master Admin*. The bottom tabs are the manager's: Home, Attendance, Learners, Classes, Sign Out, Reports. |
+| A1 | Choose **Admin** and sign in as `master.admin@iylh.test`. | You land on the **manager dashboard** (`/manager`). The header says *Nomvula Dube / Master Admin*, and the banner greets you as *"Good afternoon, Master Admin! 👋"*. The bottom tabs are the manager's: Home, Attendance, Learners, Classes, Sign Out, Reports. |
+| A1a | Sign out, choose **Manager** and sign in as `master.admin@iylh.test`. | *"Wrong account type for the role selected…"*. A master admin is an admin account, so always uses the **Admin** card. Sign in again with **Admin**. |
 | A2 | Repeat a few manager steps: add a learner (M3), add a class (M3a), add a teacher (M5a), sign a learner out (M8). | They all work exactly as for the manager. A sign-out you record is saved against your name. |
 | A3 | Open **Staff**. Scroll down to **Managers & admins**. | You see Nomvula Dube (Master admin), Pieter Jacobs (Standard admin) and Sarah Botha (Manager), each with their email and *Active*. |
 | A4 | Tap **+ Add account**, keep **Manager**, enter **Thabo Manager**, `thabo.manager@iylh.test` and a starting password of 8+ characters, then tap **Add manager**. | *"Thabo Manager was added as a manager. Give them their email and starting password to sign in."* He appears in the list. |
@@ -133,6 +142,13 @@ The master admin can do **everything the manager can**, and is the only one who 
 | A4b | Add an account with an email that's already used (e.g. `MANAGER@iylh.test`). | *"An account with this email already exists"*, and the form keeps what you typed. |
 | A4c | In a private window, sign in as `thabo.manager@iylh.test`, then as `lerato.admin@iylh.test`. | Thabo lands on `/manager` as a Manager, with **no** Managers & admins section on Staff. Lerato lands on `/admin` (totals only, step S1). |
 | A5 | Open `http://localhost:5173/admin` and `/home`. | You're sent back to `/manager`. |
+| A6 | Open **Staff** and look at the buttons. | Every teacher has **Edit** and **Reset password**. Under *Managers & admins*, everyone has both except **you** (Edit only: you change your own password in Settings) and any other master admin (neither). |
+| A6a | Tap **Edit** on **Thandeka Nkosi**, change the name to **Thandeka N**, and tap **Save changes**. | *"Thandeka N's account was updated."* The new name shows in the list, and the Yellow class still shows its teacher on **Classes**. Change it back to **Thandeka Nkosi**. |
+| A6b | Tap **Edit** on Thandeka Nkosi, change the email to `manager@iylh.test`, and tap **Save changes**. | *"An account with this email already exists"*, and the form stays open. Tap **Cancel**. The edit form has no password field. |
+| A7 | In a private window, choose **Teacher** and sign in as `t.nkosi@iylh.test`. Leave it open. Back in the main window, tap **Reset password** on Thandeka Nkosi, enter `Temp-Pass-1234` twice, and tap **Reset password**. | *"Thandeka Nkosi's password was reset. Ask them to change it in Settings."* In the private window, the next click sends you to the sign-in page. |
+| A7a | In the private window, sign in as `t.nkosi@iylh.test` with `Temp-Pass-1234`. | You land on **Choose a new password**, not `/home`. Typing `http://localhost:5173/home` sends you straight back there. |
+| A7b | Enter `Temp-Pass-1234` as the temporary password and the demo password as the new one (twice), then tap **Update password**. | You land on `/home`. `Temp-Pass-1234` no longer works; the demo password does. |
+| A8 | Open **Settings** (⚙️ on the dashboard) and change your own password, then change it back. | Same as T16–T18: your current password is required, and other sessions are signed out. |
 
 ## 4. Admin (standard): Pieter Jacobs
 
@@ -150,7 +166,7 @@ A standard admin sees **totals only**, never individual learners (POPIA).
 
 | # | Step | Expected |
 |---|---|---|
-| G1 | Sign in as `fatima.petersen@iylh.test` (any role card works: you land on your real role's page). | You land on `/parent`: *"Welcome, Fatima! 💛 Here's how Aisha is doing"*. The card shows **Aisha Petersen**, *Gr 1-2 · Yellow*, an attendance % for the last 30 days, **Present ✓** today, and the number of updates. |
+| G1 | Choose **Parent/Guardian** and sign in as `fatima.petersen@iylh.test`. | You land on `/parent`: *"Welcome, Fatima! 💛 Here's how Aisha is doing"*. The card shows **Aisha Petersen**, *Gr 1-2 · Yellow*, an attendance % for the last 30 days, **Present ✓** today, and the number of updates. |
 | G1a | Read the status box under the card. | Because the teacher signed Aisha out in T12: *"👋 Aisha has been collected"*, *"Signed out by Fatima Petersen at HH:MM"*. (On fresh demo data, before T12, it says *"✅ Aisha is at aftercare today"*, *"Arrived at 14:05"*.) |
 | G1b | Look at **Teacher Observations**. | The latest observation, with its category, date and teacher's name. **+ 1 more observation →** or **View all** shows the rest. |
 | G1c | Look at **Authorised Pickups** and **This Week**. | Pickups: Fatima Petersen (you), Ahmed Petersen and Zainab Hendricks. This Week: the last few days, with one **Absent** and the others showing who collected Aisha and when. |
@@ -167,6 +183,7 @@ A standard admin sees **totals only**, never individual learners (POPIA).
 | G8 | Change the date of birth to **2019-01-21** and tap **Create Account**. | Back on the sign-in page with *"Account created. Please sign in."* |
 | G9 | Sign in as `nandi.zulu@example.com`. | You land on `/parent` and see **Amahle Zulu**, with Nandi on her pickup list. |
 | G10 | Sign out, open **Create an account →** again, and register `nandi.zulu@example.com` a second time. | *"An account with this email already exists"* |
+| G11 | Sign in as Fatima, open **Settings** and use **Change password** (then change it back). | Same as T16–T18: it checks the current password and actually changes it. |
 
 ---
 
