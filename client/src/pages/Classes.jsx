@@ -13,7 +13,7 @@ function Classes({ role = "Teacher" }) {
   const isManager = role === "Manager";
   const { displayName, displayRole } = useHeader();
   const learnersPath = isManager ? "/manager/learners" : "/learners";
-  const shell = isManager ? "max-w-5xl mx-auto w-full" : "max-w-lg mx-auto w-full";
+  const shell = "max-w-lg md:max-w-3xl lg:max-w-5xl mx-auto w-full";
   const iconBtn =
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
@@ -121,7 +121,7 @@ function Classes({ role = "Teacher" }) {
           <p className="text-sm text-gray-400 text-center py-6">Loading classes...</p>
         )}
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {classes.map((cls) => {
             const open = () => navigate(`${learnersPath}?group=${cls.name}`);
             return (

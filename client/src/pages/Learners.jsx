@@ -41,7 +41,7 @@ function Learners({ role = "Teacher" }) {
     return matchesSearch && matchesClass;
   });
 
-  const shell = role === "Teacher" ? "max-w-lg mx-auto w-full" : "max-w-5xl mx-auto w-full";
+  const shell = "max-w-lg md:max-w-3xl lg:max-w-5xl mx-auto w-full";
 
   return (
     <div className="min-h-screen bg-cream flex flex-col">
@@ -111,7 +111,7 @@ function Learners({ role = "Teacher" }) {
           <p className="text-sm text-gray-400 text-center py-6">Loading learners...</p>
         )}
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map((learner) => (
             <button
               key={learner.id}
