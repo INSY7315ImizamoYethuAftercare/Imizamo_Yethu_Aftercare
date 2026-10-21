@@ -154,7 +154,7 @@ function Protected({ role, children }) {
 
   if (status === "unknown") {
     return (
-      <div className="min-h-screen bg-[#FFFBF5] flex items-center justify-center">
+      <div className="min-h-screen bg-cream flex items-center justify-center">
         <p className="text-sm text-gray-400">Loading...</p>
       </div>
     );

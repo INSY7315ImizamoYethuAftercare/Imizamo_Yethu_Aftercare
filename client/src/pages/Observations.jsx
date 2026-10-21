@@ -144,12 +144,12 @@ function Observations({ role = "Teacher" }) {
 
   // --- Early returns come after every hook above ---
   if (stillLoading) {
-    return <div className="min-h-screen bg-[#FFFBF5] flex items-center justify-center text-gray-400 text-sm">Loading learner...</div>;
+    return <div className="min-h-screen bg-cream flex items-center justify-center text-gray-400 text-sm">Loading learner...</div>;
   }
 
   if (!learner) {
     return (
-      <div className="min-h-screen bg-[#FFFBF5] flex flex-col items-center justify-center gap-4 px-4 text-center">
+      <div className="min-h-screen bg-cream flex flex-col items-center justify-center gap-4 px-4 text-center">
         <p className="text-gray-500 text-sm">Couldn't find that learner.</p>
         <button onClick={() => navigate(backPath)} className="px-4 py-2 rounded-full bg-orange-400 text-white text-sm font-semibold">
           Back to Learners
@@ -159,7 +159,7 @@ function Observations({ role = "Teacher" }) {
   }
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
+    <div className="min-h-screen bg-cream flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />

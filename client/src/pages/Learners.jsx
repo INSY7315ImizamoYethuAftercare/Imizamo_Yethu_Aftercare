@@ -44,7 +44,7 @@ function Learners({ role = "Teacher" }) {
   const shell = role === "Teacher" ? "max-w-lg mx-auto w-full" : "max-w-5xl mx-auto w-full";
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
+    <div className="min-h-screen bg-cream flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
@@ -168,7 +168,7 @@ function Learners({ role = "Teacher" }) {
               </div>
               <p className="text-sm text-gray-500 text-center mb-5">{copy.body}</p>
               <div className="flex gap-3">
-                <button onClick={() => setPending(null)} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
+                <button onClick={() => setPending(null)} className="flex-1 py-3 rounded-xl bg-beige text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
                 <button
                   onClick={() => { copy.act(); setPending(null); }}
                   className="flex-1 py-3 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md active:scale-95 transition"

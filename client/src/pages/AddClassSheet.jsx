@@ -80,7 +80,7 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
       >
         <form onSubmit={submit} noValidate>
           <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-5"></div>
-          <h2 id="add-class-title" className="text-2xl font-extrabold text-[#2B2A44]">Add New Classroom</h2>
+          <h2 id="add-class-title" className="text-2xl font-extrabold text-navy">Add New Classroom</h2>
           <p className="text-sm text-gray-400 mt-1 mb-6">Create a new class group for your learners</p>
 
           <label htmlFor="class-name" className={label}>
@@ -94,7 +94,7 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
             autoFocus
             onChange={(e) => { setName(e.target.value); setError(""); }}
             placeholder="e.g. Brown, White"
-            className="w-full mb-6 px-4 py-4 rounded-2xl bg-[#F5F0EA] text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-300"
+            className="w-full mb-6 px-4 py-4 rounded-2xl bg-beige text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-300"
           />
 
           <p id="grade-label" className={label}>
@@ -108,7 +108,7 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
                 aria-pressed={grade === g}
                 onClick={() => setGrade(g)}
                 className={`px-5 py-3 rounded-2xl text-sm font-bold transition active:scale-95 ${
-                  grade === g ? "bg-[#2B2A44] text-white shadow-md" : "bg-[#F5F0EA] text-gray-500 hover:bg-gray-200"
+                  grade === g ? "bg-navy text-white shadow-md" : "bg-beige text-gray-500 hover:bg-gray-200"
                 }`}
               >
                 {g}
@@ -134,10 +134,10 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
           </div>
 
           {/* Preview of how the class will look in the list. */}
-          <div aria-hidden="true" className="flex items-center gap-3 bg-[#FFFBEB] border-2 border-amber-100 rounded-2xl px-4 py-4 mb-4">
+          <div aria-hidden="true" className="flex items-center gap-3 bg-amber-50 border-2 border-amber-100 rounded-2xl px-4 py-4 mb-4">
             <span className="w-12 h-12 rounded-xl bg-amber-100/70 flex items-center justify-center text-xl">🏫</span>
             <div className="flex-1 min-w-0">
-              <p className="text-base font-bold text-[#2B2A44] truncate">{trimmed || "Class Name"}</p>
+              <p className="text-base font-bold text-navy truncate">{trimmed || "Class Name"}</p>
               <p className="text-xs font-semibold" style={{ color: colour }}>{grade}</p>
             </div>
             <span className="w-2 h-8 rounded-full" style={{ backgroundColor: colour }}></span>
@@ -154,14 +154,14 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
               type="button"
               onClick={onClose}
               disabled={saving}
-              className="flex-1 py-4 rounded-2xl bg-[#F5F0EA] text-base font-bold text-gray-500 active:scale-95 transition disabled:opacity-50"
+              className="flex-1 py-4 rounded-2xl bg-beige text-base font-bold text-gray-500 active:scale-95 transition disabled:opacity-50"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={saving}
-              className="flex-1 py-4 rounded-2xl bg-[#FF6B35] text-base font-bold text-white shadow-md hover:bg-orange-600 active:scale-95 transition disabled:opacity-50"
+              className="flex-1 py-4 rounded-2xl bg-brand text-base font-bold text-white shadow-md hover:bg-orange-600 active:scale-95 transition disabled:opacity-50"
             >
               {saving ? "Adding..." : "Add Classroom"}
             </button>
