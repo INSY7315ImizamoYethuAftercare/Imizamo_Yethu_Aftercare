@@ -19,7 +19,7 @@ function ParentSettings() {
         <button onClick={() => navigate("/parent")} className="text-sm font-medium text-gray-600">← Back</button>
       </div>
 
-      <div className="flex-1 px-4 pt-5 pb-32 max-w-lg mx-auto w-full space-y-4">
+      <div className="flex-1 px-4 md:px-6 pt-5 pb-32 max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto w-full space-y-4">
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
 
         <div className={card}>
