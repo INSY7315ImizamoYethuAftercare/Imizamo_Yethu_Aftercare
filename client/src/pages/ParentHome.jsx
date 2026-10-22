@@ -198,7 +198,7 @@ function ParentHome() {
   const shell = (body) => (
     <div className="min-h-screen bg-cream flex flex-col">
       {header}
-      <div className="flex-1 px-4 pt-5 pb-32 max-w-lg mx-auto w-full">{body}</div>
+      <div className="flex-1 px-4 md:px-6 pt-5 pb-32 max-w-xl md:max-w-3xl lg:max-w-4xl xl:max-w-5xl mx-auto w-full">{body}</div>
     </div>
   );
 
@@ -295,7 +295,7 @@ function ParentHome() {
       {observations.length === 0 && (
         <p className={`${card} p-4 text-sm text-gray-400 mb-6`}>No observations yet. Teachers' updates will appear here.</p>
       )}
-      <div className="space-y-3 mb-3">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
         {shownObservations.map((o, i) => (
           <div key={o.observationId} className={`${card} p-4`}>
             <div className="flex items-center gap-3 mb-2">
@@ -328,9 +328,9 @@ function ParentHome() {
           + Add Person
         </button>
       </div>
-      <div className={`${card} divide-y divide-gray-100 mb-6`}>
+      <div className={`${card} divide-y divide-gray-100 mb-6 md:divide-y-0 md:grid md:grid-cols-2 md:gap-0`}>
         {pickups.map((p) => (
-          <div key={p.guardianId} className="flex items-center gap-3 px-4 py-3">
+          <div key={p.guardianId} className="flex items-center gap-3 px-4 py-3 border-b md:border-b-0 md:border-r border-gray-100 last:border-0">
             <span aria-hidden="true" className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">👤</span>
             <div className="flex-1">
               <p className="font-medium text-gray-900">{p.fullName}{p.isYou && <span className="text-gray-400 font-normal"> (you)</span>}</p>
@@ -349,10 +349,10 @@ function ParentHome() {
       </div>
 
       <h2 className="font-bold text-gray-900 mb-3">This Week</h2>
-      <div className={`${card} divide-y divide-gray-100 mb-6`}>
+      <div className={`${card} divide-y divide-gray-100 mb-6 md:divide-y-0 md:grid md:grid-cols-2`}>
         {week.length === 0 && <p className="px-4 py-3 text-sm text-gray-400">No attendance recorded in the last 7 days.</p>}
         {week.map((d) => (
-          <div key={d.date} className="flex items-center gap-3 px-4 py-3">
+          <div key={d.date} className="flex items-center gap-3 px-4 py-3 border-b md:border-b-0 md:border-r border-gray-100 last:border-0">
             <span aria-hidden="true" className="text-xl">{d.status === "present" ? "✅" : "❌"}</span>
             <div className="flex-1">
               <p className="font-semibold text-gray-900">{d.date}</p>

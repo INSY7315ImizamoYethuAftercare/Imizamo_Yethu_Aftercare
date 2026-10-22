@@ -115,7 +115,9 @@ function Attendance({ role = "Teacher" }) {
     setSaving(false);
   };
 
-  const shell = role === "Teacher" ? "max-w-lg mx-auto w-full" : "max-w-5xl mx-auto w-full";
+  const shell = role === "Teacher" 
+    ? "max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-5xl mx-auto w-full" 
+    : "max-w-5xl mx-auto w-full";
 
   return (
     <div className="min-h-screen bg-cream flex flex-col">
@@ -136,7 +138,7 @@ function Attendance({ role = "Teacher" }) {
         </div>
       </div>
 
-      <div className={`flex-1 px-4 pt-5 pb-32 ${shell}`}>
+      <div className={`flex-1 px-4 md:px-6 pt-5 pb-32 ${shell}`}>
         <div className="mb-1">
           <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">Attendance <span>✓</span></h1>
           <p className="text-sm text-gray-500 mt-1">
@@ -176,14 +178,14 @@ function Attendance({ role = "Teacher" }) {
           </div>
         </div>
 
-        <div className="space-y-3 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mb-6">
           {loadError && (
-            <p className="text-sm text-red-500 text-center py-2">
+            <p className="text-sm text-red-500 text-center py-2 col-span-full">
               Could not load today&apos;s saved attendance. Check your connection and refresh.
             </p>
           )}
           {filtered.length === 0 && (
-            <p className="text-sm text-gray-400 text-center py-6">No learners in this class yet.</p>
+            <p className="text-sm text-gray-400 text-center py-6 col-span-full">No learners in this class yet.</p>
           )}
           {filtered.map((learner) => (
             <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 shadow-lg border border-gray-200">
