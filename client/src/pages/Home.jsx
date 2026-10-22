@@ -69,7 +69,7 @@ function Home() {
   const firstName = user?.fullName?.split(" ")[0] || "there";
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
+    <div className="min-h-screen bg-cream flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Imizamo Yethu Learning Hub" className="w-9 h-9 object-contain" />
@@ -84,7 +84,7 @@ function Home() {
         </div>
       </div>
 
-      <div className="flex-1 px-4 pt-5 pb-32 max-w-lg mx-auto w-full">
+      <div className="flex-1 px-4 pt-5 pb-32 max-w-lg md:max-w-3xl lg:max-w-5xl mx-auto w-full">
         <div className="bg-gradient-to-r from-orange-400 to-orange-300 rounded-2xl p-5 mb-5 text-white shadow-lg">
           <p className="text-sm opacity-90">{longDate(todayInSA())}</p>
           <h1 className="text-xl font-bold mt-1">{greeting()}, {firstName}! 👋</h1>
@@ -123,7 +123,7 @@ function Home() {
         )}
 
         <h2 className="font-semibold text-gray-900 mb-3">Quick Actions</h2>
-        <div className="grid grid-cols-2 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <button onClick={() => navigate("/attendance")} className={action}>
             <span className="text-2xl text-green-500">✓</span>
             <span className="text-sm font-semibold text-gray-800">Attendance</span>

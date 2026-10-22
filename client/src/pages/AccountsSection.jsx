@@ -105,7 +105,7 @@ function AccountsSection() {
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="px-4 py-2 rounded-full bg-[#2B2A44] text-white text-sm font-semibold shadow-lg hover:opacity-90 active:scale-95 transition whitespace-nowrap"
+            className="px-4 py-2 rounded-full bg-navy text-white text-sm font-semibold shadow-lg hover:opacity-90 active:scale-95 transition whitespace-nowrap"
           >
             + Add account
           </button>

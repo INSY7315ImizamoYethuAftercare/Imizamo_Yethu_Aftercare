@@ -196,7 +196,7 @@ function ParentHome() {
   );
 
   const shell = (body) => (
-    <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
+    <div className="min-h-screen bg-cream flex flex-col">
       {header}
       <div className="flex-1 px-4 pt-5 pb-32 max-w-lg mx-auto w-full">{body}</div>
     </div>
