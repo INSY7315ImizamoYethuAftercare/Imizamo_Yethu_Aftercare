@@ -11,7 +11,7 @@ export default defineConfig({
       // Forwards API calls to the Express server during local dev,
       // so the client can call relative paths like /api/... with no CORS setup needed.
       '/api': {
-        target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:4000',
+        target: process.env.VITE_API_PROXY_TARGET || 'http://localhost:3000',
         changeOrigin: true,
       },
     },

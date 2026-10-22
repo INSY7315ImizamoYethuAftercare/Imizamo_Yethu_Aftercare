@@ -22,7 +22,7 @@ function SignOut({ role = "Teacher" }) {
   const isManager = role === "Manager";
   const { displayName, displayRole } = useHeader();
   const comingSoon = () => alert("Coming soon");
-  const shell = isManager ? "max-w-5xl mx-auto w-full" : "max-w-lg mx-auto w-full";
+  const shell = isManager ? "max-w-5xl mx-auto w-full" : "max-w-xl md:max-w-2xl lg:max-w-3xl xl:max-w-5xl mx-auto w-full";
   const iconBtn =
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
@@ -150,7 +150,7 @@ function SignOut({ role = "Teacher" }) {
   const page = (children, center = false) => (
     <div className="min-h-screen bg-cream flex flex-col">
       {header}
-      <div className={`flex-1 px-4 pt-5 pb-32 ${center ? "flex flex-col items-center justify-center " : ""}${shell}`}>
+      <div className={`flex-1 px-4 md:px-6 pt-5 pb-32 ${center ? "flex flex-col items-center justify-center " : ""}${shell}`}>
         {children}
       </div>
     </div>
@@ -196,7 +196,7 @@ function SignOut({ role = "Teacher" }) {
         {!loading && !loadError && learners.length > 0 && toCollect.length === 0 && (
           <p className="text-sm text-gray-400 text-center py-6">Everyone has been collected today.</p>
         )}
-        <div className="space-y-3 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 mb-6">
           {filteredLearners.map((learner) => (
             <div key={learner.learnerId} className="bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg border border-gray-200">
               <div>
@@ -221,7 +221,7 @@ function SignOut({ role = "Teacher" }) {
         {collected.length > 0 && (
           <div>
             <p className="text-xs font-medium text-gray-400 mb-3 tracking-wide">ALREADY COLLECTED TODAY</p>
-            <div className="space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {collected.map((item) => (
                 <div key={item.learnerId} className="bg-white rounded-xl px-4 py-3 flex items-center justify-between shadow-lg border border-gray-200">
                   <p className="text-sm text-gray-600">{item.name}</p>
