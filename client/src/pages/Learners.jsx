@@ -111,19 +111,61 @@ function Learners({ role = "Teacher" }) {
           <p className="text-sm text-gray-400 text-center py-6">Loading learners...</p>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {filtered.map((learner) => (
-            <button
-              key={learner.id}
-              onClick={() => navigate(`${observationsPath}?id=${learner.id}`)}
-              className="w-full bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg border border-gray-200 text-left hover:border-orange-300 active:scale-[0.98] transition"
-            >
-              <div>
-                <p className="font-semibold text-gray-900">{learner.name}</p>
-                <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
+        <div className="space-y-3">
+          {filtered.map((learner) => {
+            // A deactivated learner stays listed, greyed out, and can't be opened
+            // until a manager reactivates them.
+            const off = learner.status === "deactivated";
+            return (
+              <div
+                key={learner.id}
+                className={`w-full rounded-2xl px-4 py-3 flex items-center justify-between gap-3 border transition ${
+                  off
+                    ? "bg-gray-100 border-gray-200 opacity-70"
+                    : "bg-white shadow-lg border-gray-200 hover:border-orange-300"
+                }`}
+              >
+                <button
+                  type="button"
+                  disabled={off}
+                  onClick={() => navigate(`${observationsPath}?id=${learner.id}`)}
+                  className={`flex-1 min-w-0 text-left ${off ? "cursor-not-allowed" : "active:scale-[0.98] transition"}`}
+                >
+                  <p className="font-semibold text-gray-900">{learner.name}</p>
+                  <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
+                  {off && (
+                    <span className="inline-block mt-1 text-[11px] font-semibold text-gray-500 bg-gray-200 rounded-full px-2 py-0.5">Deactivated</span>
+                  )}
+                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {isManager && (
+                    <>
+                      <button
+                        type="button"
+                        aria-label={`${off ? "Reactivate" : "Deactivate"} ${learner.name}`}
+                        title={off ? "Reactivate" : "Deactivate"}
+                        onClick={() => setPending({ type: off ? "reactivate" : "deactivate", learner })}
+                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-orange-50 text-orange-500 hover:bg-orange-100 active:scale-95 transition"
+                      >
+                        {off ? "↩" : "⏸"}
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Delete ${learner.name}`}
+                        title="Delete"
+                        onClick={() => setPending({ type: "delete", learner })}
+                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition"
+                      >
+                        🗑
+                      </button>
+                    </>
+                  )}
+                  {!off && !isManager && <span className="text-orange-400 font-semibold" aria-hidden="true">→</span>}
+                  {off && !isManager && <span className="text-gray-400" aria-hidden="true">🔒</span>}
+                </div>
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
       </div>
       {isManager && showAdd && (
