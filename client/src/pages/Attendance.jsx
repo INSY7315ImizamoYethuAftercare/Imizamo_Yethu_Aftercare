@@ -28,6 +28,7 @@ function Attendance({ role = "Teacher" }) {
   const learners = allLearners.filter((l) => l.status === "active");
 
   const [selectedClass, setSelectedClass] = useState("All");
+  const [search, setSearch] = useState("");
   const [saved, setSaved] = useState({}); // learnerId -> { recordId, status } from the server
   const [marks, setMarks] = useState({}); // learnerId -> unsaved choice made on this screen
   const [saving, setSaving] = useState(false);
@@ -64,6 +65,11 @@ function Attendance({ role = "Teacher" }) {
     selectedClass === "All"
       ? learners
       : learners.filter((l) => l.group === selectedClass);
+
+  // Search only narrows what's shown. Counts and saving still cover the whole
+  // class, so marks made before searching aren't dropped from the save.
+  const query = search.trim().toLowerCase();
+  const visible = query ? filtered.filter((l) => l.name.toLowerCase().includes(query)) : filtered;
 
   const presentCount = filtered.filter((l) => statusOf(l.id) === "present").length;
   const absentCount = filtered.filter((l) => statusOf(l.id) === "absent").length;
@@ -146,7 +152,16 @@ function Attendance({ role = "Teacher" }) {
           </p>
         </div>
 
-        <div className="flex gap-2 mt-4 mb-5 overflow-x-auto py-2">
+        <input
+          type="text"
+          aria-label="Search learner name"
+          placeholder="Search learner name..."
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          className="w-full mt-4 px-4 py-3 rounded-xl border border-gray-200 bg-white text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
+        />
+
+        <div className="flex gap-2 mt-3 mb-5 overflow-x-auto py-2">
           {classes.map((cls) => {
             const isActive = selectedClass === cls;
             const classColour = cls === "All" ? "#FB923C" : colourForClass(cls);
@@ -187,7 +202,10 @@ function Attendance({ role = "Teacher" }) {
           {filtered.length === 0 && (
             <p className="text-sm text-gray-400 text-center py-6 col-span-full">No learners in this class yet.</p>
           )}
-          {filtered.map((learner) => (
+          {filtered.length > 0 && visible.length === 0 && (
+            <p className="text-sm text-gray-400 text-center py-6 col-span-full">No learners match &ldquo;{search.trim()}&rdquo;.</p>
+          )}
+          {visible.map((learner) => (
             <div key={learner.id} className="bg-white rounded-2xl px-4 py-3 shadow-lg border border-gray-200">
               <div className="flex items-center justify-between mb-3">
                 <div>
@@ -239,27 +257,32 @@ function Attendance({ role = "Teacher" }) {
           ))}
         </div>
 
-        {message && (
-          <div
-            className={`mb-4 border text-sm font-medium rounded-2xl px-4 py-3 text-center shadow-lg ${
-              message.type === "success"
-                ? "bg-green-50 border-green-200 text-green-700"
-                : "bg-red-50 border-red-200 text-red-700"
-            }`}
-          >
-            {message.text}
-          </div>
-        )}
+        {/* Sticky so the save button stays on screen while scrolling a long
+            register. On phones it sits above the floating bottom nav; from md
+            up the nav is a sidebar, so it can sit near the bottom edge. */}
+        <div className={canEdit ? "sticky bottom-24 md:bottom-4 z-30" : ""}>
+          {message && (
+            <div
+              className={`mb-3 border text-sm font-medium rounded-2xl px-4 py-3 text-center shadow-lg ${
+                message.type === "success"
+                  ? "bg-green-50 border-green-200 text-green-700"
+                  : "bg-red-50 border-red-200 text-red-700"
+              }`}
+            >
+              {message.text}
+            </div>
+          )}
 
-        {canEdit && (
-          <button
-            onClick={handleSave}
-            disabled={saving}
-            className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-lg hover:bg-orange-500 active:scale-[0.98] transition disabled:opacity-60"
-          >
-            {saving ? "Saving..." : "Save Attendance"}
-          </button>
-        )}
+          {canEdit && (
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full py-3.5 rounded-full bg-orange-400 text-white font-semibold shadow-lg hover:bg-orange-500 active:scale-[0.98] transition disabled:opacity-60"
+            >
+              {saving ? "Saving..." : "Save Attendance"}
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

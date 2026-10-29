@@ -1,4 +1,4 @@
-// The teacher's Settings page, the ⋮ menu's Settings link, and choosing your
+// The teacher's Settings page, the header's Settings button, and choosing your
 // own password after a master admin reset a forgotten one.
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
@@ -32,16 +32,21 @@ beforeEach(() => {
   onApi('POST', '/auth/logout', { message: 'ok' })
 })
 
-describe('⋮ menu', () => {
-  it.each([
-    ['teacher', '/attendance', 'teacher settings'],
-    ['manager', '/manager/escalations', 'manager settings'],
-  ])('a %s opens their own Settings page', async (role, path, page) => {
-    await signInAs(role)
-    renderAt(path, <MoreMenu />)
+describe('Header settings button', () => {
+  it('a teacher gets a ⚙️ button (no ⋮ menu) that opens their Settings page', async () => {
+    await signInAs('teacher')
+    renderAt('/attendance', <MoreMenu />)
+    expect(screen.queryByRole('button', { name: '⋮' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Settings' }))
+    expect(screen.getByText('teacher settings')).toBeInTheDocument()
+  })
+
+  it('a manager opens their own Settings page from the ⋮ menu', async () => {
+    await signInAs('manager')
+    renderAt('/manager/escalations', <MoreMenu />)
     await userEvent.click(screen.getByRole('button', { name: '⋮' }))
     await userEvent.click(screen.getByRole('button', { name: 'Settings' }))
-    expect(screen.getByText(page)).toBeInTheDocument()
+    expect(screen.getByText('manager settings')).toBeInTheDocument()
   })
 })
 

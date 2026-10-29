@@ -271,7 +271,7 @@ function SignOut({ role = "Teacher" }) {
           <p className="text-xs font-medium text-gray-500 mb-2">AUTHORISED PICKUPS</p>
           <div className="space-y-2 mb-4">
             {selectedLearner.pickups.length === 0 && (
-              <p className="text-sm text-gray-500">No-one is on this learner&apos;s pickup list yet. Ask the manager to add someone.</p>
+              <p className="text-sm text-gray-500">No one is on this learner&apos;s pickup list yet. Ask the parent to add someone, or ask a manager to approve the sign-out.</p>
             )}
             {selectedLearner.pickups.map((p) =>
               pickupButton(p.guardianId, p.fullName, p.relationship, { guardianId: p.guardianId, name: p.fullName }),

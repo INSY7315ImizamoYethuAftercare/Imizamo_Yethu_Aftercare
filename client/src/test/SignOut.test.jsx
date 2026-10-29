@@ -201,7 +201,7 @@ describe('validation and the flagged path', () => {
     onApi('GET', '/signout/today', today([{ ...AISHA, pickups: [] }]))
     await renderAs()
     await start('Aisha Petersen')
-    expect(screen.getByText(/No-one is on this learner's pickup list yet/)).toBeInTheDocument()
+    expect(screen.getByText(/No one is on this learner's pickup list yet\. Ask the parent to add someone, or ask a manager to approve the sign-out\./)).toBeInTheDocument()
   })
 })
 
