@@ -109,7 +109,9 @@ The architectural decisions, technology evaluation, cloud architecture, security
 │       ├── config/                 # Environment configuration
 │       └── db/                     # Database-related scripts
 │
-├── database/                       # Database schema and scripts
+│       └── db/                     # pool, migrations, seeds
+│           ├── migrations/         # node-pg-migrate SQL files
+│           └── legacy/             # old one-off migration history
 │
 ├── package.json                    # Root workspace configuration
 └── .nvmrc                          # Node.js version specification
@@ -195,9 +197,18 @@ The project uses **PostgreSQL** as its relational database.
 
 From a PostgreSQL-enabled terminal:
 
+```markdown
+# 🗄️ Database Setup
+
+The project uses **PostgreSQL** as its relational database.  
+Schema changes are managed with **node-pg-migrate**. The baseline migration under `server/src/db/migrations/` is the source of truth.
+
+## 1. Create the Development Database
+
+From a PostgreSQL-enabled terminal:
+
 ```bash
 psql -U postgres -c "CREATE DATABASE imizamo_dev;"
-```
 
 This only needs to be performed once.
 
