@@ -1,11 +1,11 @@
 // Runs once before the integration suite: makes sure imizamo_test exists,
-// then rebuilds it from src/db/schema.sql (which also seeds the 5 classes).
-import { readFile } from 'node:fs/promises'
+// then rebuilds it from the migration files.
 import { fileURLToPath } from 'node:url'
 import pg from 'pg'
+import { runner } from 'node-pg-migrate'
 import { TEST_DATABASE_URL, assertSafeTestDatabase } from './test-config.js'
 
-const schemaPath = fileURLToPath(new URL('../src/db/schema.sql', import.meta.url))
+const migrationsDir = fileURLToPath(new URL('../src/db/migrations', import.meta.url))
 
 async function ensureDatabaseExists() {
   const adminUrl = new URL(TEST_DATABASE_URL)
@@ -24,13 +24,19 @@ export default async function globalSetup() {
   assertSafeTestDatabase(TEST_DATABASE_URL)
   await ensureDatabaseExists()
 
-  const schema = await readFile(schemaPath, 'utf8')
   const client = new pg.Client({ connectionString: TEST_DATABASE_URL })
   await client.connect()
   try {
     await client.query('DROP SCHEMA IF EXISTS public CASCADE; CREATE SCHEMA public;')
-    await client.query(schema)
   } finally {
     await client.end()
   }
+
+  await runner({
+    databaseUrl: TEST_DATABASE_URL,
+    dir: migrationsDir,
+    direction: 'up',
+    migrationsTable: 'pgmigrations',
+    log: () => {},
+  })
 }
