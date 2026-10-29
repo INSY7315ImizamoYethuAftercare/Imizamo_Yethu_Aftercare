@@ -101,8 +101,18 @@ describe('Learners page, as a teacher', () => {
     expect(screen.queryByRole('button', { name: /^(Deactivate|Reactivate|Delete) / })).not.toBeInTheDocument()
   })
 
+  it("opens on the teacher's own class", async () => {
+    await renderLearners('teacher')
+    // Ms Nkosi leads Yellow: Aisha and Liam, not Zoe (Green).
+    expect(screen.getByText('2 learners enrolled')).toBeInTheDocument()
+    expect(screen.queryByText('Zoe Ntombela')).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'All' }))
+    expect(screen.getByText('Zoe Ntombela')).toBeInTheDocument()
+  })
+
   it('still lists a deactivated learner, greyed out and locked', async () => {
     await renderLearners('teacher')
+    await userEvent.click(screen.getByRole('button', { name: 'All' }))
     const gone = screen.getByRole('button', { name: /^Gone Away/ })
     expect(gone).toBeDisabled()
     expect(within(gone).getByText('Deactivated')).toBeInTheDocument()

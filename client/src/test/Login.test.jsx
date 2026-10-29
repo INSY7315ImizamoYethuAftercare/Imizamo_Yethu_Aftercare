@@ -107,9 +107,25 @@ describe('Login', () => {
     expect(screen.getByRole('button', { name: 'Sign In' })).toBeEnabled()
   })
 
-  it('links to registration', async () => {
+  it('links to registration once the Parent card is picked', async () => {
     await renderLogin()
-    await userEvent.click(screen.getByRole('button', { name: /Create an account/ }))
+    await userEvent.click(screen.getByRole('button', { name: /Parent/ }))
+    const link = screen.getByRole('button', { name: /Create an account/ })
+    expect(link).toHaveAttribute('aria-disabled', 'false')
+    await userEvent.click(link)
     expect(screen.getByText('register page')).toBeInTheDocument()
+  })
+
+  it.each(['Teacher', 'Manager', 'Admin'])('blocks registration for %s and explains why', async (card) => {
+    await renderLogin()
+    await userEvent.click(screen.getByRole('button', { name: new RegExp(card) }))
+    const link = screen.getByRole('button', { name: /Create an account/ })
+    expect(link).toHaveAttribute('aria-disabled', 'true')
+    await userEvent.click(link)
+    expect(screen.queryByText('register page')).not.toBeInTheDocument()
+    const popup = screen.getByRole('alertdialog')
+    expect(popup).toHaveTextContent('You cannot create an account for this role. Ask the master admin to create an account for you.')
+    await userEvent.click(screen.getByRole('button', { name: 'OK' }))
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 })

@@ -43,6 +43,9 @@ async function renderAs(role = 'teacher', props = {}) {
 const start = async (name) => userEvent.click(await screen.findByRole('button', { name: `Sign out ${name}` }))
 const tap = (name) => userEvent.click(screen.getByRole('button', { name: new RegExp(`^${name}`) }))
 const click = (name) => userEvent.click(screen.getByRole('button', { name }))
+// The signed-in teacher (Ms Nkosi) leads Yellow, so the list opens on Yellow;
+// tests that need learners from other classes switch to All first.
+const showAll = async () => userEvent.click(await screen.findByRole('button', { name: 'All' }))
 
 beforeEach(() => {
   resetApi()
@@ -51,8 +54,33 @@ beforeEach(() => {
 })
 
 describe("today's list", () => {
+  it("opens on the teacher's own class", async () => {
+    await renderAs()
+    expect(await screen.findByText('Aisha Petersen')).toBeInTheDocument()
+    expect(screen.getByText('1 learners still to be collected')).toBeInTheDocument()
+    expect(screen.queryByText('Naledi Mokoena')).not.toBeInTheDocument() // Red
+    expect(screen.queryByText('ALREADY COLLECTED TODAY')).not.toBeInTheDocument() // Bongani is in Blue
+
+    await click('All')
+    expect(screen.getByText('Naledi Mokoena')).toBeInTheDocument()
+    await click('Green') // nobody from Green is in today's list
+    expect(screen.getByText('No one in Green has been marked present today.')).toBeInTheDocument()
+  })
+
+  it('says when nobody in the chosen class is present today', async () => {
+    onApi('GET', '/signout/today', today([NALEDI]))
+    await renderAs()
+    expect(await screen.findByText('No one in Yellow has been marked present today.')).toBeInTheDocument()
+  })
+
+  it('a manager opens on All', async () => {
+    await renderAs('manager', { role: 'Manager' })
+    expect(await screen.findByText('2 learners still to be collected')).toBeInTheDocument()
+  })
+
   it('shows learners still to be collected, and who has already gone', async () => {
     await renderAs()
+    await showAll()
     expect(await screen.findByText('2 learners still to be collected')).toBeInTheDocument()
     expect(screen.getByText('Aisha Petersen')).toBeInTheDocument()
     expect(screen.getByText('Gr 1-2 • Yellow')).toBeInTheDocument()
@@ -64,6 +92,7 @@ describe("today's list", () => {
   it('filters by search', async () => {
     await renderAs()
     await screen.findByText('Aisha Petersen')
+    await showAll()
     await userEvent.type(screen.getByPlaceholderText('Search learner name...'), 'nal')
     expect(screen.queryByText('Aisha Petersen')).not.toBeInTheDocument()
     expect(screen.getByText('1 learners still to be collected')).toBeInTheDocument()
@@ -98,16 +127,22 @@ describe('collecting a learner', () => {
   it('taps a guardian, verifies, confirms with the right payload, and refreshes the list', async () => {
     onApi('POST', '/signout/confirm', { record_id: 77, time_out: '16:42:10' })
     await renderAs()
+    await showAll()
     await start('Aisha Petersen')
     await tap('Fatima Petersen')
     expect(screen.getByRole('button', { name: /^Fatima Petersen/ })).toHaveAttribute('aria-pressed', 'true')
     await click('Verify')
-    expect(screen.getByText('Fatima Petersen is authorised to collect Aisha Petersen')).toBeInTheDocument()
+    expect(screen.getByText('Verified!')).toBeInTheDocument()
+    expect(screen.getByTestId('verified-message')).toHaveTextContent('Fatima Petersen is authorised to collect Aisha Petersen')
+    // The Sign-Out Summary card
+    expect(screen.getByText('Sign-Out Summary')).toBeInTheDocument()
+    expect(screen.getByText('Collector').nextElementSibling).toHaveTextContent('Fatima Petersen')
+    expect(screen.getByText('Teacher')).toBeInTheDocument()
 
     onApi('GET', '/signout/today', today([{ ...AISHA, signedOut: { timeOut: '16:42', collectedBy: 'Fatima Petersen' } }, NALEDI, BONGANI]))
     await click('Confirm Sign-Out')
 
-    expect(await screen.findByText('Aisha is signed out')).toBeInTheDocument()
+    expect(await screen.findByText('Aisha is signed out!')).toBeInTheDocument()
     expect(screen.getByText('Collected by Fatima Petersen at 16:42')).toBeInTheDocument()
     expect(apiClient.post).toHaveBeenCalledWith('/signout/confirm', { learnerId: 3, guardianId: 1 })
 
@@ -135,10 +170,11 @@ describe('collecting a learner', () => {
   it('signs out a learner allowed to walk home alone with guardianId null', async () => {
     onApi('POST', '/signout/confirm', { record_id: 78, time_out: '16:20:00' })
     await renderAs()
+    await showAll()
     await start('Naledi Mokoena')
     await tap('Walking Home')
     await click('Verify')
-    expect(screen.getByText('Naledi Mokoena is allowed to walk home alone')).toBeInTheDocument()
+    expect(screen.getByTestId('verified-message')).toHaveTextContent('Naledi Mokoena is allowed to walk home alone')
     await click('Confirm Sign-Out')
     expect(await screen.findByText('Walking home alone at 16:20')).toBeInTheDocument()
     expect(apiClient.post).toHaveBeenCalledWith('/signout/confirm', { learnerId: 9, guardianId: null })
@@ -146,11 +182,12 @@ describe('collecting a learner', () => {
 
   it('"Go back" and Cancel save nothing', async () => {
     await renderAs()
+    await showAll()
     await start('Aisha Petersen')
     await tap('Ahmed Petersen')
     await click('Verify')
     await click('Go back')
-    expect(screen.getByRole('heading', { name: 'Who is collecting?' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'Verify Collector' })).toBeInTheDocument()
     await click('Cancel')
     expect(await screen.findByText('2 learners still to be collected')).toBeInTheDocument()
     expect(apiClient.post).not.toHaveBeenCalledWith('/signout/confirm', expect.anything())
@@ -165,18 +202,27 @@ describe('validation and the flagged path', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Choose someone from the list, or type the name of the person collecting.')
   })
 
-  it('points to the list when a typed name is actually on it', async () => {
+  it('typing a name that is on the list selects that person', async () => {
     await renderAs()
     await start('Aisha Petersen')
-    await userEvent.type(screen.getByLabelText('SOMEONE NOT ON THE LIST?'), 'fatima petersen')
+    await userEvent.type(screen.getByLabelText('Enter the name of the person collecting'), 'fatima petersen')
+    expect(screen.getByRole('button', { name: /^Fatima Petersen/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByText(/This person is not on the pickup list/)).not.toBeInTheDocument()
     await click('Verify')
-    expect(screen.getByRole('alert')).toHaveTextContent('Fatima Petersen is on the pickup list. Tap their name above instead.')
+    expect(screen.getByTestId('verified-message')).toHaveTextContent('Fatima Petersen is authorised to collect Aisha Petersen')
+  })
+
+  it('tapping a pickup fills in the name box', async () => {
+    await renderAs()
+    await start('Aisha Petersen')
+    await tap('Ahmed Petersen')
+    expect(screen.getByLabelText('Enter the name of the person collecting')).toHaveValue('Ahmed Petersen')
   })
 
   it('flags someone not on the list for the manager, and saves nothing', async () => {
     await renderAs()
     await start('Aisha Petersen')
-    await userEvent.type(screen.getByLabelText('SOMEONE NOT ON THE LIST?'), 'Random Stranger')
+    await userEvent.type(screen.getByLabelText('Enter the name of the person collecting'), 'Random Stranger')
     expect(screen.getByText(/This person is not on the pickup list/)).toBeInTheDocument()
     await click('Verify')
     expect(screen.getByText('Needs manager approval')).toBeInTheDocument()
@@ -213,13 +259,13 @@ describe('managers', () => {
     await tap('Fatima Petersen')
     await click('Verify')
     await click('Confirm Sign-Out')
-    expect(await screen.findByText('Aisha is signed out')).toBeInTheDocument()
+    expect(await screen.findByText('Aisha is signed out!')).toBeInTheDocument()
   })
 
   it('see the override button, but it is not available yet', async () => {
     await renderAs('manager', { role: 'Manager' })
     await start('Aisha Petersen')
-    await userEvent.type(screen.getByLabelText('SOMEONE NOT ON THE LIST?'), 'Uncle Sipho')
+    await userEvent.type(screen.getByLabelText('Enter the name of the person collecting'), 'Uncle Sipho')
     await click('Verify')
     const override = screen.getByRole('button', { name: 'Override and approve' })
     expect(override).toBeDisabled()

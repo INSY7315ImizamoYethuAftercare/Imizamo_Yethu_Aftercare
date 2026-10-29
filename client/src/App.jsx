@@ -54,8 +54,8 @@ function TeacherBottomNav() {
           <span className="text-lg">🏠</span>
           <span className={`text-[10px] ${isActive("/home") ? "font-semibold" : ""}`}>Home</span>
         </button>
-        <button onClick={() => navigate("/attendance")} className={navBtn(isActive("/attendance"), "text-green-500")}>
-          <span className="text-lg">✓</span>
+        <button onClick={() => navigate("/attendance")} className={navBtn(isActive("/attendance"))}>
+          <span className="text-lg text-green-500">✓</span>
           <span className={`text-[10px] ${isActive("/attendance") ? "font-semibold" : ""}`}>Attendance</span>
         </button>
         <button onClick={() => navigate("/learners")} className={navBtn(isActive("/learners"))}>
@@ -82,8 +82,8 @@ function TeacherBottomNav() {
           <button onClick={() => navigate("/home")} className={sideNavBtn(isActive("/home"))}>
             <span>🏠</span> Home
           </button>
-          <button onClick={() => navigate("/attendance")} className={sideNavBtn(isActive("/attendance"), "text-green-600")}>
-            <span>✓</span> Attendance
+          <button onClick={() => navigate("/attendance")} className={sideNavBtn(isActive("/attendance"))}>
+            <span className="text-green-500">✓</span> Attendance
           </button>
           <button onClick={() => navigate("/learners")} className={sideNavBtn(isActive("/learners"))}>
             <span>🎒</span> Learners
@@ -113,8 +113,8 @@ function ManagerBottomNav() {
             <span className="text-lg">🏠</span>
             <span className={`text-[10px] ${isActive("/manager") ? "font-semibold" : ""}`}>Home</span>
           </button>
-          <button onClick={() => navigate("/manager/attendance")} className={navBtn(isActive("/manager/attendance"), "text-green-500")}>
-            <span className="text-lg">✓</span>
+          <button onClick={() => navigate("/manager/attendance")} className={navBtn(isActive("/manager/attendance"))}>
+            <span className="text-lg text-green-500">✓</span>
             <span className={`text-[10px] ${isActive("/manager/attendance") ? "font-semibold" : ""}`}>Attendance</span>
           </button>
           <button onClick={() => navigate("/manager/learners")} className={navBtn(isActive("/manager/learners"))}>
@@ -145,8 +145,8 @@ function ManagerBottomNav() {
           <button onClick={() => navigate("/manager")} className={sideNavBtn(isActive("/manager"))}>
             <span>🏠</span> Home
           </button>
-          <button onClick={() => navigate("/manager/attendance")} className={sideNavBtn(isActive("/manager/attendance"), "text-green-600")}>
-            <span>✓</span> Attendance
+          <button onClick={() => navigate("/manager/attendance")} className={sideNavBtn(isActive("/manager/attendance"))}>
+            <span className="text-green-500">✓</span> Attendance
           </button>
           <button onClick={() => navigate("/manager/learners")} className={sideNavBtn(isActive("/manager/learners"))}>
             <span>🎒</span> Learners

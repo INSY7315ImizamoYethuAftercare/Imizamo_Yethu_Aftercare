@@ -6,6 +6,7 @@ import { useLearners, useLearnersLoading, addLearner, deleteLearner, setLearnerS
 import AddLearnerSheet from "./AddLearnerSheet";
 import { colourForClass } from "./AddClassSheet";
 import { useHeader } from "./UseHeader";
+import { useSession } from "../services/session";
 
 function Learners({ role = "Teacher" }) {
   const navigate = useNavigate();
@@ -22,10 +23,6 @@ function Learners({ role = "Teacher" }) {
     role === "Admin" ? "/admin/observations" :
     role === "Manager" ? "/manager/observations" : "/observations";
 
-  const startGroup = searchParams.get("group") || "All";
-  const [search, setSearch] = useState("");
-  const [selectedClass, setSelectedClass] = useState(startGroup);
-
   const learners = useLearners();
   const loadingLearners = useLearnersLoading();
   const isManager = role === "Manager";
@@ -33,6 +30,16 @@ function Learners({ role = "Teacher" }) {
   const [pending, setPending] = useState(null); // { type: "delete" | "deactivate" | "reactivate", learner }
 
   const allClasses = useClasses();
+
+  // Start on ?group= if a link asked for one; otherwise a teacher opens on
+  // the class they lead (same rule as the header), and everyone else on All.
+  // `chosenClass` stays null until a filter is tapped, so the default can
+  // follow the class list once it has loaded.
+  const { user } = useSession();
+  const myClass = role === "Teacher" ? allClasses.find((c) => c.teacher === user?.fullName) : null;
+  const [search, setSearch] = useState("");
+  const [chosenClass, setSelectedClass] = useState(searchParams.get("group"));
+  const selectedClass = chosenClass ?? myClass?.name ?? "All";
   const classes = ["All", ...allClasses.map((c) => c.name)];
 
   const filtered = learners.filter((l) => {
