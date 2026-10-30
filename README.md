@@ -108,8 +108,6 @@ The architectural decisions, technology evaluation, cloud architecture, security
 │       │                            # logging and error handling
 │       ├── config/                 # Environment configuration
 │       └── db/                     # Database-related scripts
-│
-│       └── db/                     # pool, migrations, seeds
 │           ├── migrations/         # node-pg-migrate SQL files
 │           └── legacy/             # old one-off migration history
 │
@@ -191,15 +189,6 @@ Update the environment variables with the appropriate local PostgreSQL and appli
 
 # 🗄️ Database Setup
 
-The project uses **PostgreSQL** as its relational database.
-
-## 1. Create the Development Database
-
-From a PostgreSQL-enabled terminal:
-
-```markdown
-# 🗄️ Database Setup
-
 The project uses **PostgreSQL** as its relational database.  
 Schema changes are managed with **node-pg-migrate**. The baseline migration under `server/src/db/migrations/` is the source of truth.
 
@@ -209,14 +198,6 @@ From a PostgreSQL-enabled terminal:
 
 ```bash
 psql -U postgres -c "CREATE DATABASE imizamo_dev;"
-
-This only needs to be performed once.
-
-## 2. Apply the Database Schema
-
-```bash
-psql -U postgres -d imizamo_dev -f database/schema.sql
-```
 
 The `database/schema.sql` file acts as the source of truth for the database structure.
 
