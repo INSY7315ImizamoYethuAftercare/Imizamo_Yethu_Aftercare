@@ -10,15 +10,11 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 
 1. **Point your local API at a local database.** Use `imizamo_dev` or `imizamo_test`; never Azure. The seed script refuses anything else. Your `server/.env` controls which database `npm run dev:server` uses.
 
-2. **One-off: update an existing database.** If your local database was created before these changes, run the migrations once, in order. They are safe to run again:
+2. **Apply / update the database schema** with migrations:
 
    ```powershell
-   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/001_signout_by_manager.sql
-   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/002_pickups_without_accounts.sql
-   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/003_class_colour.sql
-   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/004_master_admin_manages.sql
-   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/005_password_security.sql
-   ```
+   $env:DATABASE_URL = "postgresql://postgres:YOUR_PASSWORD@localhost:5432/imizamo_dev"
+   npm run migrate -w server
 
    A database built fresh from `schema.sql` already has it.
 

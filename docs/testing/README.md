@@ -16,7 +16,7 @@ All commands are for PowerShell, run from the repository root.
 The integration tests use a local PostgreSQL database called **`imizamo_test`**:
 
 - **First run:** the database is created if it's missing.
-- **Every run:** it's rebuilt from `server/src/db/schema.sql`.
+- **Every run:** it is wiped and rebuilt from the migration files under `server/src/db/migrations/` (via `node-pg-migrate` in `global-setup.js`).
 - **Before each test:** it's emptied.
 
 The tests refuse to run against any other database name or any non-localhost host.
