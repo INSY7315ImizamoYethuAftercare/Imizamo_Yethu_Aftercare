@@ -18,7 +18,6 @@ import TeacherRepository from '../repositories/TeacherRepository.js'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { todayInSA } from '../services/AttendanceService.js'
-import * as validate from '../utils/validation.js'
 
 const guardianService = new GuardianService({
   guardianRepository: new GuardianRepository(pool),
@@ -55,7 +54,7 @@ export async function getMyChildren(req, res, next) {
 export async function getChildProfile(req, res, next) {
   try {
     const profile = await guardianService.getChildProfile({
-      userId: req.user.userId, learnerId: req.params.learnerId,
+      userId: req.user.userId, learnerId: req.validated.params.learnerId,
     })
     res.json(profile)
   } catch (err) {
@@ -67,7 +66,7 @@ export async function getChildProfile(req, res, next) {
 export async function getChildObservations(req, res, next) {
   try {
     const observations = await guardianService.getChildObservations({
-      userId: req.user.userId, learnerId: req.params.learnerId,
+      userId: req.user.userId, learnerId: req.validated.params.learnerId,
     })
     res.json(observations)
   } catch (err) {
@@ -83,7 +82,7 @@ export async function getChildOverview(req, res, next) {
   try {
     res.json(await guardianService.getChildOverview({
       userId: req.user.userId,
-      learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
+      learnerId: req.validated.params.learnerId,
       today: todayInSA(),
     }))
   } catch (err) {
@@ -98,14 +97,14 @@ export async function getChildOverview(req, res, next) {
  */
 export async function addChildPickup(req, res, next) {
   try {
-    const { fullName, relationship, contactNumber, canWalkHomeAlone } = req.body ?? {}
+    const { fullName, relationship, contactNumber, canWalkHomeAlone } = req.validated.body
     const pickup = await guardianService.addPickup({
       userId: req.user.userId,
-      learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
-      fullName: validate.text(fullName, 'fullName', { max: validate.LIMITS.fullName }),
-      relationship: validate.text(relationship, 'relationship', { max: validate.LIMITS.relationship }),
-      contactNumber: validate.text(contactNumber, 'contactNumber', { max: validate.LIMITS.contactNumber }),
-      canWalkHomeAlone: canWalkHomeAlone === true || canWalkHomeAlone === 'true',
+      learnerId: req.validated.params.learnerId,
+      fullName,
+      relationship,
+      contactNumber,
+      canWalkHomeAlone,
       today: todayInSA(),
     })
     res.status(201).json(pickup)
@@ -118,7 +117,7 @@ const setGuardianActiveHandler = (isActive) => async (req, res, next) => {
   try {
     const updated = await guardianService.setGuardianActive({
       userId: req.user.userId,
-      guardianId: validate.parseId(req.params.guardianId, 'guardianId'),
+      guardianId: req.validated.params.guardianId,
       isActive,
     })
     res.json(updated)

@@ -6,6 +6,8 @@
  */
 import { Router } from 'express'
 import { authenticate, authorize } from '../middleware/auth.js'
+import { validate } from '../middleware/validate.js'
+import * as schemas from '../validation/schemas/guardianSchemas.js'
 import {
   getMyChildren, getChildProfile, getChildObservations, getChildOverview, addChildPickup,
   deactivateGuardian, activateGuardian,
@@ -16,10 +18,10 @@ export const guardianRouter = Router()
 guardianRouter.use(authenticate)
 
 guardianRouter.get('/children', authorize('guardian'), getMyChildren)
-guardianRouter.get('/children/:learnerId', authorize('guardian'), getChildProfile)
-guardianRouter.get('/children/:learnerId/observations', authorize('guardian'), getChildObservations)
-guardianRouter.get('/children/:learnerId/overview', authorize('guardian'), getChildOverview)
-guardianRouter.post('/children/:learnerId/pickups', authorize('guardian'), addChildPickup)
+guardianRouter.get('/children/:learnerId', authorize('guardian'), validate(schemas.childParams), getChildProfile)
+guardianRouter.get('/children/:learnerId/observations', authorize('guardian'), validate(schemas.childParams), getChildObservations)
+guardianRouter.get('/children/:learnerId/overview', authorize('guardian'), validate(schemas.childParams), getChildOverview)
+guardianRouter.post('/children/:learnerId/pickups', authorize('guardian'), validate(schemas.addChildPickup), addChildPickup)
 
-guardianRouter.patch('/:guardianId/deactivate', authenticate, authorize('manager'), deactivateGuardian)
-guardianRouter.patch('/:guardianId/activate', authenticate, authorize('manager'), activateGuardian)
+guardianRouter.patch('/:guardianId/deactivate', authenticate, authorize('manager'), validate(schemas.guardianParams), deactivateGuardian)
+guardianRouter.patch('/:guardianId/activate', authenticate, authorize('manager'), validate(schemas.guardianParams), activateGuardian)
