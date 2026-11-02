@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Reports from '../pages/Reports'
+import { generateChartPDF, generatePDF } from '../utils/pdf'
 import { ApiError, onApi, resetApi } from './api-mock'
 import { signInAs } from './session-helpers'
 
@@ -12,7 +13,7 @@ vi.mock('../services/apiClient', async () => (await import('./api-mock')).apiCli
 // jsdom + recharts is noisy; stub charts so we only assert page data.
 vi.mock('../components/WeeklyChart', () => ({
   default: ({ data }) => (
-    <div data-testid="weekly-chart">{(data ?? []).map((d) => d.present).join(',')}</div>
+    <div data-testid="weekly-chart">{(data ?? []).map((d) => `${d.present}/${d.absent}`).join(',')}</div>
   ),
 }))
 vi.mock('../components/TrendChart', () => ({
@@ -22,9 +23,7 @@ vi.mock('../components/TrendChart', () => ({
 }))
 vi.mock('../utils/pdf', () => ({
   generatePDF: vi.fn(),
-}))
-vi.mock('../utils/charts', () => ({
-  exportChart: vi.fn(),
+  generateChartPDF: vi.fn(),
 }))
 
 const OVERVIEW = {
@@ -39,13 +38,15 @@ const OVERVIEW = {
     signOutsThisMonth: 48,
     daysDelivered: 22,
     uniqueLearnersServed: 6,
+    presentRecords: 110,
+    absentRecords: 10,
   },
   weeklyDays: [
-    { label: 'Mon 02', day: 'Mon', date: '2026-03-02', value: 5 },
-    { label: 'Tue 03', day: 'Tue', date: '2026-03-03', value: 4 },
-    { label: 'Wed 04', day: 'Wed', date: '2026-03-04', value: 5 },
-    { label: 'Thu 05', day: 'Thu', date: '2026-03-05', value: 3 },
-    { label: 'Fri 06', day: 'Fri', date: '2026-03-06', value: 4 },
+    { label: 'Mon 02', day: 'Mon', date: '2026-03-02', value: 5, absent: 1, recorded: true },
+    { label: 'Tue 03', day: 'Tue', date: '2026-03-03', value: 4, absent: 0, recorded: true },
+    { label: 'Wed 04', day: 'Wed', date: '2026-03-04', value: 5, absent: 2, recorded: true },
+    { label: 'Thu 05', day: 'Thu', date: '2026-03-05', value: 3, absent: 0, recorded: true },
+    { label: 'Fri 06', day: 'Fri', date: '2026-03-06', value: 0, absent: 0, recorded: false },
   ],
   attendanceByClass: [
     { name: 'Yellow', rate: 97, learners: 2 },
@@ -110,7 +111,7 @@ describe('Reports', () => {
     expect(screen.getByText(/97% · 2 learners/)).toBeInTheDocument()
     expect(screen.getByText('Academic')).toBeInTheDocument()
 
-    expect(screen.getByTestId('weekly-chart')).toHaveTextContent('5,4,5,3,4')
+    expect(screen.getByTestId('weekly-chart')).toHaveTextContent('5/1,4/0,5/2,3/0,0/0')
   })
 
   it('renders trends from API classTrends and orgTrend', async () => {
@@ -122,6 +123,98 @@ describe('Reports', () => {
     expect(screen.getByTestId('trend-chart')).toHaveTextContent('88,90,91,92')
     expect(screen.getByText('97%')).toBeInTheDocument()
     expect(screen.getByText('94%')).toBeInTheDocument()
+  })
+
+  it('opens each tab with a plain-English takeaway', async () => {
+    await renderReports('manager')
+    expect(await screen.findByText('Attendance is up 4 points on last week, at 94%.')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /Trends/i }))
+    expect(await screen.findByText(/Yellow leads at 97%; Green is lowest at 90%/)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /Donor Report/i }))
+    expect(await screen.findByText(/6 learners reached across 22 days of aftercare with 92% average attendance/)).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /Board Report/i }))
+    expect(await screen.findByText(/6 active learners across 4 class groups, looked after by 3 active teachers/)).toBeInTheDocument()
+  })
+
+  it('shows present against absent and the change on last week for each class', async () => {
+    await renderReports('manager')
+    await screen.findByText('Present vs Absent')
+    expect(screen.getByRole('img', { name: '92% present' })).toBeInTheDocument()
+    expect(screen.getByText('110')).toBeInTheDocument()
+    expect(screen.getByText('10')).toBeInTheDocument()
+    expect(screen.getByText('▲ 3')).toBeInTheDocument() // Yellow 94 -> 97
+    expect(screen.getByText('▲ 2')).toBeInTheDocument() // Green 88 -> 90
+  })
+
+  it('shows the change per class on the Trends table', async () => {
+    await renderReports('manager')
+    await screen.findByText('Total Learners')
+    await userEvent.click(screen.getByRole('button', { name: /Trends/i }))
+    expect(await screen.findByText('Change')).toBeInTheDocument()
+    expect(screen.getByText('▲ 3')).toBeInTheDocument()
+  })
+
+  it('passes a summary and charts to the Overview PDF', async () => {
+    await renderReports('manager')
+    await screen.findByText('Total Learners')
+    await userEvent.click(screen.getByRole('button', { name: /Export as PDF/i }))
+    expect(generatePDF).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Overview Report',
+        summary: 'Attendance is up 4 points on last week, at 94%.',
+        charts: [
+          expect.objectContaining({ type: 'split', parts: [expect.objectContaining({ value: 110 }), expect.objectContaining({ value: 10 })] }),
+          expect.objectContaining({ type: 'bars', heading: 'Present and absent each day this week' }),
+          expect.objectContaining({ type: 'bars', heading: 'Attendance by class' }),
+          expect.objectContaining({ type: 'bars', heading: 'Observations by development category' }),
+        ],
+      }),
+    )
+  })
+
+  it('shows absences as well as present learners for each day, and a dash where no register was taken', async () => {
+    await renderReports('manager')
+    await screen.findByText('Weekly Attendance')
+
+    const day = (label) => document.querySelector(`[data-day="${label}"]`)
+    expect(within(day('Mon 02')).getByLabelText('5 present')).toBeInTheDocument()
+    expect(within(day('Mon 02')).getByLabelText('1 absent')).toBeInTheDocument()
+    expect(within(day('Wed 04')).getByLabelText('2 absent')).toBeInTheDocument()
+    expect(within(day('Fri 06')).queryByLabelText(/present|absent/)).not.toBeInTheDocument()
+    expect(within(day('Fri 06')).getAllByText('–')).toHaveLength(2)
+  })
+
+  it('reloads the numbers when the manager comes back to the tab', async () => {
+    await renderReports('manager')
+    await screen.findByText('Total Learners')
+    expect(statValue('Observations')).toHaveTextContent('8')
+
+    onApi('GET', '/reports/overview', { ...OVERVIEW, totals: { ...OVERVIEW.totals, observations: 9 } })
+    window.dispatchEvent(new Event('focus'))
+    await waitFor(() => expect(statValue('Observations')).toHaveTextContent('9'))
+    expect(screen.queryByText(/loading report data/i)).not.toBeInTheDocument()
+  })
+
+  it('exports the organisation trend chart as a PDF', async () => {
+    await renderReports('manager')
+    await screen.findByText('Total Learners')
+    await userEvent.click(screen.getByRole('button', { name: /Trends/i }))
+
+    await userEvent.click(await screen.findByRole('button', { name: 'Export chart as PDF' }))
+    expect(generateChartPDF).toHaveBeenCalledWith(
+      expect.objectContaining({
+        title: 'Organisation Trend',
+        points: [
+          { label: 'W1', value: 88 },
+          { label: 'W2', value: 90 },
+          { label: 'W3', value: 91 },
+          { label: 'W4', value: 92 },
+        ],
+      }),
+    )
   })
 
   it('renders donor metrics from live totals', async () => {
@@ -145,8 +238,24 @@ describe('Reports', () => {
     expect(await screen.findByRole('heading', { name: 'Board Report' })).toBeInTheDocument()
     expect(screen.getByText('6 active learners')).toBeInTheDocument()
     expect(screen.getByText('4 class groups')).toBeInTheDocument()
-    expect(screen.getByText('3 qualified teachers')).toBeInTheDocument()
+    expect(screen.getByText('3 active teachers')).toBeInTheDocument()
     expect(screen.getByText(/48 safe collection/i)).toBeInTheDocument()
+    expect(screen.queryByText(/operational|Parent communication/)).not.toBeInTheDocument()
+  })
+
+  it('says "no data" rather than 0% when nothing was recorded in the period', async () => {
+    onApi('GET', '/reports/overview', {
+      ...OVERVIEW,
+      totals: { ...OVERVIEW.totals, avgAttendance: null },
+      attendanceByClass: [{ name: 'Yellow', rate: null, learners: 2 }],
+      orgTrend: OVERVIEW.orgTrend.map((w) => ({ ...w, rate: null })),
+    })
+    await renderReports('manager')
+    await screen.findByText('Total Learners')
+
+    expect(screen.getByText('Avg Attendance').closest('div.bg-white')).toHaveTextContent('–')
+    expect(screen.getByText(/No data yet · 2 learners/)).toBeInTheDocument()
+    expect(screen.queryByText(/^0%/)).not.toBeInTheDocument()
   })
 
   it('shows an error when the overview API fails', async () => {

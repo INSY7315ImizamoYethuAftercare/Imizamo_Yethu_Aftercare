@@ -99,8 +99,9 @@ export class ReportService {
   async getOverviewData({ userId, periodStart, periodEnd }) {
     await this.#assertIsManagerOrAdmin(userId)
 
-    const today = new Date()
-    const end = periodEnd && DATE_PATTERN.test(periodEnd) ? periodEnd : toYmd(today)
+    // "Today" is the South African date, the same one attendance is recorded
+    // under, so the week doesn't flip two hours early.
+    const end = periodEnd && DATE_PATTERN.test(periodEnd) ? periodEnd : todayInSA()
     const start =
       periodStart && DATE_PATTERN.test(periodStart)
         ? periodStart
@@ -159,18 +160,24 @@ export class ReportService {
 
     const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
     const dailyMap = new Map(
-      dailyPresent.map((r) => [String(r.record_date).slice(0, 10), Number(r.present_count)]),
+      dailyPresent.map((r) => [
+        String(r.record_date).slice(0, 10),
+        { present: Number(r.present_count), absent: Number(r.absent_count ?? 0) },
+      ]),
     )
     const weeklyDays = []
     for (let i = 0; i < 5; i++) {
       const d = addDays(weekStart, i)
       const ymd = toYmd(d)
       const label = `${dayNames[d.getUTCDay()]} ${String(d.getUTCDate()).padStart(2, '0')}`
+      const counts = dailyMap.get(ymd)
       weeklyDays.push({
         label,
         day: dayNames[d.getUTCDay()],
         date: ymd,
-        value: dailyMap.get(ymd) ?? 0,
+        value: counts?.present ?? 0, // present
+        absent: counts?.absent ?? 0,
+        recorded: counts !== undefined, // false when nobody took a register that day
       })
     }
 
@@ -191,14 +198,15 @@ export class ReportService {
         name: row.class_name,
         colour: colourOf(row.class_name),
         learners: Number(row.learner_count),
-        rate: total === 0 ? 0 : Math.round((present / total) * 100),
+        // null (not 0) when nothing was recorded, so the page can say "no data".
+        rate: total === 0 ? null : Math.round((present / total) * 100),
       }
     })
 
     // Include active classes that had no attendance rows yet
     for (const c of classes) {
       if (!attendanceByClass.some((r) => r.name === c.class_name)) {
-        attendanceByClass.push({ name: c.class_name, colour: c.colour ?? null, learners: Number(c.active_learner_count) || 0, rate: 0 })
+        attendanceByClass.push({ name: c.class_name, colour: c.colour ?? null, learners: Number(c.active_learner_count) || 0, rate: null })
       }
     }
 
@@ -219,10 +227,11 @@ export class ReportService {
       const wEnd = toYmd(new Date(startDate.getTime() + (spanMs * (i + 1)) / 4))
       // eslint-disable-next-line no-await-in-loop
       const rate = await this.attendanceRepository.getAttendanceRate(wStart, wEnd)
-      orgTrend.push({ week: `W${i + 1}`, rate: rate ?? 0 })
+      orgTrend.push({ week: `W${i + 1}`, rate })
     }
 
-    const avgAttendance = ratePeriod ?? 0
+    // null when no attendance was recorded in the period.
+    const avgAttendance = ratePeriod
 
     return {
       periodStart: start,
@@ -239,6 +248,9 @@ export class ReportService {
         signOutsThisMonth,
         daysDelivered,
         uniqueLearnersServed: Number(attendancePeriod.unique_learners),
+        // Attendance records in the period, for the present/absent split.
+        presentRecords: Number(attendancePeriod.total_present),
+        absentRecords: Number(attendancePeriod.total_absent),
       },
       weeklyDays,
       attendanceByClass,

@@ -49,8 +49,8 @@ function stubOverviewRepos(deps) {
     { category: 'Social', observation_count: '1', average_rating: '7.0' },
   ])
   deps.attendanceRepository.getDailyPresentCounts.mockResolvedValue([
-    { record_date: '2026-03-02', present_count: '4' },
-    { record_date: '2026-03-03', present_count: '5' },
+    { record_date: '2026-03-02', present_count: '4', absent_count: '1' },
+    { record_date: '2026-03-03', present_count: '5', absent_count: '0' },
   ])
   deps.attendanceRepository.getAttendanceByClass.mockResolvedValue([
     {
@@ -187,11 +187,15 @@ describe('ReportService', () => {
     const byDate = Object.fromEntries(result.weeklyDays.map((d) => [d.date, d.value]))
     expect(byDate['2026-03-02']).toBe(4)
     expect(byDate['2026-03-03']).toBe(5)
+    // Absences and whether a register was taken, per day
+    const days = Object.fromEntries(result.weeklyDays.map((d) => [d.date, d]))
+    expect(days['2026-03-02']).toMatchObject({ value: 4, absent: 1, recorded: true })
+    expect(days['2026-03-04']).toMatchObject({ value: 0, absent: 0, recorded: false })
 
-    // Class rates: Yellow 80%, Green filled in with 0 (no attendance rows)
+    // Class rates: Yellow 80%, Green filled in with no rate (no attendance rows)
     const yellow = result.attendanceByClass.find((c) => c.name === 'Yellow')
     expect(yellow).toMatchObject({ rate: 80, learners: 2 })
-    expect(result.attendanceByClass.some((c) => c.name === 'Green')).toBe(true)
+    expect(result.attendanceByClass.find((c) => c.name === 'Green')).toMatchObject({ rate: null })
 
     expect(result.observationsByCategory).toEqual([
       { category: 'Academic', observationCount: 3, averageRating: 8 },

@@ -4,17 +4,19 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianG
  * @param {{ data?: Array<{ week: string, rate: number }> }} props
  */
 function TrendChart({ data }) {
-  const chartData =
-    data && data.length > 0
-      ? data
-      : [
-          { week: "W1", rate: 0 },
-          { week: "W2", rate: 0 },
-          { week: "W3", rate: 0 },
-          { week: "W4", rate: 0 },
-        ];
+  const chartData = data ?? [];
 
   const rates = chartData.map((d) => d.rate).filter((n) => typeof n === "number");
+
+  // No attendance recorded in any window: say so instead of drawing a flat line.
+  if (rates.length === 0) {
+    return (
+      <div className="h-48 flex items-center justify-center">
+        <p className="text-xs text-gray-400">No attendance recorded for this period yet.</p>
+      </div>
+    );
+  }
+
   const min = rates.length ? Math.min(...rates, 80) : 0;
   const max = rates.length ? Math.max(...rates, 100) : 100;
   const domainMin = Math.max(0, Math.floor(min / 5) * 5 - 5);

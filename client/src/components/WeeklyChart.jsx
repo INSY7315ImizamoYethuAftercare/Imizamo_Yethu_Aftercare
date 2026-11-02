@@ -1,7 +1,7 @@
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid } from "recharts";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, Legend, ResponsiveContainer, CartesianGrid } from "recharts";
 
 /**
- * @param {{ data?: Array<{ day: string, present: number }> }} props
+ * @param {{ data?: Array<{ day: string, present: number, absent?: number }> }} props
  */
 function WeeklyChart({ data }) {
   const chartData =
@@ -23,7 +23,9 @@ function WeeklyChart({ data }) {
           <XAxis dataKey="day" tick={{ fontSize: 11 }} />
           <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
           <Tooltip />
-          <Bar dataKey="present" fill="#FB923C" radius={[6, 6, 0, 0]} />
+          <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
+          <Bar dataKey="present" name="Present" fill="#22C55E" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="absent" name="Absent" fill="#EF4444" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

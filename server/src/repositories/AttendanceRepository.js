@@ -197,15 +197,17 @@ class AttendanceRepository {
   }
 
   /**
-   * Present counts per calendar day for a date range (weekly chart).
+   * Present and absent counts per calendar day for a date range (weekly chart).
+   * A day with no register has no row.
    * @param {string} periodStart - YYYY-MM-DD
    * @param {string} periodEnd - YYYY-MM-DD
-   * @returns {Promise<Array<{ record_date: string, present_count: string }>>}
+   * @returns {Promise<Array<{ record_date: string, present_count: string, absent_count: string }>>}
    */
   async getDailyPresentCounts(periodStart, periodEnd) {
     const result = await this.pool.query(
       `SELECT "record_date"::text AS record_date,
-              COUNT(*) FILTER (WHERE "status" = 'present') AS present_count
+              COUNT(*) FILTER (WHERE "status" = 'present') AS present_count,
+              COUNT(*) FILTER (WHERE "status" = 'absent') AS absent_count
        FROM attendance_records
        WHERE "record_date" BETWEEN $1 AND $2
        GROUP BY "record_date"

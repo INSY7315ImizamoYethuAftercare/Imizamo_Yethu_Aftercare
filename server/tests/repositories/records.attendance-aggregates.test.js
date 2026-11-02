@@ -36,6 +36,9 @@ describe('AttendanceRepository aggregates (live reports)', () => {
     )
     expect(byDate['2026-03-02']).toBe(2)
     expect(byDate['2026-03-03']).toBe(1)
+    const absent = Object.fromEntries(rows.map((r) => [String(r.record_date).slice(0, 10), Number(r.absent_count)]))
+    expect(absent['2026-03-02']).toBe(0)
+    expect(absent['2026-03-03']).toBe(1)
   })
 
   it('getAttendanceByClass returns rate inputs per class', async () => {
