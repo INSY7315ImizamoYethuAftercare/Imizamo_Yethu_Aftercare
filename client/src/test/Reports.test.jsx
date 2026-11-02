@@ -38,6 +38,7 @@ const OVERVIEW = {
     signOutsThisMonth: 48,
     daysDelivered: 22,
     uniqueLearnersServed: 6,
+    learnersAttended: 5,
     presentRecords: 110,
     absentRecords: 10,
   },
@@ -133,7 +134,7 @@ describe('Reports', () => {
     expect(await screen.findByText(/Yellow leads at 97%; Green is lowest at 90%/)).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /Donor Report/i }))
-    expect(await screen.findByText(/6 learners reached across 22 days of aftercare with 92% average attendance/)).toBeInTheDocument()
+    expect(await screen.findByText(/5 of 6 enrolled learners attended, with 92% average attendance/)).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /Board Report/i }))
     expect(await screen.findByText(/6 active learners across 4 class groups, looked after by 3 active teachers/)).toBeInTheDocument()
@@ -187,6 +188,26 @@ describe('Reports', () => {
     expect(within(day('Fri 06')).getAllByText('–')).toHaveLength(2)
   })
 
+  it('shows the average rating beside each development category', async () => {
+    onApi('GET', '/reports/overview', {
+      ...OVERVIEW,
+      observationsByCategory: [
+        { category: 'Academic', observationCount: 3, averageRating: 7.666666 },
+        { category: 'Social', observationCount: 2, averageRating: null },
+      ],
+    })
+    await renderReports('manager')
+    expect(await screen.findByText('avg 7.7/10')).toBeInTheDocument()
+    expect(screen.getByText('no rating')).toBeInTheDocument()
+
+    await userEvent.click(screen.getByRole('button', { name: /Export as PDF/i }))
+    const { charts } = generatePDF.mock.calls.at(-1)[0]
+    expect(charts.find((c) => c.heading.startsWith('Observations')).items).toEqual([
+      expect.objectContaining({ label: 'Academic', value: 3, display: '3 · avg 7.7/10' }),
+      expect.objectContaining({ label: 'Social', value: 2, display: '2' }),
+    ])
+  })
+
   it('reloads the numbers when the manager comes back to the tab', async () => {
     await renderReports('manager')
     await screen.findByText('Total Learners')
@@ -223,10 +244,27 @@ describe('Reports', () => {
 
     await userEvent.click(screen.getByRole('button', { name: /Donor Report/i }))
     expect(await screen.findByRole('heading', { name: 'Donor Impact Report' })).toBeInTheDocument()
-    expect(screen.getByText('Learners served this period')).toBeInTheDocument()
-    expect(screen.getByText('Safe collections this month')).toBeInTheDocument()
+    expect(screen.getByText('Learners enrolled')).toBeInTheDocument()
+    expect(screen.getByText('Learners who attended')).toBeInTheDocument()
+    expect(screen.queryByText('Learners served this period')).not.toBeInTheDocument()
+    expect(screen.getByText('Sign outs')).toBeInTheDocument()
     expect(screen.getByText('48')).toBeInTheDocument()
-    expect(screen.getByText(/6 registered learner/i)).toBeInTheDocument()
+    expect(screen.getByText(/had 6 enrolled learners across 4 class groups, of whom 5 attended aftercare/)).toBeInTheDocument()
+  })
+
+  it('shows a dash for learners who attended until attendance has been taken', async () => {
+    onApi('GET', '/reports/overview', {
+      ...OVERVIEW,
+      totals: { ...OVERVIEW.totals, avgAttendance: null, presentRecords: 0, absentRecords: 0, learnersAttended: 0 },
+    })
+    await renderReports('manager')
+    await screen.findByText('Total Learners')
+    await userEvent.click(screen.getByRole('button', { name: /Donor Report/i }))
+
+    const card = (await screen.findByText('Learners who attended')).closest('div.bg-white')
+    expect(card).toHaveTextContent('–')
+    expect(screen.getByText(/6 learners are enrolled; no attendance has been recorded in this period yet/)).toBeInTheDocument()
+    expect(screen.getByText('Learners enrolled').closest('div.bg-white')).toHaveTextContent('6')
   })
 
   it('renders board report bullets from live totals', async () => {
@@ -239,7 +277,13 @@ describe('Reports', () => {
     expect(screen.getByText('6 active learners')).toBeInTheDocument()
     expect(screen.getByText('4 class groups')).toBeInTheDocument()
     expect(screen.getByText('3 active teachers')).toBeInTheDocument()
-    expect(screen.getByText(/48 safe collection/i)).toBeInTheDocument()
+    expect(screen.getByText('48 sign outs this month')).toBeInTheDocument()
+    // Development section: the total, then each category (busiest first) with its average rating
+    expect(screen.getByText('Learner development')).toBeInTheDocument()
+    expect(screen.queryByText('Wellbeing')).not.toBeInTheDocument()
+    expect(screen.getByText('8 teacher observations')).toBeInTheDocument()
+    expect(screen.getByText('3 Academic observations, average rating 8/10')).toBeInTheDocument()
+    expect(screen.getByText('2 Social observations, average rating 7/10')).toBeInTheDocument()
     expect(screen.queryByText(/operational|Parent communication/)).not.toBeInTheDocument()
   })
 

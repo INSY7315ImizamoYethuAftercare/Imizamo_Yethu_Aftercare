@@ -1687,7 +1687,8 @@ components:
             avgAttendance: { type: number }
             signOutsThisMonth: { type: integer }
             daysDelivered: { type: integer }
-            uniqueLearnersServed: { type: integer }
+            uniqueLearnersServed: { type: integer, description: Learners with any attendance record in the period. }
+            learnersAttended: { type: integer, description: Learners marked present at least once in the period. }
         weeklyDays:
           type: array
           description: Learners present each day, Monday to Friday this week.

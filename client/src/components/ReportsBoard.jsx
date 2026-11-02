@@ -1,23 +1,23 @@
 import ReportsBanner from "./ReportsBanner";
 
 const SECTIONS = [
-  { key: "enrolment", title: "Enrolment", icon: "🎒", tint: "bg-pink-50" },
+  { key: "enrollment", title: "Enrollment", icon: "🎒", tint: "bg-pink-50" },
   { key: "operations", title: "Operations", icon: "🏠", tint: "bg-sky-50" },
-  { key: "wellbeing", title: "Wellbeing", icon: "🌱", tint: "bg-green-50" },
+  { key: "development", title: "Learner development", icon: "🌱", tint: "bg-green-50" },
 ];
 
 function ReportsBoard({
   boardKeyFigures,
-  boardEnrolment,
+  boardEnrollment,
   boardOperations,
-  boardWellbeing,
+  boardDevelopment,
   periodLabel,
   insight,
   exportBoard,
   card,
   primary,
 }) {
-  const items = { enrolment: boardEnrolment, operations: boardOperations, wellbeing: boardWellbeing };
+  const items = { enrollment: boardEnrollment, operations: boardOperations, development: boardDevelopment };
   return (
     <div className="space-y-4 w-full pb-8">
       <ReportsBanner icon="📋" title="Board Report" subtitle={periodLabel} insight={insight} />

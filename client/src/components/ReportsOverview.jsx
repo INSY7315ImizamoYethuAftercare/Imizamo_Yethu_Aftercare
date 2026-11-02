@@ -164,6 +164,9 @@ function ReportsOverview({
         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
           <span>🧩</span> Development Categories
         </h3>
+        <p className="text-[11px] text-gray-400 -mt-2 mb-3">
+          Bar and number: observations recorded. Average: teachers' rating out of 10 (1 = needs support, 10 = excellent).
+        </p>
         <div className="space-y-3">
           {devCategories.length === 0 && (
             <p className="text-xs text-gray-400">No observations recorded for this period.</p>
@@ -182,6 +185,9 @@ function ReportsOverview({
               </div>
               <span className="text-sm font-semibold text-gray-800 w-6 text-right shrink-0">
                 {cat.count}
+              </span>
+              <span className="text-xs text-gray-500 w-20 shrink-0 text-right">
+                {cat.average === null ? "no rating" : `avg ${cat.average}/10`}
               </span>
             </div>
           ))}

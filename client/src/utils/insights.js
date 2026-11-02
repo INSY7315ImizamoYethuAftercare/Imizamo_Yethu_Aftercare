@@ -41,15 +41,18 @@ export function trendsInsight(rates, classRows) {
   return { ...base, text: `${base.text} ${best.name} leads at ${best.thisWeek}%; ${worst.name} is lowest at ${worst.thisWeek}%.` };
 }
 
-/** The donor headline: who was reached and how often they came. */
+/** True once any attendance (present or absent) has been recorded in the period. */
+export const hasAttendance = (t) => (t.presentRecords ?? 0) + (t.absentRecords ?? 0) > 0;
+
+/** The donor headline: how many of the enrolled learners came, and how well they attended. */
 export function donorInsight(t) {
-  const served = t.uniqueLearnersServed || t.activeLearners;
-  if (!served) return { text: "No learners are registered yet.", tone: "none" };
-  const rate = isNum(t.avgAttendance) ? ` with ${t.avgAttendance}% average attendance` : "";
-  return {
-    text: `${served} ${plural(served, "learner", "learners")} reached across ${t.daysDelivered} ${plural(t.daysDelivered, "day", "days")} of aftercare${rate}.`,
-    tone: "none",
-  };
+  const enrolled = t.activeLearners;
+  if (!enrolled) return { text: "No learners are enrolled yet.", tone: "none" };
+  if (!hasAttendance(t)) {
+    return { text: `${enrolled} ${plural(enrolled, "learner is", "learners are")} enrolled; no attendance has been recorded in this period yet.`, tone: "none" };
+  }
+  const rate = isNum(t.avgAttendance) ? `, with ${t.avgAttendance}% average attendance` : "";
+  return { text: `${t.learnersAttended} of ${enrolled} enrolled ${plural(enrolled, "learner", "learners")} attended${rate}.`, tone: "none" };
 }
 
 /** The board headline: the size of the programme and who runs it. */

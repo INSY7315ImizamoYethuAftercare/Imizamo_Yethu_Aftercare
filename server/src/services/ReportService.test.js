@@ -43,6 +43,7 @@ function stubOverviewRepos(deps) {
     total_present: '20',
     total_absent: '5',
     unique_learners: '2',
+    attended_learners: '1',
   })
   deps.observationRepository.getAggregateByDateRange.mockResolvedValue([
     { category: 'Academic', observation_count: '3', average_rating: '8.0' },
@@ -178,6 +179,7 @@ describe('ReportService', () => {
     expect(result.totals.signOutsThisMonth).toBe(48)
     expect(result.totals.daysDelivered).toBe(12)
     expect(result.totals.uniqueLearnersServed).toBe(2)
+    expect(result.totals.learnersAttended).toBe(1) // 2 had records, only 1 was ever present
 
     // Mon–Fri of the week containing periodEnd
     expect(result.weeklyDays).toHaveLength(5)

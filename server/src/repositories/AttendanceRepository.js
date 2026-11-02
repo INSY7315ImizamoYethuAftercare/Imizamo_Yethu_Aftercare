@@ -181,14 +181,16 @@ class AttendanceRepository {
    *
    * @param {string} periodStart - YYYY-MM-DD
    * @param {string} periodEnd - YYYY-MM-DD
-   * @returns {Promise<{ total_present: string, total_absent: string, unique_learners: string }>}
+   * @returns {Promise<{ total_present: string, total_absent: string, unique_learners: string, attended_learners: string }>}
+   *   unique_learners counts anyone with a record; attended_learners only those marked present at least once.
    */
   async getAggregateByDateRange(periodStart, periodEnd) {
     const result = await this.pool.query(
       `SELECT
          COUNT(*) FILTER (WHERE "status" = 'present') AS total_present,
          COUNT(*) FILTER (WHERE "status" = 'absent') AS total_absent,
-         COUNT(DISTINCT "learner_id") AS unique_learners
+         COUNT(DISTINCT "learner_id") AS unique_learners,
+         COUNT(DISTINCT "learner_id") FILTER (WHERE "status" = 'present') AS attended_learners
        FROM attendance_records
        WHERE "record_date" BETWEEN $1 AND $2`,
       [periodStart, periodEnd],

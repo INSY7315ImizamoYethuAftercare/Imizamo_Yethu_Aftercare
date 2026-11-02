@@ -38,10 +38,14 @@ describe('change helpers', () => {
 })
 
 describe('donor and board headlines', () => {
-  const totals = { activeLearners: 6, uniqueLearnersServed: 5, classes: 4, teachers: 1, daysDelivered: 22, avgAttendance: 92 }
+  const totals = { activeLearners: 6, learnersAttended: 5, presentRecords: 40, absentRecords: 4, classes: 4, teachers: 1, avgAttendance: 92 }
   it('summarises the donor numbers, leaving out the rate when there is none', () => {
-    expect(donorInsight(totals).text).toBe('5 learners reached across 22 days of aftercare with 92% average attendance.')
-    expect(donorInsight({ ...totals, avgAttendance: null }).text).toBe('5 learners reached across 22 days of aftercare.')
+    expect(donorInsight(totals).text).toBe('5 of 6 enrolled learners attended, with 92% average attendance.')
+    expect(donorInsight({ ...totals, avgAttendance: null }).text).toBe('5 of 6 enrolled learners attended.')
+    expect(donorInsight({ ...totals, presentRecords: 0, absentRecords: 0 }).text).toBe(
+      '6 learners are enrolled; no attendance has been recorded in this period yet.',
+    )
+    expect(donorInsight({ ...totals, activeLearners: 0 }).text).toBe('No learners are enrolled yet.')
   })
   it('summarises the programme for the board', () => {
     expect(boardInsight(totals).text).toBe('6 active learners across 4 class groups, looked after by 1 active teacher.')

@@ -6,6 +6,7 @@ import { longDate } from "../utils/dates";
 import { useHeader } from "./UseHeader";
 import { useLearners, useLearnersLoading, fetchLearnerById, updateLearnerDetails } from "./UseLearners";
 import { useClasses } from "./UseClasses";
+import { CATEGORIES, categoryChipClass, categoryTextClass } from "../utils/categories";
 
 const CLASS_THEMES = {
   Yellow: { banner: "bg-yellow-300", tabActive: "bg-yellow-300", back: "bg-yellow-400 border-yellow-600 text-yellow-950" },
@@ -106,17 +107,9 @@ function Observations({ role = "Teacher" }) {
   const iconBtn = "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const backPath = role === "Admin" ? "/admin/learners" : role === "Manager" ? "/manager/learners" : "/learners";
-  const categories = ["Academic", "Social", "Wellbeing", "Creative", "Physical"];
-
-  const getCategoryColour = (category) => ({
-    Social: "text-cyan-500", Academic: "text-blue-500", Wellbeing: "text-green-500",
-    Creative: "text-pink-500", Physical: "text-purple-500",
-  }[category] || "text-gray-500");
-
-  const getCategoryBg = (category) => ({
-    Social: "bg-cyan-400 text-white", Academic: "bg-blue-400 text-white", Wellbeing: "bg-green-400 text-white",
-    Creative: "bg-pink-400 text-white", Physical: "bg-purple-400 text-white",
-  }[category] || "bg-gray-200 text-gray-600");
+  const categories = CATEGORIES;
+  const getCategoryColour = categoryTextClass;
+  const getCategoryBg = categoryChipClass;
 
   const closeForm = () => {
     setShowForm(false);

@@ -1,4 +1,5 @@
 import ReportsBanner from "./ReportsBanner";
+import { hasAttendance } from "../utils/insights";
 
 // Tinted tile colours for the key figures, cycled in order.
 const TINTS = ["bg-sky-50", "bg-green-50", "bg-purple-50", "bg-orange-50", "bg-pink-50"];
@@ -35,10 +36,9 @@ function ReportsDonor({
       <div className={card}>
         <h3 className="font-semibold text-gray-900 mb-2">Narrative Summary</h3>
         <p className="text-sm text-gray-600 leading-relaxed">
-          During this period, the Imizamo Yethu Learning Hub provided aftercare services
-          to {t.uniqueLearnersServed || t.activeLearners} registered learner
-          {(t.uniqueLearnersServed || t.activeLearners) === 1 ? "" : "s"} across{" "}
-          {t.classes} class group{t.classes === 1 ? "" : "s"}.{" "}
+          During this period, the Imizamo Yethu Learning Hub had {t.activeLearners} enrolled learner
+          {t.activeLearners === 1 ? "" : "s"} across {t.classes} class group{t.classes === 1 ? "" : "s"}
+          {hasAttendance(t) ? `, of whom ${t.learnersAttended} attended aftercare` : ""}.{" "}
           {t.avgAttendance === null
             ? "No attendance has been recorded in this period yet"
             : `The programme maintained a ${t.avgAttendance}% average attendance rate`}

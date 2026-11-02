@@ -263,7 +263,7 @@ function ChartSection({ chart }) {
                 )
               )}
             </View>
-            <Text style={{ width: item.parts ? 110 : 70, fontSize: 9, textAlign: "right", fontFamily: "Helvetica-Bold" }}>
+            <Text style={{ width: item.parts ? 110 : item.display && item.display.length > 8 ? 100 : 70, fontSize: 9, textAlign: "right", fontFamily: "Helvetica-Bold" }}>
               {item.parts || hasValue(item) ? item.display ?? String(item.value) : "No data yet"}
             </Text>
           </View>

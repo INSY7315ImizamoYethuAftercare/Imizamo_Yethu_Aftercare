@@ -248,6 +248,8 @@ export class ReportService {
         signOutsThisMonth,
         daysDelivered,
         uniqueLearnersServed: Number(attendancePeriod.unique_learners),
+        // Learners marked present on at least one day in the period.
+        learnersAttended: Number(attendancePeriod.attended_learners ?? 0),
         // Attendance records in the period, for the present/absent split.
         presentRecords: Number(attendancePeriod.total_present),
         absentRecords: Number(attendancePeriod.total_absent),

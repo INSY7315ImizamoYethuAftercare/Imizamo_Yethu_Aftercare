@@ -8,20 +8,14 @@ import { useNavigate } from "react-router-dom";
 import { generateChartPDF, generatePDF } from "../utils/pdf";
 import { useHeader } from "./UseHeader";
 import { apiClient } from "../services/apiClient";
-import { boardInsight, donorInsight, trendsInsight, weekInsight } from "../utils/insights";
+import { boardInsight, donorInsight, hasAttendance, trendsInsight, weekInsight } from "../utils/insights";
 import { colourForClass } from "./AddClassSheet";
+import { categoryHex } from "../utils/categories";
 
 // Colours are the same Tailwind shades the rest of the app uses. The weekly bars
 // are present counts, so they are green like "Present" on the home screens.
 const PRESENT_GREEN = "#22C55E";
 const ABSENT_RED = "#EF4444";
-
-const CATEGORY_COLOURS = {
-  Academic: "#0EA5E9",
-  Social: "#A855F7",
-  Wellbeing: "#F97316",
-  Creative: "#EC4899",
-};
 
 function formatPeriodLabel(start, end) {
   if (!start || !end) return "Current period";
@@ -99,6 +93,7 @@ function Reports({ role = "Manager" }) {
     uniqueLearnersServed: 0,
     presentRecords: 0,
     absentRecords: 0,
+    learnersAttended: 0,
   };
 
   const weeklyDays = (data?.weeklyDays ?? []).map((d) => ({
@@ -124,7 +119,8 @@ function Reports({ role = "Manager" }) {
   const devCategories = (data?.observationsByCategory ?? []).map((row) => ({
     name: row.category,
     count: row.observationCount,
-    color: CATEGORY_COLOURS[row.category] ?? "#94A3B8",
+    average: row.averageRating === null || row.averageRating === undefined ? null : Math.round(row.averageRating * 10) / 10,
+    color: categoryHex(row.category),
   }));
 
   const pct = (n) => (n === null || n === undefined ? "–" : n + "%");
@@ -173,8 +169,14 @@ function Reports({ role = "Manager" }) {
   const donorMetrics = [
     {
       icon: "🎒",
-      label: "Learners served this period",
-      value: String(t.uniqueLearnersServed || t.activeLearners),
+      label: "Learners enrolled",
+      value: String(t.activeLearners),
+    },
+    {
+      icon: "✅",
+      label: "Learners who attended",
+      // Marked present at least once this period; a dash until attendance has been taken.
+      value: hasAttendance(t) ? String(t.learnersAttended) : "–",
     },
     {
       icon: "📈",
@@ -188,13 +190,8 @@ function Reports({ role = "Manager" }) {
     },
     {
       icon: "🏠",
-      label: "Safe collections this month",
+      label: "Sign outs",
       value: String(t.signOutsThisMonth),
-    },
-    {
-      icon: "📅",
-      label: "Days of aftercare delivered",
-      value: String(t.daysDelivered),
     },
   ];
 
@@ -202,20 +199,27 @@ function Reports({ role = "Manager" }) {
     { label: "Active learners", value: String(t.activeLearners), icon: "🎒", tint: "bg-pink-50", text: "text-pink-500" },
     { label: "Class groups", value: String(t.classes), icon: "🏫", tint: "bg-sky-50", text: "text-sky-600" },
     { label: "Active teachers", value: String(t.teachers), icon: "👩‍🏫", tint: "bg-purple-50", text: "text-purple-600" },
-    { label: "Safe collections this month", value: String(t.signOutsThisMonth), icon: "🚪", tint: "bg-orange-50", text: "text-orange-500" },
+    { label: "Sign outs", value: String(t.signOutsThisMonth), icon: "🚪", tint: "bg-orange-50", text: "text-orange-500" },
   ];
 
-  const boardEnrolment = [
+  const boardEnrollment = [
     `${t.activeLearners} active learners`,
     `${t.classes} class groups`,
     `${t.teachers} active teacher${t.teachers === 1 ? "" : "s"}`,
   ];
   const boardOperations = [
-    `Digital attendance recorded on ${t.daysDelivered} day${t.daysDelivered === 1 ? "" : "s"}`,
-    `${t.signOutsThisMonth} safe collection${t.signOutsThisMonth === 1 ? "" : "s"} this month`,
+    `${t.signOutsThisMonth} sign out${t.signOutsThisMonth === 1 ? "" : "s"} this month`,
   ];
-  const boardWellbeing = [
+  // The total, then each category with its count and average rating (busiest first).
+  const boardDevelopment = [
     `${t.observations} teacher observation${t.observations === 1 ? "" : "s"}`,
+    ...[...devCategories]
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+      .map(
+        (c) =>
+          `${c.count} ${c.name} observation${c.count === 1 ? "" : "s"}` +
+          (c.average === null ? ", no ratings yet" : `, average rating ${c.average}/10`),
+      ),
   ];
 
   const exportOverview = () =>
@@ -262,7 +266,12 @@ function Reports({ role = "Manager" }) {
         {
           type: "bars",
           heading: "Observations by development category",
-          items: devCategories.map((c) => ({ label: c.name, value: c.count, color: c.color })),
+          items: devCategories.map((c) => ({
+            label: c.name,
+            value: c.count,
+            display: c.average === null ? String(c.count) : `${c.count} · avg ${c.average}/10`,
+            color: c.color,
+          })),
         },
       ],
     });
@@ -325,9 +334,9 @@ function Reports({ role = "Manager" }) {
       period: periodLabel,
       summary: boardTakeaway.text,
       rows: [
-        ...boardEnrolment.map((text) => ({ label: "Enrolment", value: text })),
+        ...boardEnrollment.map((text) => ({ label: "Enrollment", value: text })),
         ...boardOperations.map((text) => ({ label: "Operations", value: text })),
-        ...boardWellbeing.map((text) => ({ label: "Wellbeing", value: text })),
+        ...boardDevelopment.map((text) => ({ label: "Development", value: text })),
       ],
     });
 
@@ -419,9 +428,9 @@ function Reports({ role = "Manager" }) {
         {activeTab === "Board Report" && (
           <ReportsBoard
             boardKeyFigures={boardKeyFigures}
-            boardEnrolment={boardEnrolment}
+            boardEnrollment={boardEnrollment}
             boardOperations={boardOperations}
-            boardWellbeing={boardWellbeing}
+            boardDevelopment={boardDevelopment}
             periodLabel={periodLabel}
             insight={boardTakeaway}
             exportBoard={exportBoard}
