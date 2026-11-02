@@ -471,3 +471,15 @@ Full Video: https://youtu.be/2XYmDj81yUY
 *Developed and donated by NovaTech Solutions to support the digital transformation of the Imizamo Yethu Aftercare.*
 
 **INSY7315 – Work Integrated Learning | Part 2 – Implementation**
+
+## Azure environment status
+
+Production deployment targets **Microsoft Azure** (App Service and Azure Database for PostgreSQL).
+
+Our project team has applied for Azure credits under a non-profit (NPO) arrangement. Until that application is approved and the PostgreSQL flexible server is provisioned:
+
+- No production Azure PostgreSQL instance is currently available as we've ran out of student credits and therefore had to cancel our subscription.
+- The schema management is handled exclusively through **node-pg-migrate**. Migrations execute automatically on application start and are validated in continuous integration against a PostgreSQL service container.
+- Once the production database is restored, the baseline migration will be recorded on that environment using a one-time `npm run migrate -w server -- --fake` operation (after the appropriate firewall rule is configured).
+
+Local development and the automated test suite are unaffected and continue to use migrations against a local or CI PostgreSQL database.
