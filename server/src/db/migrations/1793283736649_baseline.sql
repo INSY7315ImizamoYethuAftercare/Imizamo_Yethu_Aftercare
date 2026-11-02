@@ -1,3 +1,5 @@
+-- Up Migration
+
 -- Azure-safe rebuild of the Imizamo Yethu schema (generated from updated_schema.txt).
 -- Removed: psql \restrict lines, SET/search_path lines, OWNER TO lines. Includes the class seed + migrations at the end.
 -- Run on an EMPTY public schema.
@@ -1050,3 +1052,5 @@ WHERE a.access_level = 'master'
 ALTER TABLE users
   ADD COLUMN password_changed_at timestamptz,
   ADD COLUMN must_change_password boolean NOT NULL DEFAULT false;
+  
+-- Down Migration
