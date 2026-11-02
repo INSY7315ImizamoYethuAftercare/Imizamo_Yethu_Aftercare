@@ -13,7 +13,6 @@ import PickupPermissionRepository from '../repositories/PickupPermissionReposito
 import AdminRepository from '../repositories/AdminRepository.js'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
-import * as validate from '../utils/validation.js'
 import { isProduction } from '../config/env.js'
 
 const userRepository = new UserRepository(pool)
@@ -51,26 +50,13 @@ const cookieOptions = {
 /** POST /api/auth/register */
 export async function register(req, res, next) {
   try {
-
-    const { email, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob  } = req.body ?? {}
-    if (!email || !password || !role || !fullName) {
-      const err = new Error('email, password, role and fullName are all required')
-      err.status = 400
-      throw err
-    }
-    const normalisedEmail = validate.email(email)
-    validate.password(password)
-    validate.text(role, 'role', { max: 20 })
-    validate.text(fullName, 'fullName', { max: validate.LIMITS.fullName })
     // Guardian-only fields: AuthService decides whether they are required;
-    // here we only check that whatever was sent is the right shape.
-    validate.text(contactNumber, 'contactNumber', { max: validate.LIMITS.contactNumber, required: false })
-    validate.text(relationship, 'relationship', { max: validate.LIMITS.relationship, required: false })
-    validate.text(claimedLearnerName, 'claimedLearnerName', { max: validate.LIMITS.claimedLearnerName, required: false })
-    validate.isoDate(claimedLearnerDob, 'claimedLearnerDob', { required: false })
+    // the schema has only checked that whatever was sent is the right shape.
+    const { email, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob } =
+      req.validated.body
 
-    const user = await authService.register({ 
-      email: normalisedEmail, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob, 
+    const user = await authService.register({
+      email, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob,
     })
     res.status(201).json({ userId: user.user_id, email: user.email, role: user.role })
 
@@ -82,22 +68,9 @@ export async function register(req, res, next) {
 /** POST /api/auth/login */
 export async function login(req, res, next) {
   try {
-
-    const { email, password, role } = req.body ?? {}
-    if (!email || !password) {
-      const err = new Error('email and password are required')
-      err.status = 400
-      throw err
-    }
-    // Only the type is checked here: no length rules, so older accounts can still sign in.
-    if (typeof email !== 'string' || typeof password !== 'string') {
-      const err = new Error('email and password must be text')
-      err.status = 400
-      throw err
-    }
-
-    // Optional: the role card picked on the login screen.
-    if (role !== undefined) validate.text(role, 'role', { max: 20 })
+    // Only the type is checked (see authSchemas): no length rules, so older accounts can still sign in.
+    // role is optional: the role card picked on the login screen.
+    const { email, password, role } = req.validated.body
 
     const { token, user } = await authService.login({ email, password, role })
     res.cookie('token', token, cookieOptions)
@@ -110,12 +83,7 @@ export async function login(req, res, next) {
 /** POST /api/auth/change-password - the signed-in user changes their own password. */
 export async function changePassword(req, res, next) {
   try {
-    const { currentPassword, newPassword } = req.body ?? {}
-    if (!currentPassword || !newPassword) {
-      throw validate.badRequest('currentPassword and newPassword are required')
-    }
-    if (typeof currentPassword !== 'string') throw validate.badRequest('currentPassword must be text')
-    validate.password(newPassword, 'newPassword')
+    const { currentPassword, newPassword } = req.validated.body
 
     // Other sessions for this account end; this one gets a fresh token.
     const { token, user } = await authService.changePassword({ userId: req.user.userId, currentPassword, newPassword })
