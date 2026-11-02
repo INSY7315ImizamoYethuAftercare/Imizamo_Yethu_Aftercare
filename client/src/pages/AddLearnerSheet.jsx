@@ -3,7 +3,7 @@ import { useClasses } from "./UseClasses";
 
 export const GRADES = ["Grade R", "Grade 1", "Grade 2", "Grade 3", "Grade 4", "Grade 5", "Grade 6", "Grade 7"];
 
-const field = "w-full mt-1 mb-3 px-4 py-3 rounded-xl bg-[#F5F0EA] text-sm focus:outline-none focus:ring-2 focus:ring-orange-300";
+const field = "w-full mt-1 mb-3 px-4 py-3 rounded-xl bg-beige text-sm focus:outline-none focus:ring-2 focus:ring-orange-300";
 const label = "text-[11px] font-semibold text-gray-500 tracking-wide";
 
 function AddLearnerSheet({ onAdd, onClose }) {
@@ -60,7 +60,7 @@ function AddLearnerSheet({ onAdd, onClose }) {
         {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
 
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-beige text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
           <button onClick={submit} className="flex-1 py-3 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md active:scale-95 transition">Add Student</button>
         </div>
       </div>

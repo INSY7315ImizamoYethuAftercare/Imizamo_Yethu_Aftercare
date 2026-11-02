@@ -254,6 +254,28 @@ A successful response should look similar to:
 
 ---
 
+# 📖 API Documentation (OpenAPI)
+
+Every endpoint is described in an **OpenAPI 3.0** specification, so other clients can discover and use the API without reading the code.
+
+| | Live (Azure) | Local |
+|---|---|---|
+| **Interactive docs (Swagger UI)** | [/api/docs](https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net/api/docs) | http://localhost:4000/api/docs |
+| **Raw spec (JSON)** | [/api/openapi.json](https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net/api/openapi.json) | http://localhost:4000/api/openapi.json |
+
+The spec covers all 47 endpoints, grouped by feature (Auth, Attendance, Sign-out, Guardian portal, Observations, Reports, Learners, Classes, Teachers, Accounts). For each one it lists:
+
+- the request body, path and query parameters, with their validation rules (lengths, formats, ranges)
+- the success response
+- every error it can return (400, 401, 403, 404, 409, 429), all with the same `{ "message": "..." }` body
+- which roles may call it
+
+**Trying it out:** open `/api/docs`, run `POST /api/auth/login` with "Try it out", and the session cookie is set for the page. The other endpoints then work as that user.
+
+**Keeping it up to date:** the spec is in [`server/src/docs/openapi.yaml`](server/src/docs/openapi.yaml). The test [`server/tests/api/openapi.test.js`](server/tests/api/openapi.test.js) fails if a route in the role matrix (`server/tests/helpers/routes.js`) is missing from the spec, or the spec lists a route that doesn't exist. When you add or change a route, update the spec in the same pull request.
+
+---
+
 # 📜 Available Scripts
 
 | Command | Description |

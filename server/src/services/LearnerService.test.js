@@ -55,3 +55,80 @@ describe('LearnerService', () => {
     await expect(service.deleteLearner({ userId: 1, learnerId: 3 })).rejects.toMatchObject({ status: 409 })
   })
 })
+
+describe('LearnerService.getLearnerOverview (staff learner profile)', () => {
+  let deps
+  let service
+
+  beforeEach(() => {
+    deps = {
+      learnerRepository: { findById: jest.fn().mockResolvedValue({ learner_id: 3, can_walk_home_alone: false }) },
+      managerRepository: { findByUserId: jest.fn().mockResolvedValue(null) },
+      teacherRepository: { findByUserId: jest.fn().mockResolvedValue({ teacher_id: 7 }) },
+      attendanceRepository: {
+        findByLearnerSince: jest.fn().mockResolvedValue([
+          { record_date: '2026-10-29', status: 'present', time_in: '14:05:00' },
+          { record_date: '2026-10-28', status: 'absent', time_in: null },
+          { record_date: '2026-10-27', status: 'present', time_in: '14:10:00' },
+          { record_date: '2026-10-26', status: 'present', time_in: '14:00:00' },
+        ]),
+      },
+      signOutRepository: {
+        findByLearnerSince: jest.fn().mockResolvedValue([
+          { record_date: '2026-10-29', time_out: '16:42:10', guardian_name: 'Fatima Petersen' },
+          { record_date: '2026-10-27', time_out: '16:00:00', guardian_name: null },
+        ]),
+      },
+      pickupPermissionRepository: {
+        findActiveByLearnerIds: jest.fn().mockResolvedValue([
+          { learner_id: 3, guardian_id: 1, full_name: 'Fatima Petersen', relationship: 'Mother', is_primary_contact: true },
+        ]),
+      },
+      observationRepository: {
+        findByLearnerIdWithTeacher: jest.fn().mockResolvedValue([
+          { observation_id: 9, record_date: '2026-10-20', category: 'Social', rating: 8, notes: 'Kind to others', teacher_name: 'Thandeka Nkosi' },
+        ]),
+      },
+    }
+    service = new LearnerService(deps)
+  })
+
+  it("returns the learner's real attendance, recent days, pickups and observations", async () => {
+    const result = await service.getLearnerOverview({ userId: 1, learnerId: 3, today: '2026-10-29' })
+
+    // The last 30 days, counting today.
+    expect(deps.attendanceRepository.findByLearnerSince).toHaveBeenCalledWith(3, '2026-09-30')
+    expect(result.attendance).toEqual({ periodDays: 30, presentDays: 3, markedDays: 4, percent: 75 })
+    expect(result.recent[0]).toEqual({
+      date: '2026-10-29', status: 'present', timeIn: '14:05',
+      signedOut: { timeOut: '16:42', collectedBy: 'Fatima Petersen' },
+    })
+    expect(result.recent[1]).toMatchObject({ date: '2026-10-28', status: 'absent', signedOut: null })
+    expect(result.recent[2].signedOut).toEqual({ timeOut: '16:00', collectedBy: 'Walked home alone' })
+    expect(result.pickups).toEqual([{ guardianId: 1, fullName: 'Fatima Petersen', relationship: 'Mother', isPrimaryContact: true }])
+    expect(result.observations).toEqual([
+      { observationId: 9, date: '2026-10-20', category: 'Social', rating: 8, notes: 'Kind to others', teacherName: 'Thandeka Nkosi' },
+    ])
+  })
+
+  it('gives a null percentage (not 0%) when nothing has been marked yet', async () => {
+    deps.attendanceRepository.findByLearnerSince.mockResolvedValue([])
+    deps.signOutRepository.findByLearnerSince.mockResolvedValue([])
+    const result = await service.getLearnerOverview({ userId: 1, learnerId: 3, today: '2026-10-29' })
+    expect(result.attendance.percent).toBeNull()
+    expect(result.recent).toEqual([])
+  })
+
+  it('is for teachers and managers only', async () => {
+    deps.teacherRepository.findByUserId.mockResolvedValue(null)
+    await expect(service.getLearnerOverview({ userId: 1, learnerId: 3, today: '2026-10-29' }))
+      .rejects.toMatchObject({ status: 403 })
+    expect(deps.attendanceRepository.findByLearnerSince).not.toHaveBeenCalled()
+  })
+
+  it('returns 404 for a learner that does not exist', async () => {
+    deps.learnerRepository.findById.mockResolvedValue(null)
+    await expect(service.getLearnerOverview({ userId: 1, learnerId: 99, today: '2026-10-29' }))
+      .rejects.toMatchObject({ status: 404 })
+  })
+})

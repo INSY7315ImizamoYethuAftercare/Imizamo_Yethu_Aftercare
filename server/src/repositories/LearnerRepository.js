@@ -1,5 +1,11 @@
 // repositories/LearnerRepository.js
 
+// The pg driver turns DATE columns into JS Date objects, which reach the
+// browser as "2018-03-14T00:00:00.000Z" (and can shift a day across time
+// zones). Selecting the DOB as text keeps it a plain "YYYY-MM-DD".
+const DOB = `TO_CHAR("date_of_birth", 'YYYY-MM-DD') AS "date_of_birth"`
+const L_DOB = `TO_CHAR(l."date_of_birth", 'YYYY-MM-DD') AS "date_of_birth"`
+
 class LearnerRepository {
     constructor(pool) {
         // pool is the shared Singleton PgPool instance
@@ -15,7 +21,7 @@ class LearnerRepository {
     async findById(learnerId) {
         const result = await this.pool.query(
             `SELECT l."learner_id", l."class_id", l."first_name", l."last_name",
-                l."date_of_birth", l."can_walk_home_alone", l."is_active",
+                ${L_DOB}, l."can_walk_home_alone", l."is_active",
                 c."class_name", c."grade_range", c."colour" AS "class_colour"
             FROM learners l
             JOIN school_classes c ON c."class_id" = l."class_id"
@@ -37,7 +43,7 @@ class LearnerRepository {
   async findByGuardianId(guardianId) {
     const result = await this.pool.query(
       `SELECT l."learner_id", l."class_id", l."first_name", l."last_name",
-              l."date_of_birth", l."can_walk_home_alone", l."is_active"
+              ${L_DOB}, l."can_walk_home_alone", l."is_active"
        FROM learners l
        INNER JOIN pickup_permissions p ON p."learner_id" = l."learner_id"
        WHERE p."guardian_id" = $1`,
@@ -57,7 +63,7 @@ class LearnerRepository {
   async findAll() {
     const result = await this.pool.query(
       `SELECT l."learner_id", l."class_id", l."first_name", l."last_name",
-              l."date_of_birth", l."can_walk_home_alone", l."is_active", c."class_name", c."grade_range",
+              ${L_DOB}, l."can_walk_home_alone", l."is_active", c."class_name", c."grade_range",
               c."colour" AS "class_colour"
        FROM learners l
        JOIN school_classes c ON c."class_id" = l."class_id"
@@ -99,7 +105,7 @@ class LearnerRepository {
  */
 async findByFullNameAndDob(fullName, dateOfBirth) {
   const result = await this.pool.query(
-    `SELECT "learner_id", "class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone", "is_active"
+    `SELECT "learner_id", "class_id", "first_name", "last_name", ${DOB}, "can_walk_home_alone", "is_active"
      FROM learners
      WHERE LOWER(TRIM("first_name" || ' ' || "last_name")) = LOWER(TRIM($1))
        AND "date_of_birth" = $2`,
@@ -142,7 +148,7 @@ async findByFullNameAndDob(fullName, dateOfBirth) {
     const result = await this.pool.query(
       `INSERT INTO learners ("class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone")
        VALUES ($1, $2, $3, $4, $5)
-       RETURNING "learner_id", "class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone", "is_active"`,
+       RETURNING "learner_id", "class_id", "first_name", "last_name", ${DOB}, "can_walk_home_alone", "is_active"`,
       [classId, firstName, lastName, dateOfBirth ?? null, canWalkHomeAlone ?? false]
     );
     return result.rows[0];
@@ -171,7 +177,7 @@ async findByFullNameAndDob(fullName, dateOfBirth) {
     const result = await this.pool.query(
       `UPDATE learners SET ${setClause} 
       WHERE "learner_id" = $${keys.length + 1} 
-      RETURNING "learner_id", "class_id", "first_name", "last_name", "date_of_birth", "can_walk_home_alone", "is_active"`,
+      RETURNING "learner_id", "class_id", "first_name", "last_name", ${DOB}, "can_walk_home_alone", "is_active"`,
       [...values, learnerId]
     );
     return result.rows[0] || null;

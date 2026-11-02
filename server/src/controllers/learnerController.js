@@ -3,6 +3,11 @@ import LearnerRepository from '../repositories/LearnerRepository.js'
 import SchoolClassRepository from '../repositories/SchoolClassRepository.js'
 import ManagerRepository from '../repositories/ManagerRepository.js'
 import TeacherRepository from '../repositories/TeacherRepository.js'
+import AttendanceRepository from '../repositories/AttendanceRepository.js'
+import SignOutRepository from '../repositories/SignOutRepository.js'
+import PickupPermissionRepository from '../repositories/PickupPermissionRepository.js'
+import ObservationRepository from '../repositories/ObservationRepository.js'
+import { todayInSA } from '../services/AttendanceService.js'
 import { pool } from '../db/pool.js'
 import * as validate from '../utils/validation.js'
 
@@ -11,6 +16,10 @@ const learnerService = new LearnerService({
   schoolClassRepository: new SchoolClassRepository(pool),
   managerRepository: new ManagerRepository(pool),
   teacherRepository: new TeacherRepository(pool),
+  attendanceRepository: new AttendanceRepository(pool),
+  signOutRepository: new SignOutRepository(pool),
+  pickupPermissionRepository: new PickupPermissionRepository(pool),
+  observationRepository: new ObservationRepository(pool),
 })
 
 export async function listLearners(req, res, next) {
@@ -29,6 +38,23 @@ export async function getLearner(req, res, next) {
       learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
     })
     res.json(learner)
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * GET /api/learners/:learnerId/overview — the staff learner profile's
+ * attendance, recent days, pickups and observations.
+ */
+export async function getLearnerOverview(req, res, next) {
+  try {
+    const overview = await learnerService.getLearnerOverview({
+      userId: req.user.userId,
+      learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
+      today: todayInSA(),
+    })
+    res.json(overview)
   } catch (err) {
     next(err)
   }

@@ -26,9 +26,14 @@ const navBtn = (active, activeColor = "text-orange-500") =>
     active ? activeColor : "text-gray-400 hover:text-gray-600"
   }`;
 
-function NavShell({ children }) {
+const sideNavBtn = (active, activeColor = "text-orange-500") =>
+  `flex items-center gap-3 w-full px-4 py-3 rounded-xl transition text-left ${
+    active ? `${activeColor} bg-orange-50 font-semibold` : "text-gray-600 hover:bg-gray-50"
+  }`;
+
+function MobileNavShell({ children }) {
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-40">
+    <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden">
       <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 px-3 py-2.5 flex justify-between items-center">
         {children}
       </div>
@@ -42,28 +47,56 @@ function TeacherBottomNav() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <NavShell>
-      <button onClick={() => navigate("/home")} className={navBtn(isActive("/home"))}>
-        <span className="text-lg">🏠</span>
-        <span className={`text-[10px] ${isActive("/home") ? "font-semibold" : ""}`}>Home</span>
-      </button>
-      <button onClick={() => navigate("/attendance")} className={navBtn(isActive("/attendance"), "text-green-500")}>
-        <span className="text-lg">✓</span>
-        <span className={`text-[10px] ${isActive("/attendance") ? "font-semibold" : ""}`}>Attendance</span>
-      </button>
-      <button onClick={() => navigate("/learners")} className={navBtn(isActive("/learners"))}>
-        <span className="text-lg">🎒</span>
-        <span className={`text-[10px] ${isActive("/learners") ? "font-semibold" : ""}`}>Learners</span>
-      </button>
-      <button onClick={() => navigate("/classes")} className={navBtn(isActive("/classes"))}>
-        <span className="text-lg">🏫</span>
-        <span className={`text-[10px] ${isActive("/classes") ? "font-semibold" : ""}`}>Classes</span>
-      </button>
-      <button onClick={() => navigate("/signout")} className={navBtn(isActive("/signout"))}>
-        <span className="text-lg">🚪</span>
-        <span className={`text-[10px] ${isActive("/signout") ? "font-semibold" : ""}`}>Sign Out</span>
-      </button>
-    </NavShell>
+    <>
+      {/* Mobile bottom nav */}
+      <MobileNavShell>
+        <button onClick={() => navigate("/home")} className={navBtn(isActive("/home"))}>
+          <span className="text-lg">🏠</span>
+          <span className={`text-[10px] ${isActive("/home") ? "font-semibold" : ""}`}>Home</span>
+        </button>
+        <button onClick={() => navigate("/attendance")} className={navBtn(isActive("/attendance"))}>
+          <span className="text-lg text-green-500">✓</span>
+          <span className={`text-[10px] ${isActive("/attendance") ? "font-semibold" : ""}`}>Attendance</span>
+        </button>
+        <button onClick={() => navigate("/learners")} className={navBtn(isActive("/learners"))}>
+          <span className="text-lg">🎒</span>
+          <span className={`text-[10px] ${isActive("/learners") ? "font-semibold" : ""}`}>Learners</span>
+        </button>
+        <button onClick={() => navigate("/classes")} className={navBtn(isActive("/classes"))}>
+          <span className="text-lg">🏫</span>
+          <span className={`text-[10px] ${isActive("/classes") ? "font-semibold" : ""}`}>Classes</span>
+        </button>
+        <button onClick={() => navigate("/signout")} className={navBtn(isActive("/signout"))}>
+          <span className="text-lg">🚪</span>
+          <span className={`text-[10px] ${isActive("/signout") ? "font-semibold" : ""}`}>Sign Out</span>
+        </button>
+      </MobileNavShell>
+
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-56 bg-white border-r border-gray-200 flex-col pt-6 px-3 z-30">
+        <div className="px-3 mb-6">
+          <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <p className="text-sm font-semibold text-gray-800 mt-2">Imizamo Yethu</p>
+        </div>
+        <nav className="flex flex-col gap-1">
+          <button onClick={() => navigate("/home")} className={sideNavBtn(isActive("/home"))}>
+            <span>🏠</span> Home
+          </button>
+          <button onClick={() => navigate("/attendance")} className={sideNavBtn(isActive("/attendance"))}>
+            <span className="text-green-500">✓</span> Attendance
+          </button>
+          <button onClick={() => navigate("/learners")} className={sideNavBtn(isActive("/learners"))}>
+            <span>🎒</span> Learners
+          </button>
+          <button onClick={() => navigate("/classes")} className={sideNavBtn(isActive("/classes"))}>
+            <span>🏫</span> Classes
+          </button>
+          <button onClick={() => navigate("/signout")} className={sideNavBtn(isActive("/signout"))}>
+            <span>🚪</span> Sign Out
+          </button>
+        </nav>
+      </aside>
+    </>
   );
 }
 
@@ -73,34 +106,63 @@ function ManagerBottomNav() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-40">
-      <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 px-2 py-2.5 flex justify-between items-center">
-        <button onClick={() => navigate("/manager")} className={navBtn(isActive("/manager"))}>
-          <span className="text-lg">🏠</span>
-          <span className={`text-[10px] ${isActive("/manager") ? "font-semibold" : ""}`}>Home</span>
-        </button>
-        <button onClick={() => navigate("/manager/attendance")} className={navBtn(isActive("/manager/attendance"), "text-green-500")}>
-          <span className="text-lg">✓</span>
-          <span className={`text-[10px] ${isActive("/manager/attendance") ? "font-semibold" : ""}`}>Attendance</span>
-        </button>
-        <button onClick={() => navigate("/manager/learners")} className={navBtn(isActive("/manager/learners"))}>
-          <span className="text-lg">🎒</span>
-          <span className={`text-[10px] ${isActive("/manager/learners") ? "font-semibold" : ""}`}>Learners</span>
-        </button>
-        <button onClick={() => navigate("/manager/classes")} className={navBtn(isActive("/manager/classes"))}>
-          <span className="text-lg">🏫</span>
-          <span className={`text-[10px] ${isActive("/manager/classes") ? "font-semibold" : ""}`}>Classes</span>
-        </button>
-        <button onClick={() => navigate("/manager/signout")} className={navBtn(isActive("/manager/signout"))}>
-          <span className="text-lg">🚪</span>
-          <span className={`text-[10px] ${isActive("/manager/signout") ? "font-semibold" : ""}`}>Sign Out</span>
-        </button>
-        <button onClick={() => navigate("/reports")} className={navBtn(isActive("/reports"))}>
-          <span className="text-lg">📊</span>
-          <span className={`text-[10px] ${isActive("/reports") ? "font-semibold" : ""}`}>Reports</span>
-        </button>
+    <>
+      <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden">
+        <div className="max-w-xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 px-2 py-2.5 flex justify-between items-center">
+          <button onClick={() => navigate("/manager")} className={navBtn(isActive("/manager"))}>
+            <span className="text-lg">🏠</span>
+            <span className={`text-[10px] ${isActive("/manager") ? "font-semibold" : ""}`}>Home</span>
+          </button>
+          <button onClick={() => navigate("/manager/attendance")} className={navBtn(isActive("/manager/attendance"))}>
+            <span className="text-lg text-green-500">✓</span>
+            <span className={`text-[10px] ${isActive("/manager/attendance") ? "font-semibold" : ""}`}>Attendance</span>
+          </button>
+          <button onClick={() => navigate("/manager/learners")} className={navBtn(isActive("/manager/learners"))}>
+            <span className="text-lg">🎒</span>
+            <span className={`text-[10px] ${isActive("/manager/learners") ? "font-semibold" : ""}`}>Learners</span>
+          </button>
+          <button onClick={() => navigate("/manager/classes")} className={navBtn(isActive("/manager/classes"))}>
+            <span className="text-lg">🏫</span>
+            <span className={`text-[10px] ${isActive("/manager/classes") ? "font-semibold" : ""}`}>Classes</span>
+          </button>
+          <button onClick={() => navigate("/manager/signout")} className={navBtn(isActive("/manager/signout"))}>
+            <span className="text-lg">🚪</span>
+            <span className={`text-[10px] ${isActive("/manager/signout") ? "font-semibold" : ""}`}>Sign Out</span>
+          </button>
+          <button onClick={() => navigate("/reports")} className={navBtn(isActive("/reports"))}>
+            <span className="text-lg">📊</span>
+            <span className={`text-[10px] ${isActive("/reports") ? "font-semibold" : ""}`}>Reports</span>
+          </button>
+        </div>
       </div>
-    </div>
+
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-56 bg-white border-r border-gray-200 flex-col pt-6 px-3 z-30">
+        <div className="px-3 mb-6">
+          <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <p className="text-sm font-semibold text-gray-800 mt-2">Imizamo Yethu</p>
+        </div>
+        <nav className="flex flex-col gap-1">
+          <button onClick={() => navigate("/manager")} className={sideNavBtn(isActive("/manager"))}>
+            <span>🏠</span> Home
+          </button>
+          <button onClick={() => navigate("/manager/attendance")} className={sideNavBtn(isActive("/manager/attendance"))}>
+            <span className="text-green-500">✓</span> Attendance
+          </button>
+          <button onClick={() => navigate("/manager/learners")} className={sideNavBtn(isActive("/manager/learners"))}>
+            <span>🎒</span> Learners
+          </button>
+          <button onClick={() => navigate("/manager/classes")} className={sideNavBtn(isActive("/manager/classes"))}>
+            <span>🏫</span> Classes
+          </button>
+          <button onClick={() => navigate("/manager/signout")} className={sideNavBtn(isActive("/manager/signout"))}>
+            <span>🚪</span> Sign Out
+          </button>
+          <button onClick={() => navigate("/reports")} className={sideNavBtn(isActive("/reports"))}>
+            <span>📊</span> Reports
+          </button>
+        </nav>
+      </aside>
+    </>
   );
 }
 
@@ -110,20 +172,40 @@ function AdminBottomNav() {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <NavShell>
-      <button onClick={() => navigate("/admin")} className={navBtn(isActive("/admin"))}>
-        <span className="text-lg">🏠</span>
-        <span className={`text-[10px] ${isActive("/admin") ? "font-semibold" : ""}`}>Home</span>
-      </button>
-      <button onClick={() => navigate("/admin/reports")} className={navBtn(isActive("/admin/reports"))}>
-        <span className="text-lg">📊</span>
-        <span className={`text-[10px] ${isActive("/admin/reports") ? "font-semibold" : ""}`}>Reports</span>
-      </button>
-      <button onClick={() => navigate("/admin/settings")} className={navBtn(isActive("/admin/settings"))}>
-        <span className="text-lg">⚙️</span>
-        <span className={`text-[10px] ${isActive("/admin/settings") ? "font-semibold" : ""}`}>Settings</span>
-      </button>
-    </NavShell>
+    <>
+      <MobileNavShell>
+        <button onClick={() => navigate("/admin")} className={navBtn(isActive("/admin"))}>
+          <span className="text-lg">🏠</span>
+          <span className={`text-[10px] ${isActive("/admin") ? "font-semibold" : ""}`}>Home</span>
+        </button>
+        <button onClick={() => navigate("/admin/reports")} className={navBtn(isActive("/admin/reports"))}>
+          <span className="text-lg">📊</span>
+          <span className={`text-[10px] ${isActive("/admin/reports") ? "font-semibold" : ""}`}>Reports</span>
+        </button>
+        <button onClick={() => navigate("/admin/settings")} className={navBtn(isActive("/admin/settings"))}>
+          <span className="text-lg">⚙️</span>
+          <span className={`text-[10px] ${isActive("/admin/settings") ? "font-semibold" : ""}`}>Settings</span>
+        </button>
+      </MobileNavShell>
+
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-56 bg-white border-r border-gray-200 flex-col pt-6 px-3 z-30">
+        <div className="px-3 mb-6">
+          <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <p className="text-sm font-semibold text-gray-800 mt-2">Imizamo Yethu</p>
+        </div>
+        <nav className="flex flex-col gap-1">
+          <button onClick={() => navigate("/admin")} className={sideNavBtn(isActive("/admin"))}>
+            <span>🏠</span> Home
+          </button>
+          <button onClick={() => navigate("/admin/reports")} className={sideNavBtn(isActive("/admin/reports"))}>
+            <span>📊</span> Reports
+          </button>
+          <button onClick={() => navigate("/admin/settings")} className={sideNavBtn(isActive("/admin/settings"))}>
+            <span>⚙️</span> Settings
+          </button>
+        </nav>
+      </aside>
+    </>
   );
 }
 
@@ -133,19 +215,31 @@ function ParentBottomNav() {
   const isActive = location.pathname.startsWith("/parent");
 
   return (
-    <div className="fixed bottom-4 left-4 right-4 z-40">
-      <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 px-3 py-2.5 flex justify-center items-center">
-        <button onClick={() => navigate("/parent")} className={navBtn(isActive, "text-orange-500")}>
-          <span className="text-lg">💛</span>
-          <span className={`text-[10px] ${isActive ? "font-semibold" : ""}`}>My Child</span>
-        </button>
+    <>
+      <div className="fixed bottom-4 left-4 right-4 z-40 md:hidden">
+        <div className="max-w-md mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 px-3 py-2.5 flex justify-center items-center">
+          <button onClick={() => navigate("/parent")} className={navBtn(isActive, "text-orange-500")}>
+            <span className="text-lg">💛</span>
+            <span className={`text-[10px] ${isActive ? "font-semibold" : ""}`}>My Child</span>
+          </button>
+        </div>
       </div>
-    </div>
+
+      <aside className="hidden md:flex fixed left-0 top-0 h-screen w-56 bg-white border-r border-gray-200 flex-col pt-6 px-3 z-30">
+        <div className="px-3 mb-6">
+          <img src="/logo.png" alt="Logo" className="w-10 h-10 object-contain" />
+          <p className="text-sm font-semibold text-gray-800 mt-2">Imizamo Yethu</p>
+        </div>
+        <nav className="flex flex-col gap-1">
+          <button onClick={() => navigate("/parent")} className={sideNavBtn(isActive)}>
+            <span>💛</span> My Child
+          </button>
+        </nav>
+      </aside>
+    </>
   );
 }
 
-// Only lets the right kind of logged-in user through. Asks the server once
-// per page load whether the session cookie is still valid.
 function Protected({ role, children }) {
   const { user, status } = useSession();
   useEffect(() => {
@@ -154,13 +248,12 @@ function Protected({ role, children }) {
 
   if (status === "unknown") {
     return (
-      <div className="min-h-screen bg-[#FFFBF5] flex items-center justify-center">
+      <div className="min-h-screen bg-cream flex items-center justify-center">
         <p className="text-sm text-gray-400">Loading...</p>
       </div>
     );
   }
   if (!user) return <Navigate to="/" replace />;
-  // After a master admin's reset: choose your own password first.
   if (user.mustChangePassword) return <Navigate to={CHOOSE_PASSWORD_PATH} replace />;
   if (user.appRole !== role) return <Navigate to={homePathFor(user.appRole)} replace />;
   return children;
@@ -169,7 +262,9 @@ function Protected({ role, children }) {
 function TeacherLayout({ children }) {
   return (
     <Protected role="teacher">
-      {children}
+      <div className="md:pl-56">
+        {children}
+      </div>
       <TeacherBottomNav />
     </Protected>
   );
@@ -178,7 +273,9 @@ function TeacherLayout({ children }) {
 function ManagerLayout({ children }) {
   return (
     <Protected role="manager">
-      {children}
+      <div className="md:pl-56">
+        {children}
+      </div>
       <ManagerBottomNav />
     </Protected>
   );
@@ -187,7 +284,9 @@ function ManagerLayout({ children }) {
 function AdminLayout({ children }) {
   return (
     <Protected role="admin">
-      {children}
+      <div className="md:pl-56">
+        {children}
+      </div>
       <AdminBottomNav />
     </Protected>
   );
@@ -196,7 +295,9 @@ function AdminLayout({ children }) {
 function ParentLayout({ children }) {
   return (
     <Protected role="guardian">
-      {children}
+      <div className="md:pl-56">
+        {children}
+      </div>
       <ParentBottomNav />
     </Protected>
   );
@@ -233,8 +334,6 @@ function App() {
         <Route path="/admin" element={<AdminLayout><AdminHome /></AdminLayout>} />
         <Route path="/admin/reports" element={<AdminLayout><Reports role="Admin" /></AdminLayout>} />
         <Route path="/admin/settings" element={<AdminLayout><Settings role="Admin" /></AdminLayout>} />
-        {/* Admins see totals only, never individual learners or the register
-            (POPIA): old links to those pages go back to the admin home. */}
         <Route path="/admin/*" element={<Navigate to="/admin" replace />} />
 
         <Route path="/parent" element={<ParentLayout><ParentHome /></ParentLayout>} />

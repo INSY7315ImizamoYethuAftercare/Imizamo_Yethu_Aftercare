@@ -9,7 +9,8 @@ import { CLASSES, LEARNERS, signInAs } from './session-helpers'
 
 vi.mock('../services/apiClient', async () => (await import('./api-mock')).apiClientModule)
 
-const card = (name) => screen.getByText(name).closest('div.bg-white')
+// Each learner is one row in the register list.
+const card = (name) => screen.getByText(name).closest('li')
 
 async function renderAs(role, props = {}) {
   await signInAs(role)
@@ -29,9 +30,22 @@ beforeEach(() => {
   onApi('GET', '/attendance/class/2', [])
 })
 
+// Ms Nkosi (the signed-in teacher) leads Yellow, so the page opens there.
+const showAll = () => userEvent.click(screen.getByRole('button', { name: 'All' }))
+
 describe('Attendance (teacher)', () => {
+  it("opens on the teacher's own class", async () => {
+    await renderAs('teacher')
+    expect(screen.getByText('2 learners')).toBeInTheDocument()
+    expect(screen.getByText('Aisha Petersen')).toBeInTheDocument()
+    expect(screen.queryByText('Zoe Ntombela')).not.toBeInTheDocument() // Green
+    expect(screen.getByText('0 / 2')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Mark all present' })).toBeInTheDocument()
+  })
+
   it('renders active learners only, with class filters and zero counts', async () => {
     await renderAs('teacher')
+    await showAll()
     expect(screen.getByText('Liam Botha')).toBeInTheDocument()
     expect(screen.getByText('Zoe Ntombela')).toBeInTheDocument()
     expect(screen.queryByText('Gone Away')).not.toBeInTheDocument()
@@ -48,6 +62,46 @@ describe('Attendance (teacher)', () => {
     expect(screen.getByText('1 learners')).toBeInTheDocument()
   })
 
+  it('class view shows "present / total" and marks everyone in the class with All ✓', async () => {
+    onApi('POST', '/attendance', (body) => ({ record_id: body.learnerId + 100, ...body }))
+    await renderAs('teacher')
+    await showAll()
+    // "All" uses the same summary card, but without All ✓ / Clear.
+    expect(screen.getByText('0 / 3')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Mark all present' })).not.toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Yellow' }))
+    expect(screen.getByText('0 / 2')).toBeInTheDocument()
+    expect(screen.getByText('learners present')).toBeInTheDocument()
+    // The summary card is outlined in the class's own colour (Yellow).
+    expect(screen.getByTestId('class-summary').style.borderColor).toMatch(/#FDE047|rgb\(253, 224, 71\)/i)
+
+    await userEvent.click(screen.getByRole('button', { name: 'Mark all present' }))
+    expect(screen.getByText('2 / 2')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Save Attendance' }))
+
+    expect(await screen.findByText('Attendance saved')).toBeInTheDocument()
+    const posts = apiClient.post.mock.calls.filter(([path]) => path === '/attendance').map(([, body]) => body)
+    expect(posts).toEqual(
+      expect.arrayContaining([
+        { learnerId: 11, classId: 1, status: 'present' },
+        { learnerId: 12, classId: 1, status: 'present' },
+      ]),
+    )
+    expect(posts).toHaveLength(2) // Green's learner was not touched
+  })
+
+  it('Clear undoes unsaved choices in the class view', async () => {
+    await renderAs('teacher')
+    await userEvent.click(screen.getByRole('button', { name: 'Yellow' }))
+    await userEvent.click(within(card('Aisha Petersen')).getByRole('button', { name: 'Absent' }))
+    await userEvent.click(screen.getByRole('button', { name: 'Mark all present' }))
+    expect(screen.getByText('2 / 2')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Clear' }))
+    expect(screen.getByText('0 / 2')).toBeInTheDocument()
+    await userEvent.click(screen.getByRole('button', { name: 'Save Attendance' }))
+    expect(screen.getByText('Nothing new to save. Mark learners present or absent first.')).toBeInTheDocument()
+  })
+
   it('shows a validation message when saving with nothing marked, and calls no API', async () => {
     await renderAs('teacher')
     await userEvent.click(screen.getByRole('button', { name: 'Save Attendance' }))
@@ -58,10 +112,12 @@ describe('Attendance (teacher)', () => {
   it('submits one POST per marked learner with the right payload', async () => {
     onApi('POST', '/attendance', (body) => ({ record_id: body.learnerId + 100, ...body }))
     await renderAs('teacher')
+    await showAll()
 
     await userEvent.click(within(card('Aisha Petersen')).getByRole('button', { name: 'Present' }))
     await userEvent.click(within(card('Zoe Ntombela')).getByRole('button', { name: 'Absent' }))
-    expect(screen.getAllByText('1').length).toBeGreaterThanOrEqual(2) // present 1, absent 1
+    expect(screen.getByText('1 / 3')).toBeInTheDocument() // 1 present out of 3
+    expect(screen.getByText(/1 absent/)).toBeInTheDocument()
     await userEvent.click(screen.getByRole('button', { name: 'Save Attendance' }))
 
     expect(await screen.findByText('Attendance saved')).toBeInTheDocument()

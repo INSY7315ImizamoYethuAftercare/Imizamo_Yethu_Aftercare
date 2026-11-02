@@ -49,7 +49,7 @@ function EditClassSheet({ cls, classes = [], onSave, onClose }) {
               type="button"
               onClick={() => setGrade(g)}
               className={`px-4 py-2 rounded-full text-xs font-semibold transition ${
-                grade === g ? "bg-[#2B2A44] text-white" : "bg-[#F5F0EA] text-gray-500 hover:bg-gray-200"
+                grade === g ? "bg-navy text-white" : "bg-beige text-gray-500 hover:bg-gray-200"
               }`}
             >
               {g === UNASSIGNED_GRADE ? "Not assigned" : g}
@@ -65,7 +65,7 @@ function EditClassSheet({ cls, classes = [], onSave, onClose }) {
               type="button"
               onClick={() => setTeacher(name)}
               className={`px-4 py-2 rounded-full text-xs font-semibold transition ${
-                teacher === name ? "bg-[#2B2A44] text-white" : "bg-[#F5F0EA] text-gray-500 hover:bg-gray-200"
+                teacher === name ? "bg-navy text-white" : "bg-beige text-gray-500 hover:bg-gray-200"
               }`}
             >
               {name === NO_TEACHER ? "No teacher" : name}
@@ -77,7 +77,7 @@ function EditClassSheet({ cls, classes = [], onSave, onClose }) {
         </p>
 
         <div className="flex gap-3">
-          <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
+          <button onClick={onClose} className="flex-1 py-3 rounded-xl bg-beige text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
           <button onClick={() => onSave(grade, teacher)} className="flex-1 py-3 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md active:scale-95 transition">Save</button>
         </div>
       </div>

@@ -13,7 +13,7 @@ function Classes({ role = "Teacher" }) {
   const isManager = role === "Manager";
   const { displayName, displayRole } = useHeader();
   const learnersPath = isManager ? "/manager/learners" : "/learners";
-  const shell = isManager ? "max-w-5xl mx-auto w-full" : "max-w-lg mx-auto w-full";
+  const shell = "max-w-lg md:max-w-3xl lg:max-w-5xl mx-auto w-full";
   const iconBtn =
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
@@ -83,7 +83,7 @@ function Classes({ role = "Teacher" }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
+    <div className="min-h-screen bg-cream flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
@@ -121,7 +121,7 @@ function Classes({ role = "Teacher" }) {
           <p className="text-sm text-gray-400 text-center py-6">Loading classes...</p>
         )}
 
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {classes.map((cls) => {
             const open = () => navigate(`${learnersPath}?group=${cls.name}`);
             return (
@@ -223,7 +223,7 @@ function Classes({ role = "Teacher" }) {
                 )}
                 {moveError && <div role="alert" className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-3 py-2 mb-4">{moveError}</div>}
                 <div className="flex gap-3">
-                  <button onClick={closeRemove} disabled={moving} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition disabled:opacity-50">Cancel</button>
+                  <button onClick={closeRemove} disabled={moving} className="flex-1 py-3 rounded-xl bg-beige text-sm font-semibold text-gray-500 active:scale-95 transition disabled:opacity-50">Cancel</button>
                   {otherClasses.length > 0 && (
                     <button onClick={moveAndRemove} disabled={moving || !moveTo} className="flex-1 py-3 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md active:scale-95 transition disabled:opacity-50">
                       {moving ? "Moving..." : "Move & remove"}
@@ -242,7 +242,7 @@ function Classes({ role = "Teacher" }) {
                   <p className="text-sm font-semibold text-gray-900">{toRemove.name} ({toRemove.grade})</p>
                 </div>
                 <div className="flex gap-3">
-                  <button onClick={closeRemove} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
+                  <button onClick={closeRemove} className="flex-1 py-3 rounded-xl bg-beige text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
                   <button onClick={confirmRemove} className="flex-1 py-3 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md active:scale-95 transition">Remove</button>
                 </div>
               </>

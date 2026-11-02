@@ -12,7 +12,7 @@ function TeacherSettings() {
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
+    <div className="min-h-screen bg-cream flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
@@ -29,7 +29,7 @@ function TeacherSettings() {
         </button>
       </div>
 
-      <div className="flex-1 px-4 pt-5 pb-32 max-w-lg mx-auto w-full space-y-4">
+      <div className="flex-1 px-4 md:px-6 pt-5 pb-32 max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto w-full space-y-4">
         <h1 className="text-2xl font-bold text-gray-900">Settings</h1>
 
         <div className={card}>

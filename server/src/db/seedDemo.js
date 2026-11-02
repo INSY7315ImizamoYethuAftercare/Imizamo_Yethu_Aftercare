@@ -21,7 +21,7 @@ const DEMO_PASSWORD = process.env.SEED_PASSWORD ?? 'Demo-Password-2026!'
 const DOMAIN = 'iylh.test'
 
 const STAFF = [
-  { role: 'admin', accessLevel: 'master', fullName: 'Nomvula Dube', email: `master.admin@${DOMAIN}` },
+  { role: 'admin', accessLevel: 'master', fullName: 'Master Admin', email: `master.admin@${DOMAIN}` },
   { role: 'admin', accessLevel: 'standard', fullName: 'Pieter Jacobs', email: `admin@${DOMAIN}` },
   { role: 'manager', fullName: 'Sarah Botha', email: `manager@${DOMAIN}` },
   { role: 'teacher', fullName: 'Thandeka Nkosi', email: `t.nkosi@${DOMAIN}`, class: 'Yellow' },

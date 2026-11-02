@@ -22,6 +22,7 @@ import { learnerRouter } from './routes/learner.routes.js'
 import { reportRouter } from './routes/report.routes.js'
 import { teacherRouter } from './routes/teacher.routes.js'
 import { accountRouter } from './routes/account.routes.js'
+import { docsRouter } from './routes/docs.routes.js'
 
 // Where the built React app lives in the deploy package (see
 // scripts/build-deploy.mjs). Absent in local dev, where Vite serves it.
@@ -68,6 +69,8 @@ export function createApp({ publicDir = DEFAULT_PUBLIC_DIR } = {}) {
   app.use('/api/classes', schoolClassRouter)
   app.use('/api/teacher', teacherRouter)
   app.use('/api/accounts', accountRouter)
+  // API documentation: /api/docs (browsable) and /api/openapi.json (raw spec).
+  app.use('/api', docsRouter)
 
   // --- Website (production) ---
   // One Azure Web App serves both the API and the React app, so they share

@@ -12,6 +12,11 @@ function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showNoSignup, setShowNoSignup] = useState(false);
+
+  // Only parents/guardians register themselves; staff accounts are made by
+  // the master admin.
+  const canRegister = role === "Parent";
 
   // `key` is the account role the server checks the picked card against.
   const roles = [
@@ -118,11 +123,47 @@ function Login() {
 
         <p className="text-sm text-center text-gray-500">
           New to the hub?{" "}
-          <button onClick={() => navigate("/register")} className="text-orange-500 font-medium">
+          {/* Greyed out but still clickable for staff roles, so a tap can
+              explain why instead of doing nothing. */}
+          <button
+            type="button"
+            aria-disabled={!canRegister}
+            onClick={() => (canRegister ? navigate("/register") : setShowNoSignup(true))}
+            className={canRegister ? "text-orange-500 font-medium" : "text-gray-300 font-medium cursor-not-allowed"}
+          >
             Create an account →
           </button>
         </p>
       </div>
+
+      {showNoSignup && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4"
+          onClick={() => setShowNoSignup(false)}
+        >
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="no-signup-title"
+            aria-describedby="no-signup-text"
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white rounded-2xl shadow-lg border border-gray-200 p-5 w-full max-w-xs text-center"
+          >
+            <p id="no-signup-title" className="font-semibold text-gray-900 mb-2">Can&apos;t create an account</p>
+            <p id="no-signup-text" className="text-sm text-gray-600 mb-4">
+              You cannot create an account for this role. Ask the master admin to create an account for you.
+            </p>
+            <button
+              type="button"
+              autoFocus
+              onClick={() => setShowNoSignup(false)}
+              className="w-full py-2.5 rounded-full bg-orange-400 text-white font-semibold shadow-md hover:bg-orange-500 active:scale-[0.98] transition"
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
 
       <p className="text-xs text-gray-400 mt-8">© Imizamo Yethu Learning Hub</p>
     </div>

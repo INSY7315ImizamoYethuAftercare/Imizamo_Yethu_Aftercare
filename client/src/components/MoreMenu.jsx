@@ -2,17 +2,35 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout, settingsPathFor, useSession } from "../services/session";
 
+const iconBtn =
+  "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
+
 function MoreMenu() {
   const navigate = useNavigate();
   const { user } = useSession();
   const [open, setOpen] = useState(false);
+
+  // Teachers get a plain ⚙️ button, like the other portals. Log out lives on
+  // their Settings page. Managers still get the ⋮ menu next to their own ⚙️.
+  if (user?.appRole === "teacher") {
+    return (
+      <button
+        type="button"
+        aria-label="Settings"
+        onClick={() => navigate(settingsPathFor(user.appRole))}
+        className={iconBtn}
+      >
+        ⚙️
+      </button>
+    );
+  }
 
   return (
     <div className="relative">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition"
+        className={iconBtn}
       >
         ⋮
       </button>
