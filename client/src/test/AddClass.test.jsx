@@ -73,6 +73,42 @@ describe('Add New Classroom', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  it('offers the active teachers and adds the class with the one picked', async () => {
+    onApi('GET', '/teacher', [
+      { teacher_id: 2, user_id: 2, full_name: 'Ms Nkosi', contact_email: 'nkosi@iylh.org', is_active: true },
+      { teacher_id: 3, user_id: 3, full_name: 'Mr Gone', contact_email: 'gone@iylh.org', is_active: false },
+      { teacher_id: 4, user_id: 4, full_name: 'Ms Free', contact_email: 'free@iylh.org', is_active: true },
+    ])
+    onApi('POST', '/classes', BROWN)
+    onApi('PATCH', '/classes/1', {})
+    const dialog = await openForm()
+
+    const group = within(dialog).getByRole('group', { name: 'TEACHER' })
+    expect(await within(group).findByRole('button', { name: 'Ms Free' })).toBeInTheDocument()
+    expect(within(group).queryByRole('button', { name: 'Mr Gone' })).not.toBeInTheDocument()
+    expect(within(group).getByRole('button', { name: 'No teacher' })).toHaveAttribute('aria-pressed', 'true')
+
+    await userEvent.type(within(dialog).getByLabelText(/CLASS NAME/), 'Brown')
+    await userEvent.click(within(group).getByRole('button', { name: 'Ms Free' }))
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add Classroom' }))
+
+    expect(classPosts()).toEqual([['/classes', expect.objectContaining({ className: 'Brown', teacherId: 4 })]])
+  })
+
+  it('warns that a teacher who already leads a class will be moved, and moves them', async () => {
+    onApi('GET', '/teacher', [{ teacher_id: 2, user_id: 2, full_name: 'Ms Nkosi', contact_email: 'nkosi@iylh.org', is_active: true }])
+    onApi('POST', '/classes', BROWN)
+    onApi('PATCH', '/classes/1', {})
+    const dialog = await openForm()
+    await userEvent.type(within(dialog).getByLabelText(/CLASS NAME/), 'Brown')
+    await userEvent.click(await within(dialog).findByRole('button', { name: 'Ms Nkosi' }))
+    expect(within(dialog).getByText('Ms Nkosi currently leads Yellow. Adding this class will move them here.')).toBeInTheDocument()
+
+    await userEvent.click(within(dialog).getByRole('button', { name: 'Add Classroom' }))
+    expect(apiClient.patch).toHaveBeenCalledWith('/classes/1', { teacherId: null })
+    expect(classPosts()).toEqual([['/classes', expect.objectContaining({ teacherId: 2 })]])
+  })
+
   it.each([
     ['', 'Enter a class name.'],
     ['YELLOW', "There's already a class called YELLOW."],

@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import MoreMenu from "../components/MoreMenu";
+import SettingsButton from "../components/SettingsButton";
 import { apiClient } from "../services/apiClient";
 import { useSession } from "../services/session";
 import { colourForClass } from "./AddClassSheet";
@@ -21,7 +20,6 @@ import { useHeader } from "./UseHeader";
 // yet. Both need a real escalation table and API; until then those screens
 // record nothing.
 function SignOut({ role = "Teacher" }) {
-  const navigate = useNavigate();
   const isManager = role === "Manager";
   const { displayName, displayRole } = useHeader();
   const comingSoon = () => alert("Coming soon");
@@ -160,10 +158,7 @@ function SignOut({ role = "Teacher" }) {
       </div>
       <div className="flex items-center gap-3">
         <button onClick={comingSoon} className={iconBtn}>🔔</button>
-        {isManager && (
-          <button onClick={() => navigate("/settings")} className={iconBtn}>⚙️</button>
-        )}
-        <MoreMenu />
+        <SettingsButton />
       </div>
     </div>
   );

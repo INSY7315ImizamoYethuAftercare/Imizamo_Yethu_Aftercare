@@ -46,7 +46,7 @@ function Staff() {
     try {
       await createTeacher({ fullName, email, password: draft.password });
       closeForm();
-      setBanner(fullName + " was added. Give them their email and starting password to sign in.");
+      setBanner(fullName + " was added. Give them their email and starting password to sign in. They'll choose their own password the first time.");
       setTimeout(() => setBanner(""), 4000);
     } catch (err) {
       setAddError(err.message || "Could not add this teacher. Please try again.");

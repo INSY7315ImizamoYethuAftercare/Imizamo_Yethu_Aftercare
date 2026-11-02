@@ -84,7 +84,7 @@ function AccountsSection() {
     try {
       const created = await apiClient.post("/accounts", { type: draft.type, fullName, email, password: draft.password });
       closeForm();
-      setBanner(`${created.fullName} was added as a ${TYPE_LABEL[created.type].toLowerCase()}. Give them their email and starting password to sign in.`);
+      setBanner(`${created.fullName} was added as a ${TYPE_LABEL[created.type].toLowerCase()}. Give them their email and starting password to sign in. They'll choose their own password the first time.`);
       setTimeout(() => setBanner(""), 5000);
       await load();
     } catch (err) {

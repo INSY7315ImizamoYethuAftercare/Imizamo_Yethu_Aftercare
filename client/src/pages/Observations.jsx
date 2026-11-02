@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import MoreMenu from "../components/MoreMenu";
+import SettingsButton from "../components/SettingsButton";
 import { apiClient } from "../services/apiClient";
 import { longDate } from "../utils/dates";
 import { useHeader } from "./UseHeader";
@@ -103,8 +103,6 @@ function Observations({ role = "Teacher" }) {
   // Only teachers can record observations (the API is teacher-only).
   const canObserve = role === "Teacher";
   const comingSoon = () => alert("Coming soon");
-  const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
-  const showSettings = role === "Manager" || role === "Admin";
   const iconBtn = "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const backPath = role === "Admin" ? "/admin/learners" : role === "Manager" ? "/manager/learners" : "/learners";
@@ -207,8 +205,7 @@ function Observations({ role = "Teacher" }) {
         </div>
         <div className="flex items-center gap-3">
           <button onClick={comingSoon} className={iconBtn}>🔔</button>
-          {showSettings && <button onClick={() => navigate(settingsPath)} className={iconBtn}>⚙️</button>}
-          <MoreMenu />
+          <SettingsButton />
         </div>
       </div>
 

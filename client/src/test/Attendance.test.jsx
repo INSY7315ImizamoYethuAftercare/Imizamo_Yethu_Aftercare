@@ -180,6 +180,12 @@ describe('Attendance (teacher)', () => {
 })
 
 describe('Attendance (manager, read-only)', () => {
+  it('has one ⚙️ in the header and no ⋮ menu', async () => {
+    await renderAs('manager', { role: 'Manager' })
+    expect(screen.getAllByRole('button', { name: 'Settings' })).toHaveLength(1)
+    expect(screen.queryByRole('button', { name: '⋮' })).not.toBeInTheDocument()
+  })
+
   it('shows statuses but no Present/Absent buttons and no Save', async () => {
     onApi('GET', '/attendance/class/1', [{ record_id: 501, learner_id: 11, status: 'present' }])
     await renderAs('manager', { role: 'Manager' })

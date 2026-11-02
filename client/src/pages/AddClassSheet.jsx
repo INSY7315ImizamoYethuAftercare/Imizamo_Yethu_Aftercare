@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getClasses } from "./UseClasses";
+import { useStaff, teachersOnly, NO_TEACHER } from "./UseTeachers";
 
 export const GRADE_RANGES = ["Gr R", "Gr 1-2", "Gr 3-4", "Gr 5-6", "Gr 7"];
 export const UNASSIGNED_GRADE = "Unassigned";
@@ -38,10 +39,14 @@ export const colourForClass = (name, colour) =>
 
 const label = "block text-xs font-bold text-gray-500 tracking-wide mb-2";
 
-function AddClassSheet({ existingNames, onAdd, onClose }) {
+function AddClassSheet({ existingNames, classes = [], onAdd, onClose }) {
   const [name, setName] = useState("");
   const [grade, setGrade] = useState("Gr 1-2");
   const [colour, setColour] = useState(SWATCHES[0].hex);
+  const [teacher, setTeacher] = useState(NO_TEACHER);
+  const teachers = teachersOnly(useStaff()).filter((t) => t.status === "Active");
+  // The class the picked teacher leads now, so the manager can see they'll be moved.
+  const movingFrom = teacher !== NO_TEACHER ? classes.find((c) => c.teacher === teacher)?.name : null;
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -62,7 +67,7 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
     setSaving(true);
     setError("");
     try {
-      await onAdd({ name: trimmed, grade, colour });
+      await onAdd({ name: trimmed, grade, colour, teacher });
     } catch (err) {
       setError(err?.message || "Couldn't add the class. Please try again.");
       setSaving(false);
@@ -115,6 +120,26 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
               </button>
             ))}
           </div>
+
+          <p id="teacher-label" className={label}>TEACHER</p>
+          <div role="group" aria-labelledby="teacher-label" className="flex flex-wrap gap-2 mb-2">
+            {[NO_TEACHER, ...teachers.map((t) => t.name)].map((n) => (
+              <button
+                key={n}
+                type="button"
+                aria-pressed={teacher === n}
+                onClick={() => setTeacher(n)}
+                className={`px-5 py-3 rounded-2xl text-sm font-bold transition active:scale-95 ${
+                  teacher === n ? "bg-navy text-white shadow-md" : "bg-beige text-gray-500 hover:bg-gray-200"
+                }`}
+              >
+                {n === NO_TEACHER ? "No teacher" : n}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-orange-500 min-h-[1rem] mb-6">
+            {movingFrom ? `${teacher} currently leads ${movingFrom}. Adding this class will move them here.` : ""}
+          </p>
 
           <p id="colour-label" className={label}>CLASS COLOUR</p>
           <div role="group" aria-labelledby="colour-label" className="grid grid-cols-5 gap-3 mb-6">

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import MoreMenu from "../components/MoreMenu";
+import SettingsButton from "../components/SettingsButton";
 import { apiClient } from "../services/apiClient";
 import { dataBus } from "../services/dataBus";
 import { useSession } from "../services/session";
@@ -120,7 +120,7 @@ function Home() {
         </div>
         <div className="flex items-center gap-3">
           <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
-          <MoreMenu />
+          <SettingsButton />
         </div>
       </div>
 

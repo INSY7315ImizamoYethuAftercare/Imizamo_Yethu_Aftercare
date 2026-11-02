@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import MoreMenu from "../components/MoreMenu";
+import SettingsButton from "../components/SettingsButton";
 import { useHeader } from "./UseHeader";
 
 function Escalations() {
   const { displayName, displayRole } = useHeader();
-  const navigate = useNavigate();
   const comingSoon = () => alert("Coming soon");
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const iconBtn =
@@ -78,8 +76,7 @@ function Escalations() {
           </div>
           <div className="flex items-center gap-3">
             <button onClick={comingSoon} className={iconBtn}>🔔</button>
-            <button onClick={() => navigate("/settings")} className={iconBtn}>⚙️</button>
-            <MoreMenu />
+            <SettingsButton />
           </div>
         </div>
       </div>

@@ -50,6 +50,8 @@ export class TeacherService {
       passwordHash,
       fullName,
       isActive: true,
+      // The manager picks the starting password, so the teacher chooses their own at first sign-in.
+      mustChangePassword: true,
     });
 
     return this.teacherRepository.create({

@@ -30,7 +30,9 @@
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.12.0",
     "node-pg-migrate": "^9.0.0",
-    "pg": "^8.13.1"
+    "pg": "^8.13.1",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.9.1"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

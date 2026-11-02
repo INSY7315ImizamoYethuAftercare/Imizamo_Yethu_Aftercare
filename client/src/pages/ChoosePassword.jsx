@@ -30,7 +30,7 @@ function ChoosePassword() {
           <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto mb-3 object-contain" />
           <h1 className="text-2xl font-bold text-gray-900">Choose a new password</h1>
           <p className="text-sm text-gray-500 mt-2">
-            Hi {user.fullName}. Your password was reset by the master admin. Enter the temporary password you were given,
+            Hi {user.fullName}. Your password was set for you by someone else. Enter the temporary password you were given,
             then choose your own. Only you will know it.
           </p>
         </div>

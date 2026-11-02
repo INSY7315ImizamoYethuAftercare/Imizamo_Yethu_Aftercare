@@ -6,7 +6,6 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import MoreMenu from '../components/MoreMenu'
 import Login from '../pages/Login'
 import ParentSettings from '../pages/ParentSettings'
 import Settings from '../pages/Settings'
@@ -67,17 +66,6 @@ describe('Log out button on the Settings page', () => {
     await signInAs('guardian')
     renderAt('/parent/settings', <ParentSettings />)
     apiClient.post.mockClear()
-    await userEvent.click(screen.getByRole('button', { name: 'Log out' }))
-    await expectLoggedOut()
-  })
-})
-
-describe('Log out in the ⋮ menu', () => {
-  it('logs a manager out', async () => {
-    await signInAs('manager')
-    renderAt('/manager/attendance', <MoreMenu />)
-    apiClient.post.mockClear()
-    await userEvent.click(screen.getByRole('button', { name: '⋮' }))
     await userEvent.click(screen.getByRole('button', { name: 'Log out' }))
     await expectLoggedOut()
   })
