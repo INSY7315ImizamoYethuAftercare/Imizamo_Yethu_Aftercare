@@ -59,6 +59,7 @@ export const PROTECTED_ROUTES = [
 
   route('GET /api/learners', [...MANAGER, 'teacher'], () => '/api/learners'),
   route('GET /api/learners/:learnerId', [...MANAGER, 'teacher'], (w) => `/api/learners/${w.learnerA.learner_id}`),
+  route('GET /api/learners/:learnerId/overview', [...MANAGER, 'teacher'], (w) => `/api/learners/${w.learnerA.learner_id}/overview`),
   route('POST /api/learners', [...MANAGER], () => '/api/learners',
     (w) => ({ classId: w.yellowId, firstName: 'New', lastName: 'Learner', dateOfBirth: '2019-01-01' })),
   route('PATCH /api/learners/:learnerId', [...MANAGER], (w) => `/api/learners/${w.learnerA.learner_id}`,

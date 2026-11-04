@@ -85,7 +85,7 @@ function Staff() {
   };
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       <div className="bg-white">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-4 pt-4 pb-3">
           <div className="flex items-center gap-2">
@@ -140,7 +140,7 @@ function Staff() {
             </div>
             {addError && <p role="alert" className="text-sm text-red-500 mb-3">{addError}</p>}
             <div className="flex gap-3">
-              <button type="button" onClick={closeForm} className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium border border-gray-200 shadow-md">
+              <button type="button" onClick={closeForm} className="flex-1 py-2.5 rounded-full bg-beige text-gray-500 font-semibold">
                 Cancel
               </button>
               <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-semibold shadow-md disabled:opacity-60">

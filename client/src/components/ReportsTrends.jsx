@@ -5,6 +5,7 @@ import { changeLabel, pointsChange } from "../utils/insights";
 
 function ReportsTrends({
   orgTrend,
+  orgTrendView,
   classRows,
   insight,
   exportTrends,
@@ -19,7 +20,16 @@ function ReportsTrends({
 
       <div className={card}>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <h3 className="font-semibold text-gray-900">Organisation trend</h3>
+          <div>
+            <h3 className="font-semibold text-gray-900">Organisation trend</h3>
+            {orgTrend.length > 0 && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                {orgTrendView === "daily"
+                  ? "Attendance day by day. This changes to weekly once two weeks are recorded."
+                  : "Attendance each week, Monday to Friday."}
+              </p>
+            )}
+          </div>
           <button
             onClick={exportChart}
             className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-orange-500 border border-gray-200 shadow-lg hover:border-orange-300 active:scale-95 transition"

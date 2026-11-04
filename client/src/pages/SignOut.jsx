@@ -164,7 +164,7 @@ function SignOut({ role = "Teacher" }) {
   );
 
   const page = (children, center = false) => (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       {header}
       <div className={`flex-1 px-4 pt-5 pb-32 ${center ? "flex flex-col items-center justify-center " : ""}${step === "list" ? listShell : formShell}`}>
         {children}
@@ -190,7 +190,7 @@ function SignOut({ role = "Teacher" }) {
   const primaryBtn =
     "w-full py-3.5 rounded-2xl bg-orange-500 text-white font-semibold shadow-lg hover:bg-orange-600 active:scale-[0.98] transition disabled:opacity-60";
   const secondaryBtn =
-    "py-3.5 rounded-2xl bg-stone-100 text-gray-600 font-semibold hover:bg-stone-200 active:scale-[0.98] transition";
+    "py-3.5 rounded-2xl bg-beige text-gray-500 font-semibold hover:bg-gray-200 active:scale-[0.98] transition";
 
   const errorBox = (text) => (
     <div role="alert" className="mb-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-3 py-2">
@@ -260,7 +260,7 @@ function SignOut({ role = "Teacher" }) {
               <div>
                 <p className="font-semibold text-gray-900">{learner.name}</p>
                 <p className="text-xs text-gray-500">{learner.gradeRange} • {learner.className}</p>
-                <p className="text-xs text-green-500 mt-1">Present today</p>
+                <p className="text-xs text-green-600 mt-1">Present today</p>
               </div>
               <button
                 type="button"
@@ -309,15 +309,15 @@ function SignOut({ role = "Teacher" }) {
           onClick={() => choose(next)}
           className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl border-2 text-left text-sm font-semibold transition active:scale-[0.99] ${
             selected
-              ? "border-emerald-400 bg-emerald-50 text-emerald-700"
-              : "border-transparent bg-stone-100 text-gray-600 hover:bg-stone-200"
+              ? "border-green-400 bg-green-50 text-green-700"
+              : "border-transparent bg-beige text-gray-500 hover:bg-gray-200"
           }`}
         >
           <span className="flex items-center gap-2">
             <span aria-hidden="true">{selected ? "✅" : icon}</span>
             {label}
           </span>
-          {sub && <span className={`text-xs font-normal ${selected ? "text-emerald-600" : "text-gray-400"}`}>{sub}</span>}
+          {sub && <span className={`text-xs font-normal ${selected ? "text-green-600" : "text-gray-400"}`}>{sub}</span>}
         </button>
       );
     };
@@ -454,9 +454,9 @@ function SignOut({ role = "Teacher" }) {
       <>
         {pageTitle}
 
-        <div className="bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-5 mb-4 text-center shadow-lg">
+        <div className="bg-green-50 border-2 border-green-400 rounded-2xl p-5 mb-4 text-center shadow-lg">
           <p className="text-4xl" aria-hidden="true">✅</p>
-          <p className="font-bold text-emerald-600 text-xl mt-2">Verified!</p>
+          <p className="font-bold text-green-600 text-xl mt-2">Verified!</p>
           <p data-testid="verified-message" className="text-sm text-gray-700 mt-1">
             {collector.guardianId === null ? (
               <><strong>{selectedLearner.name}</strong> is allowed to walk home alone</>

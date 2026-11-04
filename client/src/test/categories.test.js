@@ -5,9 +5,9 @@ describe('development category colours', () => {
   it('gives every category its own colour in text, chip and hex form', () => {
     expect(CATEGORIES).toEqual(['Academic', 'Social', 'Wellbeing', 'Creative', 'Physical'])
     expect(new Set(CATEGORIES.map(categoryHex)).size).toBe(CATEGORIES.length)
-    expect(categoryTextClass('Academic')).toBe('text-blue-500')
-    expect(categoryChipClass('Social')).toBe('bg-cyan-400 text-white')
-    expect(categoryHex('Wellbeing')).toBe('#22C55E')
+    expect(categoryTextClass('Academic')).toBe('text-blue-600')
+    expect(categoryChipClass('Social')).toBe('bg-cyan-100 text-cyan-700')
+    expect(categoryHex('Wellbeing')).toBe('#86EFAC')
   })
 
   it('falls back to grey for an unknown category', () => {

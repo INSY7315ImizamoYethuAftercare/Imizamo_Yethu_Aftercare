@@ -15,7 +15,7 @@ function ChoosePassword() {
 
   if (status === "unknown") {
     return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center">
         <p className="text-sm text-gray-400">Loading...</p>
       </div>
     );
@@ -24,7 +24,7 @@ function ChoosePassword() {
   if (!user.mustChangePassword) return <Navigate to={homePathFor(user.appRole)} replace />;
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col items-center px-4 pt-10 pb-8">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col items-center px-4 pt-10 pb-8">
       <div className="w-full max-w-sm space-y-4">
         <div className="text-center">
           <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto mb-3 object-contain" />

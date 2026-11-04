@@ -51,7 +51,7 @@ function ObservationsList({
                 setShowForm(false);
                 setNote("");
               }}
-              className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium text-sm border border-gray-200 shadow-lg active:scale-[0.98] transition"
+              className="flex-1 py-2.5 rounded-full bg-beige text-gray-500 font-semibold text-sm active:scale-[0.98] transition"
             >
               Cancel
             </button>

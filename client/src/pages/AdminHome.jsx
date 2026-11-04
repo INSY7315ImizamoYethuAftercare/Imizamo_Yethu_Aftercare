@@ -37,7 +37,7 @@ function AdminHome() {
     : [];
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       <div className="bg-white">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-4 pt-4 pb-3">
           <div className="flex items-center gap-2">
@@ -55,7 +55,7 @@ function AdminHome() {
       </div>
 
       <div className="flex-1 px-4 pt-5 pb-32 max-w-5xl mx-auto w-full">
-        <div className="bg-gradient-to-r from-orange-400 to-orange-300 rounded-2xl p-5 mb-5 text-white shadow-lg">
+        <div className="bg-gradient-to-r from-orange-500 to-orange-300 rounded-2xl p-5 mb-5 text-white shadow-lg">
           {today && <p className="text-sm opacity-90">{longDate(todayInSA())}</p>}
           <h1 className="text-xl font-bold mt-1">{greeting()}, {firstName}! 👋</h1>
           {today && (
@@ -80,7 +80,7 @@ function AdminHome() {
                 </div>
                 <p className="text-xs text-gray-500">Present Today</p>
                 <div className="mt-2 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-400 rounded-full" style={{ width: percent(today.present, today.activeLearners) }}></div>
+                  <div className="h-full bg-green-500 rounded-full" style={{ width: percent(today.present, today.activeLearners) }}></div>
                 </div>
               </div>
               <div className={card}>

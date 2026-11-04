@@ -110,6 +110,9 @@ function Reports({ role = "Manager" }) {
   const attendanceByClass = data?.attendanceByClass ?? [];
   const classRows = data?.classTrends ?? [];
   const orgTrend = data?.orgTrend ?? [];
+  const orgTrendView = data?.orgTrendView ?? "weekly";
+  const trendPoints = orgTrend.map((w) => ({ label: w.label, value: w.rate }));
+  const trendPeriodWords = orgTrendView === "daily" ? "day by day" : "week by week";
 
   const maxCat = Math.max(
     1,
@@ -285,8 +288,8 @@ function Reports({ role = "Manager" }) {
       charts: [
         {
           type: "line",
-          heading: "Organisation attendance across the period",
-          points: orgTrend.map((w) => ({ label: w.week, value: w.rate })),
+          heading: `Organisation attendance ${trendPeriodWords}`,
+          points: trendPoints,
         },
         {
           type: "bars",
@@ -314,8 +317,8 @@ function Reports({ role = "Manager" }) {
       filename: "org-trend-chart",
       title: "Organisation Trend",
       period: periodLabel,
-      heading: "Attendance rate across the period",
-      points: orgTrend.map((w) => ({ label: w.week, value: w.rate })),
+      heading: `Attendance rate ${trendPeriodWords}`,
+      points: trendPoints,
     });
 
   const exportDonor = () =>
@@ -341,7 +344,7 @@ function Reports({ role = "Manager" }) {
     });
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       <div className="bg-white">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-4 pt-4 pb-3">
           <div className="flex items-center gap-2">
@@ -377,7 +380,7 @@ function Reports({ role = "Manager" }) {
           <p className="text-sm text-gray-500 mb-4">Loading report data…</p>
         )}
         {error && (
-          <p className="text-sm text-red-500 mb-4 bg-red-50 border border-red-100 rounded-xl px-3 py-2">
+          <p className="mb-4 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-3 py-2">
             {error}
           </p>
         )}
@@ -403,6 +406,7 @@ function Reports({ role = "Manager" }) {
         {activeTab === "Trends" && (
           <ReportsTrends
             orgTrend={orgTrend}
+            orgTrendView={orgTrendView}
             classRows={classRows}
             insight={trendsTakeaway}
             exportTrends={exportTrends}

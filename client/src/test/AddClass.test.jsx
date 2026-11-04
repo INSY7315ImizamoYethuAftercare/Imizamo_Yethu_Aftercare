@@ -10,7 +10,7 @@ import { CLASSES, signInAs } from './session-helpers'
 
 vi.mock('../services/apiClient', async () => (await import('./api-mock')).apiClientModule)
 
-const BROWN = { class_id: 6, class_name: 'Brown', grade_range: 'Gr 5-6', colour: '#9B5DE5', teacher_id: null, teacher_name: null, is_active: true, learner_count: 0, active_learner_count: 0, present_today: 0 }
+const BROWN = { class_id: 6, class_name: 'Brown', grade_range: 'Gr 5-6', colour: '#D8B4FE', teacher_id: null, teacher_name: null, is_active: true, learner_count: 0, active_learner_count: 0, present_today: 0 }
 
 async function openForm(role = 'manager') {
   await signInAs(role)
@@ -45,7 +45,7 @@ describe('Add New Classroom', () => {
 
     const colours = within(dialog).getByRole('group', { name: 'CLASS COLOUR' })
     expect(within(colours).getAllByRole('button')).toHaveLength(8)
-    expect(within(colours).getByRole('button', { name: 'Yellow' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(colours).getByRole('button', { name: 'Teal' })).toHaveAttribute('aria-pressed', 'true')
 
     expect(within(dialog).getByText('Class Name')).toBeInTheDocument() // preview placeholder
     expect(within(dialog).getByRole('button', { name: 'Add Classroom' })).toBeInTheDocument()
@@ -68,7 +68,7 @@ describe('Add New Classroom', () => {
     onApi('GET', '/classes', [...CLASSES, BROWN])
     await userEvent.click(within(dialog).getByRole('button', { name: 'Add Classroom' }))
 
-    expect(classPosts()).toEqual([['/classes', { className: 'Brown', gradeRange: 'Gr 5-6', colour: '#9B5DE5' }]])
+    expect(classPosts()).toEqual([['/classes', { className: 'Brown', gradeRange: 'Gr 5-6', colour: '#D8B4FE' }]])
     expect(await screen.findByText('Brown')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
@@ -145,7 +145,7 @@ describe('Add New Classroom', () => {
     await signInAs('manager')
     render(<MemoryRouter><Classes role="Manager" /></MemoryRouter>)
     const row = (await screen.findByText('Brown')).closest('[role="button"]')
-    expect(row.querySelector('span[style]')).toHaveStyle({ backgroundColor: '#9B5DE5' })
+    expect(row.querySelector('span[style]')).toHaveStyle({ backgroundColor: '#D8B4FE' })
   })
 
   it('teachers do not get the form', async () => {

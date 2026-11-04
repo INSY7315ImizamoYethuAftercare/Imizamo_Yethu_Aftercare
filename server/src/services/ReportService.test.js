@@ -211,10 +211,84 @@ describe('ReportService', () => {
       ]),
     )
 
-    expect(result.orgTrend).toHaveLength(4)
-    expect(result.orgTrend[0]).toMatchObject({ week: 'W1', rate: 80 })
+    // Only one week has a register in the stub, so the trend is day by day.
+    expect(result.orgTrendView).toBe('daily')
+    expect(result.orgTrend).toEqual([
+      { label: 'Mon 02', rate: 80 },
+      { label: 'Tue 03', rate: 100 },
+      { label: 'Wed 04', rate: null },
+      { label: 'Thu 05', rate: null },
+      { label: 'Fri 06', rate: null },
+    ])
 
     expect(result.rates).toMatchObject({ thisWeek: 80, lastWeek: 80, period: 80 })
+  })
+
+  describe('organisation trend', () => {
+    const overviewWith = (rows, periodStart = '2026-01-01') => {
+      stubOverviewRepos(deps)
+      deps.attendanceRepository.getDailyPresentCounts.mockResolvedValue(rows)
+      return service.getOverviewData({ userId: 1, periodStart, periodEnd: '2026-03-06' })
+    }
+
+    it('reads up to the last 8 weeks of attendance', async () => {
+      await overviewWith([])
+      expect(deps.attendanceRepository.getDailyPresentCounts).toHaveBeenCalledWith('2026-01-12', '2026-03-06')
+    })
+
+    it('shows real weeks from the first recorded week, with a gap for an empty week', async () => {
+      const result = await overviewWith([
+        { record_date: '2026-02-16', present_count: '3', absent_count: '1' },
+        { record_date: '2026-03-02', present_count: '4', absent_count: '1' },
+        { record_date: '2026-03-03', present_count: '5', absent_count: '0' },
+      ])
+      expect(result.orgTrendView).toBe('weekly')
+      expect(result.orgTrend).toEqual([
+        { label: '16 Feb', rate: 75 },
+        { label: '23 Feb', rate: null },
+        { label: '2 Mar', rate: 90 },
+      ])
+    })
+
+    it('leaves weekend records out, matching the this-week and last-week rates', async () => {
+      const result = await overviewWith([
+        { record_date: '2026-02-23', present_count: '1', absent_count: '1' },
+        { record_date: '2026-02-28', present_count: '0', absent_count: '8' },
+        { record_date: '2026-03-02', present_count: '1', absent_count: '0' },
+      ])
+      expect(result.orgTrend).toEqual([
+        { label: '23 Feb', rate: 50 },
+        { label: '2 Mar', rate: 100 },
+      ])
+    })
+
+    it('starts the day-by-day view at the first day with a register', async () => {
+      const result = await overviewWith([{ record_date: '2026-03-04', present_count: '3', absent_count: '1' }])
+      expect(result.orgTrendView).toBe('daily')
+      expect(result.orgTrend).toEqual([
+        { label: 'Wed 04', rate: 75 },
+        { label: 'Thu 05', rate: null },
+        { label: 'Fri 06', rate: null },
+      ])
+    })
+
+    it('stays inside a shorter period', async () => {
+      const result = await overviewWith(
+        [{ record_date: '2026-03-05', present_count: '1', absent_count: '0' }],
+        '2026-03-05',
+      )
+      expect(deps.attendanceRepository.getDailyPresentCounts).toHaveBeenCalledWith('2026-03-05', '2026-03-06')
+      expect(result.orgTrend).toEqual([
+        { label: 'Thu 05', rate: 100 },
+        { label: 'Fri 06', rate: null },
+      ])
+    })
+
+    it('is empty when nothing was recorded', async () => {
+      const result = await overviewWith([])
+      expect(result.orgTrendView).toBe('weekly')
+      expect(result.orgTrend).toEqual([])
+    })
   })
 
   it('getOverviewData defaults the period when dates are omitted', async () => {

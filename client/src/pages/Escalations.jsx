@@ -64,7 +64,7 @@ function Escalations() {
   };
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       <div className="bg-white">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-4 pt-4 pb-3">
           <div className="flex items-center gap-2">
@@ -99,7 +99,7 @@ function Escalations() {
             <p className="text-xs text-gray-500 mt-1">Open</p>
           </div>
           <div className={`${card} text-center`}>
-            <p className="text-2xl font-bold text-green-500">{closedItems.length}</p>
+            <p className="text-2xl font-bold text-green-600">{closedItems.length}</p>
             <p className="text-xs text-gray-500 mt-1">Resolved today</p>
           </div>
         </div>

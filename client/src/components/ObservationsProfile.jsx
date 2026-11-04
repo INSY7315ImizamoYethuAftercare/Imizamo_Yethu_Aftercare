@@ -110,7 +110,7 @@ function ObservationsProfile({
                 type="button"
                 onClick={cancelEdit}
                 disabled={saving}
-                className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium text-sm border border-gray-200 shadow-lg disabled:opacity-50"
+                className="flex-1 py-2.5 rounded-full bg-beige text-gray-500 font-semibold text-sm disabled:opacity-50"
               >
                 Cancel
               </button>

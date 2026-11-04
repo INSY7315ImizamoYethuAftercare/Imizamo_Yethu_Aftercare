@@ -1,6 +1,7 @@
 import { pdf, Document, Page, Text, View, Image, Svg, Line, Polyline, Circle, StyleSheet } from "@react-pdf/renderer";
 
-const ORANGE = "#F97316";
+const ORANGE = "#F97316"; // text-orange-500: orange text
+const ORANGE_FILL = "#FB923C"; // orange-400: the app's buttons and trend chart
 const INK = "#111827";
 const MUTED = "#6B7280";
 const LINE = "#E5E7EB";
@@ -22,7 +23,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     paddingBottom: 14,
     borderBottomWidth: 2,
-    borderBottomColor: ORANGE,
+    borderBottomColor: ORANGE_FILL,
   },
   brand: {
     flexDirection: "row",
@@ -116,7 +117,7 @@ const styles = StyleSheet.create({
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: ORANGE,
+    backgroundColor: ORANGE_FILL,
     color: "#FFFFFF",
     paddingVertical: 7,
     paddingHorizontal: 10,
@@ -129,7 +130,7 @@ const styles = StyleSheet.create({
     borderBottomColor: LINE,
   },
   tableRowAlt: {
-    backgroundColor: "#FFFBF5",
+    backgroundColor: CREAM,
   },
   colLabel: { width: "62%" },
   colValue: { width: "38%", textAlign: "right" },
@@ -259,7 +260,7 @@ function ChartSection({ chart }) {
                 </View>
               ) : (
                 hasValue(item) && (
-                  <View style={{ width: `${Math.min(100, (item.value / max) * 100)}%`, height: 9, backgroundColor: item.color ?? ORANGE }} />
+                  <View style={{ width: `${Math.min(100, (item.value / max) * 100)}%`, height: 9, backgroundColor: item.color ?? ORANGE_FILL }} />
                 )
               )}
             </View>
@@ -361,10 +362,10 @@ function LineChartSvg({ points }) {
       {runs
         .filter((r) => r.length > 1)
         .map((r, i) => (
-          <Polyline key={i} points={r.map((p) => p.join(",")).join(" ")} stroke={ORANGE} strokeWidth={2.5} fill="none" />
+          <Polyline key={i} points={r.map((p) => p.join(",")).join(" ")} stroke={ORANGE_FILL} strokeWidth={2.5} fill="none" />
         ))}
       {points.map((p, i) =>
-        hasValue(p) ? <Circle key={p.label} cx={chartX(i, points.length)} cy={chartY(p.value)} r={3.5} fill={ORANGE} /> : null,
+        hasValue(p) ? <Circle key={p.label} cx={chartX(i, points.length)} cy={chartY(p.value)} r={3.5} fill={ORANGE_FILL} /> : null,
       )}
     </Svg>
   );

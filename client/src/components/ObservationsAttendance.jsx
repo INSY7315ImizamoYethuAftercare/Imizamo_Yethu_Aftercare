@@ -11,7 +11,7 @@ function ObservationsAttendance({ card }) {
           { date: "2025-07-21", detail: "Signed out by Fatima Petersen at 17:30", ok: true },
         ].map((row) => (
           <div key={row.date} className="flex items-center gap-3 text-sm">
-            <span className={row.ok ? "text-green-500" : "text-red-500"}>{row.ok ? "✓" : "✗"}</span>
+            <span className={row.ok ? "text-green-600" : "text-red-500"}>{row.ok ? "✓" : "✗"}</span>
             <div>
               <p className="text-gray-800 font-medium">{row.date}</p>
               <p className="text-gray-500 text-xs">{row.detail}</p>

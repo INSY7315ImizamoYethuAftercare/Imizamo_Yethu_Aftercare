@@ -105,7 +105,7 @@ function AccountsSection() {
           <button
             type="button"
             onClick={() => setAdding(true)}
-            className="px-4 py-2 rounded-full bg-navy text-white text-sm font-semibold shadow-lg hover:opacity-90 active:scale-95 transition whitespace-nowrap"
+            className="px-4 py-2 rounded-full bg-orange-400 text-white text-sm font-semibold shadow-lg hover:bg-orange-500 active:scale-95 transition whitespace-nowrap"
           >
             + Add account
           </button>
@@ -150,7 +150,7 @@ function AccountsSection() {
           </div>
           {addError && <p role="alert" className="text-sm text-red-500 mb-3">{addError}</p>}
           <div className="flex gap-3">
-            <button type="button" onClick={closeForm} className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium border border-gray-200 shadow-md">
+            <button type="button" onClick={closeForm} className="flex-1 py-2.5 rounded-full bg-beige text-gray-500 font-semibold">
               Cancel
             </button>
             <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-semibold shadow-md disabled:opacity-60">

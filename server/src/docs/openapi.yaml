@@ -1722,12 +1722,18 @@ components:
               lastWeek: { type: integer, nullable: true }
         orgTrend:
           type: array
-          description: The period split into 4 equal parts, with the attendance rate for each.
+          description: >-
+            Attendance rate per Monday-Friday week for up to the last 8 weeks, starting at the
+            first week with attendance. With only one such week, that week day by day instead.
+            A null rate means no attendance was recorded.
           items:
             type: object
             properties:
-              week: { type: string, example: W1 }
-              rate: { type: number }
+              label: { type: string, example: 12 Oct }
+              rate: { type: integer, nullable: true }
+        orgTrendView:
+          type: string
+          enum: [weekly, daily]
         today:
           type: object
           properties:

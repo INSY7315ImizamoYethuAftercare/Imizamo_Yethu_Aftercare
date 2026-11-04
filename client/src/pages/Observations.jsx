@@ -169,12 +169,12 @@ function Observations({ role = "Teacher" }) {
 
   // --- Early returns come after every hook above ---
   if (stillLoading) {
-    return <div className="min-h-screen bg-cream flex items-center justify-center text-gray-400 text-sm">Loading learner...</div>;
+    return <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center text-gray-400 text-sm">Loading learner...</div>;
   }
 
   if (!learner) {
     return (
-      <div className="min-h-screen bg-cream flex flex-col items-center justify-center gap-4 px-4 text-center">
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col items-center justify-center gap-4 px-4 text-center">
         <p className="text-gray-500 text-sm">Couldn't find that learner.</p>
         <button onClick={() => navigate(backPath)} className="px-4 py-2 rounded-full bg-orange-400 text-white text-sm font-semibold">
           Back to Learners
@@ -187,7 +187,7 @@ function Observations({ role = "Teacher" }) {
   const shell = "max-w-lg md:max-w-3xl lg:max-w-5xl mx-auto w-full";
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
@@ -236,7 +236,7 @@ function Observations({ role = "Teacher" }) {
         <div className="grid grid-cols-3 gap-3 mb-4">
           <div className={`${card} text-center`}>
             {/* Present days out of days marked, over the last 30 days. */}
-            <p className="text-xl font-bold text-green-500">
+            <p className="text-xl font-bold text-green-600">
               {overview?.attendance.percent != null ? `${overview.attendance.percent}%` : "—"}
             </p>
             <p className="text-xs text-gray-500">Attendance</p>
@@ -319,7 +319,7 @@ function Observations({ role = "Teacher" }) {
                   </label>
                   {saveError && <div className="bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-3 py-2">{saveError}</div>}
                   <div className="flex gap-3">
-                    <button type="button" onClick={cancelEdit} disabled={saving} className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium text-sm border border-gray-200 shadow-lg disabled:opacity-50">
+                    <button type="button" onClick={cancelEdit} disabled={saving} className="flex-1 py-2.5 rounded-full bg-beige text-gray-500 font-semibold text-sm disabled:opacity-50">
                       Cancel
                     </button>
                     <button type="button" onClick={saveDetails} disabled={saving} className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-semibold text-sm shadow-lg disabled:opacity-50">
@@ -403,7 +403,7 @@ function Observations({ role = "Teacher" }) {
                   <div role="alert" className="mb-3 bg-red-50 border border-red-200 text-red-600 text-sm rounded-xl px-3 py-2">{obsError}</div>
                 )}
                 <div className="flex gap-3">
-                  <button onClick={closeForm} disabled={savingObs} className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium text-sm border border-gray-200 shadow-lg active:scale-[0.98] transition disabled:opacity-50">
+                  <button onClick={closeForm} disabled={savingObs} className="flex-1 py-2.5 rounded-full bg-beige text-gray-500 font-semibold text-sm active:scale-[0.98] transition disabled:opacity-50">
                     Cancel
                   </button>
                   <button onClick={handleSave} disabled={savingObs} className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-semibold text-sm shadow-lg active:scale-[0.98] transition disabled:opacity-50">
@@ -460,7 +460,7 @@ function Observations({ role = "Teacher" }) {
                       : `Present${day.timeIn ? ` (arrived ${day.timeIn})` : ""} • not signed out`;
                   return (
                     <li key={day.date} className="flex items-center gap-3 text-sm">
-                      <span className={present ? "text-green-500" : "text-red-500"} aria-hidden="true">{present ? "✓" : "✗"}</span>
+                      <span className={present ? "text-green-600" : "text-red-500"} aria-hidden="true">{present ? "✓" : "✗"}</span>
                       <div>
                         <p className="text-gray-800 font-medium">{longDate(day.date)}</p>
                         <p className="text-gray-500 text-xs">{detail}</p>

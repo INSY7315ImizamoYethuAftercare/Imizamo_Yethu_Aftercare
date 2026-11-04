@@ -62,11 +62,12 @@ const OVERVIEW = {
     { name: 'Green', thisWeek: 90, lastWeek: 88 },
   ],
   orgTrend: [
-    { week: 'W1', rate: 88 },
-    { week: 'W2', rate: 90 },
-    { week: 'W3', rate: 91 },
-    { week: 'W4', rate: 92 },
+    { label: '13 Oct', rate: 88 },
+    { label: '20 Oct', rate: 90 },
+    { label: '27 Oct', rate: 91 },
+    { label: '3 Nov', rate: 92 },
   ],
+  orgTrendView: 'weekly',
   rates: { thisWeek: 94, lastWeek: 90, period: 92 },
 }
 
@@ -122,8 +123,23 @@ describe('Reports', () => {
     await userEvent.click(screen.getByRole('button', { name: /Trends/i }))
     expect(await screen.findByText('Organisation trend')).toBeInTheDocument()
     expect(screen.getByTestId('trend-chart')).toHaveTextContent('88,90,91,92')
+    expect(screen.getByText('Attendance each week, Monday to Friday.')).toBeInTheDocument()
     expect(screen.getByText('97%')).toBeInTheDocument()
     expect(screen.getByText('94%')).toBeInTheDocument()
+  })
+
+  it('explains the day-by-day trend while only one week is recorded', async () => {
+    onApi('GET', '/reports/overview', {
+      ...OVERVIEW,
+      orgTrend: [{ label: 'Mon 02', rate: 80 }, { label: 'Tue 03', rate: 100 }],
+      orgTrendView: 'daily',
+    })
+    await renderReports('manager')
+    await screen.findByText('Total Learners')
+
+    await userEvent.click(screen.getByRole('button', { name: /Trends/i }))
+    expect(await screen.findByTestId('trend-chart')).toHaveTextContent('80,100')
+    expect(screen.getByText(/Attendance day by day/)).toBeInTheDocument()
   })
 
   it('opens each tab with a plain-English takeaway', async () => {
@@ -229,10 +245,10 @@ describe('Reports', () => {
       expect.objectContaining({
         title: 'Organisation Trend',
         points: [
-          { label: 'W1', value: 88 },
-          { label: 'W2', value: 90 },
-          { label: 'W3', value: 91 },
-          { label: 'W4', value: 92 },
+          { label: '13 Oct', value: 88 },
+          { label: '20 Oct', value: 90 },
+          { label: '27 Oct', value: 91 },
+          { label: '3 Nov', value: 92 },
         ],
       }),
     )
