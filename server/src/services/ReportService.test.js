@@ -57,6 +57,7 @@ function stubOverviewRepos(deps) {
     {
       class_name: 'Yellow',
       learner_count: '2',
+      attended_learners: '2',
       present_count: '8',
       total_count: '10',
     },
@@ -199,6 +200,12 @@ describe('ReportService', () => {
     expect(yellow).toMatchObject({ rate: 80, learners: 2 })
     expect(result.attendanceByClass.find((c) => c.name === 'Green')).toMatchObject({ rate: null })
 
+    // Donor report: Green has no register this month, so null rather than 0
+    expect(result.classesThisMonth).toEqual([
+      { name: 'Yellow', colour: null, activeLearners: 2, attendedLearners: 2 },
+      { name: 'Green', colour: null, activeLearners: 1, attendedLearners: null },
+    ])
+
     expect(result.observationsByCategory).toEqual([
       { category: 'Academic', observationCount: 3, averageRating: 8 },
       { category: 'Social', observationCount: 1, averageRating: 7 },
@@ -272,16 +279,26 @@ describe('ReportService', () => {
       ])
     })
 
-    it('stays inside a shorter period', async () => {
+    it('looks back 8 weeks from the end of a chosen month, past the start of the month', async () => {
       const result = await overviewWith(
-        [{ record_date: '2026-03-05', present_count: '1', absent_count: '0' }],
-        '2026-03-05',
+        [
+          { record_date: '2026-02-23', present_count: '1', absent_count: '1' },
+          { record_date: '2026-03-05', present_count: '1', absent_count: '0' },
+        ],
+        '2026-03-01',
       )
-      expect(deps.attendanceRepository.getDailyPresentCounts).toHaveBeenCalledWith('2026-03-05', '2026-03-06')
+      expect(deps.attendanceRepository.getDailyPresentCounts).toHaveBeenCalledWith('2026-01-12', '2026-03-06')
       expect(result.orgTrend).toEqual([
-        { label: 'Thu 05', rate: 100 },
-        { label: 'Fri 06', rate: null },
+        { label: '23 Feb', rate: 50 },
+        { label: '2 Mar', rate: 100 },
       ])
+    })
+
+    it('leaves out the days after a past month that ends mid-week', async () => {
+      stubOverviewRepos(deps)
+      const result = await service.getOverviewData({ userId: 1, periodStart: '2026-08-01', periodEnd: '2026-08-31' }) // a Monday
+      expect(deps.attendanceRepository.getAttendanceRate).toHaveBeenCalledWith('2026-08-31', '2026-08-31')
+      expect(result.weeklyDays.map((d) => d.date)).toEqual(['2026-08-31'])
     })
 
     it('is empty when nothing was recorded', async () => {

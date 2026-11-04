@@ -1,12 +1,11 @@
 import ReportsBanner from "./ReportsBanner";
+import LearnersByClass from "./LearnersByClass";
 import { hasAttendance } from "../utils/insights";
-
-// Tinted tile colours for the key figures, cycled in order.
-const TINTS = ["bg-sky-50", "bg-green-50", "bg-purple-50", "bg-orange-50", "bg-pink-50"];
-const TEXTS = ["text-sky-600", "text-green-600", "text-purple-600", "text-orange-500", "text-pink-500"];
 
 function ReportsDonor({
   donorMetrics,
+  classesThisMonth,
+  monthLabel,
   periodLabel,
   insight,
   t,
@@ -21,17 +20,19 @@ function ReportsDonor({
       <div>
         <h3 className="font-semibold text-gray-900 mb-3">Key Impact Metrics</h3>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-          {donorMetrics.map((m, i) => (
+          {donorMetrics.map((m) => (
             <div key={m.label} className={`${card} min-w-0`}>
-              <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg ${TINTS[i % TINTS.length]}`} aria-hidden="true">
+              <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg ${m.tint}`} aria-hidden="true">
                 {m.icon}
               </span>
-              <p className={`text-2xl font-bold mt-3 ${TEXTS[i % TEXTS.length]}`}>{m.value}</p>
+              <p className={`text-2xl font-bold mt-3 ${m.text}`}>{m.value}</p>
               <p className="text-xs text-gray-500 mt-1 break-words">{m.label}</p>
             </div>
           ))}
         </div>
       </div>
+
+      <LearnersByClass classes={classesThisMonth} monthLabel={monthLabel} card={card} />
 
       <div className={card}>
         <h3 className="font-semibold text-gray-900 mb-2">Narrative Summary</h3>
@@ -49,7 +50,7 @@ function ReportsDonor({
         </p>
       </div>
 
-      <button onClick={exportDonor} className={primary}>
+      <button data-pdf-skip onClick={exportDonor} className={primary}>
         📄 Export as PDF
       </button>
     </div>

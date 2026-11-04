@@ -223,12 +223,14 @@ class AttendanceRepository {
    * Attendance rate + active learner count per class for a date range.
    * @param {string} periodStart - YYYY-MM-DD
    * @param {string} periodEnd - YYYY-MM-DD
-   * @returns {Promise<Array<{ class_name: string, learner_count: string, present_count: string, total_count: string }>>}
+   * @returns {Promise<Array<{ class_name: string, learner_count: string, attended_learners: string, present_count: string, total_count: string }>>}
+   *   attended_learners: active learners marked present at least once in the range.
    */
   async getAttendanceByClass(periodStart, periodEnd) {
     const result = await this.pool.query(
       `SELECT c."class_name",
               COUNT(DISTINCT l."learner_id") FILTER (WHERE l."is_active") AS learner_count,
+              COUNT(DISTINCT l."learner_id") FILTER (WHERE l."is_active" AND a."status" = 'present') AS attended_learners,
               COUNT(*) FILTER (WHERE a."status" = 'present') AS present_count,
               COUNT(*) AS total_count
        FROM attendance_records a

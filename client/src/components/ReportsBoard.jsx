@@ -1,13 +1,17 @@
 import ReportsBanner from "./ReportsBanner";
+import LearnersByClass from "./LearnersByClass";
+import { STAT_COLOURS } from "../utils/statColours";
 
 const SECTIONS = [
-  { key: "enrollment", title: "Enrollment", icon: "🎒", tint: "bg-pink-50" },
-  { key: "operations", title: "Operations", icon: "🏠", tint: "bg-sky-50" },
-  { key: "development", title: "Learner development", icon: "🌱", tint: "bg-green-50" },
+  { key: "enrollment", title: "Enrollment", icon: "🎒", tint: STAT_COLOURS.learners.tint },
+  { key: "operations", title: "Operations", icon: "🚪", tint: STAT_COLOURS.signOuts.tint },
+  { key: "development", title: "Learner development", icon: "🌱", tint: STAT_COLOURS.observations.tint },
 ];
 
 function ReportsBoard({
   boardKeyFigures,
+  classesThisMonth,
+  monthLabel,
   boardEnrollment,
   boardOperations,
   boardDevelopment,
@@ -34,6 +38,8 @@ function ReportsBoard({
         ))}
       </div>
 
+      <LearnersByClass classes={classesThisMonth} monthLabel={monthLabel} card={card} />
+
       {SECTIONS.map((s) => (
         <div key={s.key} className={card}>
           <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
@@ -51,7 +57,7 @@ function ReportsBoard({
         </div>
       ))}
 
-      <button onClick={exportBoard} className={primary}>
+      <button data-pdf-skip onClick={exportBoard} className={primary}>
         📄 Export as PDF
       </button>
     </div>

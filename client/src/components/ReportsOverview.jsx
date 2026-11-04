@@ -51,6 +51,8 @@ function ReportsOverview({
   totals,
   periodLabel,
   insight,
+  pastMonth,
+  weekWords,
   exportOverview,
   card,
   primary,
@@ -70,7 +72,7 @@ function ReportsOverview({
             <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg ${row.tint}`} aria-hidden="true">
               {row.icon}
             </span>
-            <p className={`text-2xl font-bold mt-3 ${row.color}`}>{row.value}</p>
+            <p className={`text-2xl font-bold mt-3 ${row.text}`}>{row.value}</p>
             <p className="text-xs text-gray-500 mt-1">{row.label}</p>
             {row.bar !== undefined && (
               <div className="h-1.5 rounded-full bg-gray-100 mt-2 overflow-hidden">
@@ -94,11 +96,11 @@ function ReportsOverview({
 
       <div className={card}>
         <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
-          <span>📅</span> Weekly Attendance
+          <span>📅</span> {pastMonth ? `Final Week of ${pastMonth}` : "Weekly Attendance"}
         </h3>
         <div className="flex justify-between gap-2 mb-4">
           {weeklyDays.length === 0 && (
-            <p className="text-xs text-gray-400">No attendance recorded this week yet.</p>
+            <p className="text-xs text-gray-400">No attendance recorded {weekWords.inNow}.</p>
           )}
           {weeklyDays.map((d) => (
             <div key={d.label} className="flex-1 text-center min-w-0 rounded-xl bg-gray-50 py-2" data-day={d.label}>
@@ -156,7 +158,7 @@ function ReportsOverview({
               </div>
             </div>
           ))}
-          {attendanceByClass.length > 0 && <p className="text-[11px] text-gray-400">Change is this week against last week, in percentage points.</p>}
+          {attendanceByClass.length > 0 && <p className="text-[11px] text-gray-400">Change is {weekWords.now} against {weekWords.before}, in percentage points.</p>}
         </div>
       </div>
 
@@ -194,7 +196,7 @@ function ReportsOverview({
         </div>
       </div>
 
-      <button onClick={exportOverview} className={primary}>
+      <button data-pdf-skip onClick={exportOverview} className={primary}>
         📄 Export as PDF
       </button>
     </div>

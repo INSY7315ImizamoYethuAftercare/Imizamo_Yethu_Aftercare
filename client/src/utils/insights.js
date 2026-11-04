@@ -17,10 +17,25 @@ export function changeLabel(diff) {
 
 const plural = (n, one, many) => (n === 1 ? one : many);
 
-/** This week's attendance against last week's. */
-export function weekInsight(rates) {
+/** A past month's final week against the week before it. */
+function pastWeekInsight(now, before, month) {
+  if (!isNum(now)) return { text: `No attendance was recorded in the final week of ${month}.`, tone: "none" };
+  const diff = pointsChange(now, before);
+  if (diff === null) return { text: `Attendance was ${now}% in the final week of ${month}, with no earlier week to compare against.`, tone: "none" };
+  const points = `${Math.abs(diff)} ${plural(Math.abs(diff), "point", "points")}`;
+  if (diff > 0) return { text: `Attendance finished ${month} up ${points} on the week before, at ${now}%.`, tone: "up" };
+  if (diff < 0) return { text: `Attendance finished ${month} down ${points} on the week before, at ${now}%.`, tone: "down" };
+  return { text: `Attendance finished ${month} steady at ${now}%, the same as the week before.`, tone: "flat" };
+}
+
+/**
+ * This week's attendance against last week's. For a past month, pass its name
+ * as `pastMonth` and the weeks compared are its last two.
+ */
+export function weekInsight(rates, pastMonth = null) {
   const now = rates?.thisWeek;
   const before = rates?.lastWeek;
+  if (pastMonth) return pastWeekInsight(now, before, pastMonth);
   if (!isNum(now)) return { text: "No attendance has been recorded this week yet.", tone: "none" };
   const diff = pointsChange(now, before);
   if (diff === null) return { text: `Attendance is ${now}% this week, with no earlier week to compare against.`, tone: "none" };
@@ -31,14 +46,15 @@ export function weekInsight(rates) {
 }
 
 /** The week comparison plus the strongest and weakest class this week. */
-export function trendsInsight(rates, classRows) {
-  const base = weekInsight(rates);
+export function trendsInsight(rates, classRows, pastMonth = null) {
+  const base = weekInsight(rates, pastMonth);
   const ranked = (classRows ?? []).filter((c) => isNum(c.thisWeek)).sort((a, b) => b.thisWeek - a.thisWeek);
   if (ranked.length < 2) return base;
   const best = ranked[0];
   const worst = ranked[ranked.length - 1];
   if (best.thisWeek === worst.thisWeek) return base;
-  return { ...base, text: `${base.text} ${best.name} leads at ${best.thisWeek}%; ${worst.name} is lowest at ${worst.thisWeek}%.` };
+  const [leads, lowest] = pastMonth ? ["led", "was lowest"] : ["leads", "is lowest"];
+  return { ...base, text: `${base.text} ${best.name} ${leads} at ${best.thisWeek}%; ${worst.name} ${lowest} at ${worst.thisWeek}%.` };
 }
 
 /** True once any attendance (present or absent) has been recorded in the period. */

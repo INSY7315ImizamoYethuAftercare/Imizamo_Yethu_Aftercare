@@ -1675,7 +1675,7 @@ components:
         periodStart: { type: string, format: date }
         periodEnd: { type: string, format: date }
         thisWeekStart: { type: string, format: date, description: Monday of the week containing periodEnd. }
-        thisWeekEnd: { type: string, format: date, description: Friday of that week. }
+        thisWeekEnd: { type: string, format: date, description: "Friday of that week, or periodEnd if that comes first." }
         monthStart: { type: string, format: date }
         totals:
           type: object
@@ -1723,7 +1723,7 @@ components:
         orgTrend:
           type: array
           description: >-
-            Attendance rate per Monday-Friday week for up to the last 8 weeks, starting at the
+            Attendance rate per Monday-Friday week for up to the 8 weeks ending at periodEnd, starting at the
             first week with attendance. With only one such week, that week day by day instead.
             A null rate means no attendance was recorded.
           items:
@@ -1731,6 +1731,19 @@ components:
             properties:
               label: { type: string, example: 12 Oct }
               rate: { type: integer, nullable: true }
+        classesThisMonth:
+          type: array
+          description: Each active class for the month starting at monthStart.
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              colour: { type: string, nullable: true }
+              activeLearners: { type: integer }
+              attendedLearners:
+                type: integer
+                nullable: true
+                description: Active learners marked present at least once this month. Null when the class has no register this month.
         orgTrendView:
           type: string
           enum: [weekly, daily]

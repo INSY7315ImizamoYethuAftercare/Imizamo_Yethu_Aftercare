@@ -24,8 +24,8 @@ function WeeklyChart({ data }) {
           <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
           <Tooltip />
           <Legend iconType="circle" wrapperStyle={{ fontSize: 11 }} />
-          <Bar dataKey="present" name="Present" fill="#22C55E" radius={[6, 6, 0, 0]} />
-          <Bar dataKey="absent" name="Absent" fill="#EF4444" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="present" name="Present" fill="#22C55E" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+          <Bar dataKey="absent" name="Absent" fill="#EF4444" radius={[6, 6, 0, 0]} isAnimationActive={false} />
         </BarChart>
       </ResponsiveContainer>
     </div>

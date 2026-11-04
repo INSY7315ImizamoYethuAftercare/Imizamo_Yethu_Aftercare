@@ -4,8 +4,9 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Reports from '../pages/Reports'
-import { generateChartPDF, generatePDF } from '../utils/pdf'
-import { ApiError, onApi, resetApi } from './api-mock'
+import { exportPagePdf } from '../utils/pdf'
+import { monthRange, monthYear, reportMonths, todayInSA } from '../utils/dates'
+import { ApiError, apiClient, onApi, resetApi } from './api-mock'
 import { signInAs } from './session-helpers'
 
 vi.mock('../services/apiClient', async () => (await import('./api-mock')).apiClientModule)
@@ -22,8 +23,7 @@ vi.mock('../components/TrendChart', () => ({
   ),
 }))
 vi.mock('../utils/pdf', () => ({
-  generatePDF: vi.fn(),
-  generateChartPDF: vi.fn(),
+  exportPagePdf: vi.fn(),
 }))
 
 const OVERVIEW = {
@@ -68,6 +68,11 @@ const OVERVIEW = {
     { label: '3 Nov', rate: 92 },
   ],
   orgTrendView: 'weekly',
+  monthStart: '2026-03-01',
+  classesThisMonth: [
+    { name: 'Yellow', colour: null, activeLearners: 4, attendedLearners: 3 },
+    { name: 'Green', colour: null, activeLearners: 2, attendedLearners: null },
+  ],
   rates: { thisWeek: 94, lastWeek: 90, period: 92 },
 }
 
@@ -178,18 +183,11 @@ describe('Reports', () => {
     await renderReports('manager')
     await screen.findByText('Total Learners')
     await userEvent.click(screen.getByRole('button', { name: /Export as PDF/i }))
-    expect(generatePDF).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Overview Report',
-        summary: 'Attendance is up 4 points on last week, at 94%.',
-        charts: [
-          expect.objectContaining({ type: 'split', parts: [expect.objectContaining({ value: 110 }), expect.objectContaining({ value: 10 })] }),
-          expect.objectContaining({ type: 'bars', heading: 'Present and absent each day this week' }),
-          expect.objectContaining({ type: 'bars', heading: 'Attendance by class' }),
-          expect.objectContaining({ type: 'bars', heading: 'Observations by development category' }),
-        ],
-      }),
-    )
+    expect(exportPagePdf).toHaveBeenLastCalledWith(expect.objectContaining({ title: 'Overview Report', filename: 'overview-report' }))
+    // It captures what is on screen, leaving the export button out
+    const { root } = exportPagePdf.mock.lastCall[0]
+    expect(root).toHaveTextContent('Total Learners')
+    expect(screen.getByRole('button', { name: /Export as PDF/i })).toHaveAttribute('data-pdf-skip')
   })
 
   it('shows absences as well as present learners for each day, and a dash where no register was taken', async () => {
@@ -217,11 +215,6 @@ describe('Reports', () => {
     expect(screen.getByText('no rating')).toBeInTheDocument()
 
     await userEvent.click(screen.getByRole('button', { name: /Export as PDF/i }))
-    const { charts } = generatePDF.mock.calls.at(-1)[0]
-    expect(charts.find((c) => c.heading.startsWith('Observations')).items).toEqual([
-      expect.objectContaining({ label: 'Academic', value: 3, display: '3 · avg 7.7/10' }),
-      expect.objectContaining({ label: 'Social', value: 2, display: '2' }),
-    ])
   })
 
   it('reloads the numbers when the manager comes back to the tab', async () => {
@@ -241,17 +234,10 @@ describe('Reports', () => {
     await userEvent.click(screen.getByRole('button', { name: /Trends/i }))
 
     await userEvent.click(await screen.findByRole('button', { name: 'Export chart as PDF' }))
-    expect(generateChartPDF).toHaveBeenCalledWith(
-      expect.objectContaining({
-        title: 'Organisation Trend',
-        points: [
-          { label: '13 Oct', value: 88 },
-          { label: '20 Oct', value: 90 },
-          { label: '27 Oct', value: 91 },
-          { label: '3 Nov', value: 92 },
-        ],
-      }),
-    )
+    const { title, root, onlySelector } = exportPagePdf.mock.lastCall[0]
+    expect(title).toBe('Organisation Trend')
+    expect(root.querySelector(onlySelector)).toHaveTextContent('Organisation trend')
+    expect(screen.getByRole('button', { name: 'Export chart as PDF' })).toHaveAttribute('data-pdf-skip')
   })
 
   it('renders donor metrics from live totals', async () => {
@@ -281,6 +267,89 @@ describe('Reports', () => {
     expect(card).toHaveTextContent('–')
     expect(screen.getByText(/6 learners are enrolled; no attendance has been recorded in this period yet/)).toBeInTheDocument()
     expect(screen.getByText('Learners enrolled').closest('div.bg-white')).toHaveTextContent('6')
+  })
+
+  it('shows active learners and who came this month for each class', async () => {
+    await renderReports('admin')
+    await screen.findByText('Total Learners')
+    await userEvent.click(screen.getByRole('button', { name: /Donor Report/i }))
+    await screen.findByRole('heading', { name: 'Learners by Class' })
+
+    const cells = (name) => within(screen.getByText(name).closest('tr')).getAllByRole('cell').map((c) => c.textContent)
+    expect(cells('Yellow')).toEqual(['Yellow', '4', '3'])
+    // No register for Green this month: a dash, not 0, and left out of the total
+    expect(cells('Green')).toEqual(['Green', '2', '–'])
+    expect(cells('Total')).toEqual(['Total', '6', '3'])
+
+  })
+
+  it('shows the same class table on the Board report', async () => {
+    await renderReports('admin')
+    await screen.findByText('Total Learners')
+    await userEvent.click(screen.getByRole('button', { name: /Board Report/i }))
+    await screen.findByRole('heading', { name: 'Learners by Class' })
+
+    const cells = (name) => within(screen.getByText(name).closest('tr')).getAllByRole('cell').map((c) => c.textContent)
+    expect(cells('Yellow')).toEqual(['Yellow', '4', '3'])
+    expect(cells('Total')).toEqual(['Total', '6', '3'])
+
+  })
+
+  it('says so if the PDF cannot be made, and puts the page back', async () => {
+    exportPagePdf.mockRejectedValueOnce(new Error('canvas failed'))
+    vi.spyOn(console, 'error').mockImplementation(() => {})
+    await renderReports('admin')
+    await screen.findByText('Total Learners')
+    await userEvent.click(screen.getByRole('button', { name: /Export as PDF/i }))
+    expect(await screen.findByText(/Couldn't create the PDF/)).toBeInTheDocument()
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    console.error.mockRestore()
+  })
+
+  describe('month picker', () => {
+    const requestFor = (start) => {
+      const { end } = monthRange(start)
+      return `/reports/overview?periodStart=${start}&periodEnd=${end}`
+    }
+
+    it('opens on the current month', async () => {
+      await renderReports('admin')
+      await screen.findByText('Total Learners')
+      expect(screen.getByLabelText('Month')).toHaveValue(reportMonths()[0].start)
+      expect(apiClient.get).toHaveBeenCalledWith(requestFor(reportMonths()[0].start))
+    })
+
+    it('loads a past month, and words its weeks as past', async () => {
+      const past = reportMonths()[1]
+      await renderReports('admin')
+      await screen.findByText('Total Learners')
+
+      await userEvent.selectOptions(screen.getByLabelText('Month'), past.start)
+      await waitFor(() => expect(apiClient.get).toHaveBeenLastCalledWith(requestFor(past.start)))
+      expect(await screen.findByRole('heading', { name: new RegExp(`Final Week of ${past.label}`) })).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: /Trends/ }))
+      expect(screen.getByRole('columnheader', { name: 'Final week' })).toBeInTheDocument()
+      expect(screen.getByRole('columnheader', { name: 'Week before' })).toBeInTheDocument()
+
+      await userEvent.click(screen.getByRole('button', { name: /Board Report/i }))
+      expect(screen.getByText(`48 sign outs in ${past.label}`)).toBeInTheDocument()
+    })
+
+    it("doesn't show the old month's numbers while the new month loads", async () => {
+      const past = reportMonths()[1]
+      await renderReports('admin')
+      await screen.findByText('6')
+
+      let finish
+      onApi('GET', requestFor(past.start), () => new Promise((resolve) => { finish = resolve }))
+      await userEvent.selectOptions(screen.getByLabelText('Month'), past.start)
+      expect(screen.queryByText('6')).not.toBeInTheDocument()
+      expect(screen.getByText(/Loading report data/)).toBeInTheDocument()
+
+      finish(OVERVIEW)
+      expect(await screen.findByText('6')).toBeInTheDocument()
+    })
   })
 
   it('renders board report bullets from live totals', async () => {
@@ -325,6 +394,25 @@ describe('Reports', () => {
 
     await renderReports('manager')
     expect(await screen.findByText(/Forbidden|Could not load report data/i)).toBeInTheDocument()
+  })
+
+  it('gives a figure the same colour on every tab', async () => {
+    const colourOf = (label) => screen.getByText(label, { selector: 'p' }).previousElementSibling.className.match(/text-\w+-\d+/)[0]
+    await renderReports('admin')
+    await screen.findByText('6')
+    const overview = { learners: colourOf('Total Learners'), classes: colourOf('Classes'), observations: colourOf('Observations') }
+
+    await userEvent.click(screen.getByRole('button', { name: /Board Report/i }))
+    await screen.findByRole('heading', { name: 'Board Report' })
+    expect(colourOf('Active learners')).toBe(overview.learners)
+    expect(colourOf('Class groups')).toBe(overview.classes)
+    const signOuts = colourOf('Sign outs')
+
+    await userEvent.click(screen.getByRole('button', { name: /Donor Report/i }))
+    await screen.findByRole('heading', { name: 'Donor Impact Report' })
+    expect(colourOf('Learners enrolled')).toBe(overview.learners)
+    expect(colourOf('Development observations')).toBe(overview.observations)
+    expect(colourOf('Sign outs')).toBe(signOuts)
   })
 
   it('works for an admin role label', async () => {

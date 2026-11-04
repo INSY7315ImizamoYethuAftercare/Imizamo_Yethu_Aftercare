@@ -32,7 +32,7 @@ function TrendChart({ data }) {
           <XAxis dataKey="label" tick={{ fontSize: 11 }} padding={{ left: 24, right: 24 }} />
           <YAxis domain={[ticks[0], 100]} ticks={ticks} tickFormatter={(v) => `${v}%`} tick={{ fontSize: 11 }} />
           <Tooltip formatter={(v) => [`${v}%`, "Attendance"]} />
-          <Line type="monotone" dataKey="rate" stroke="#FB923C" strokeWidth={3} dot={{ r: 4 }} />
+          <Line type="monotone" dataKey="rate" stroke="#FB923C" strokeWidth={3} dot={{ r: 4 }} isAnimationActive={false} />
         </LineChart>
       </ResponsiveContainer>
     </div>

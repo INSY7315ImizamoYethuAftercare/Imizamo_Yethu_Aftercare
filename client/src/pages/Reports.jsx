@@ -3,19 +3,15 @@ import ReportsOverview from "../components/ReportsOverview";
 import ReportsTabs from "../components/ReportsTabs";
 import ReportsDonor from "../components/ReportsDonor";
 import ReportsBoard from "../components/ReportsBoard";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { generateChartPDF, generatePDF } from "../utils/pdf";
+import { exportPagePdf } from "../utils/pdf";
 import { useHeader } from "./UseHeader";
 import { apiClient } from "../services/apiClient";
 import { boardInsight, donorInsight, hasAttendance, trendsInsight, weekInsight } from "../utils/insights";
-import { colourForClass } from "./AddClassSheet";
+import { STAT_COLOURS } from "../utils/statColours";
+import { monthRange, monthYear, reportMonths } from "../utils/dates";
 import { categoryHex } from "../utils/categories";
-
-// Colours are the same Tailwind shades the rest of the app uses. The weekly bars
-// are present counts, so they are green like "Present" on the home screens.
-const PRESENT_GREEN = "#22C55E";
-const ABSENT_RED = "#EF4444";
 
 function formatPeriodLabel(start, end) {
   if (!start || !end) return "Current period";
@@ -34,6 +30,10 @@ function Reports({ role = "Manager" }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const reportRef = useRef(null);
+  const [months] = useState(() => reportMonths());
+  const [month, setMonth] = useState(months[0].start); // first day of the chosen month
   const navigate = useNavigate();
   const comingSoon = () => alert("Coming soon");
   const tabs = [
@@ -56,9 +56,10 @@ function Reports({ role = "Manager" }) {
   // numbers in quietly.
   useEffect(() => {
     let cancelled = false;
-    const load = () =>
-      apiClient
-        .get("/reports/overview")
+    const load = () => {
+      const { start, end } = monthRange(month);
+      return apiClient
+        .get(`/reports/overview?periodStart=${start}&periodEnd=${end}`)
         .then((payload) => {
           if (cancelled) return;
           setData(payload);
@@ -70,6 +71,7 @@ function Reports({ role = "Manager" }) {
         .finally(() => {
           if (!cancelled) setLoading(false);
         });
+    };
     const reload = () => document.visibilityState !== "hidden" && load();
 
     load();
@@ -80,7 +82,22 @@ function Reports({ role = "Manager" }) {
       window.removeEventListener("focus", reload);
       document.removeEventListener("visibilitychange", reload);
     };
-  }, []);
+  }, [month]);
+
+  const chooseMonth = (e) => {
+    setMonth(e.target.value);
+    // Clear the old month's numbers so they never sit under the new month's name.
+    setData(null);
+    setError("");
+    setLoading(true);
+  };
+
+  const monthLabel = monthYear(month);
+  // Null for the current month, where "this week" still means this week.
+  const pastMonth = month === months[0].start ? null : monthLabel;
+  const weekWords = pastMonth
+    ? { now: "the final week", before: "the week before", inNow: "in the final week", Now: "Final week", Before: "Week before" }
+    : { now: "this week", before: "last week", inNow: "this week", Now: "This week", Before: "Last week" };
 
   const t = data?.totals ?? {
     activeLearners: 0,
@@ -96,10 +113,7 @@ function Reports({ role = "Manager" }) {
     learnersAttended: 0,
   };
 
-  const weeklyDays = (data?.weeklyDays ?? []).map((d) => ({
-    ...d,
-    color: PRESENT_GREEN,
-  }));
+  const weeklyDays = data?.weeklyDays ?? [];
 
   const weeklyChartData = weeklyDays.map((d) => ({
     day: d.day,
@@ -109,10 +123,9 @@ function Reports({ role = "Manager" }) {
 
   const attendanceByClass = data?.attendanceByClass ?? [];
   const classRows = data?.classTrends ?? [];
+  const classesThisMonth = data?.classesThisMonth ?? [];
   const orgTrend = data?.orgTrend ?? [];
   const orgTrendView = data?.orgTrendView ?? "weekly";
-  const trendPoints = orgTrend.map((w) => ({ label: w.label, value: w.rate }));
-  const trendPeriodWords = orgTrendView === "daily" ? "day by day" : "week by week";
 
   const maxCat = Math.max(
     1,
@@ -127,7 +140,6 @@ function Reports({ role = "Manager" }) {
   }));
 
   const pct = (n) => (n === null || n === undefined ? "–" : n + "%");
-  const NO_DATA = "No data yet";
 
   const periodLabel = formatPeriodLabel(data?.periodStart, data?.periodEnd);
 
@@ -136,36 +148,31 @@ function Reports({ role = "Manager" }) {
       label: "Total Learners",
       value: String(t.activeLearners),
       icon: "🎒",
-      color: "text-orange-500",
-      tint: "bg-orange-50",
+      ...STAT_COLOURS.learners,
     },
     {
       label: "Avg Attendance",
       value: pct(t.avgAttendance),
       icon: "📈",
-      color: "text-green-600",
-      tint: "bg-green-50",
+      ...STAT_COLOURS.attendance,
       bar: t.avgAttendance ?? 0,
-      fill: "bg-green-500",
     },
     {
       label: "Observations",
       value: String(t.observations),
       icon: "📝",
-      color: "text-sky-600",
-      tint: "bg-sky-50",
+      ...STAT_COLOURS.observations,
     },
     {
       label: "Classes",
       value: String(t.classes),
       icon: "🏫",
-      color: "text-pink-500",
-      tint: "bg-pink-50",
+      ...STAT_COLOURS.classes,
     },
   ];
 
-  const overviewInsight = weekInsight(data?.rates);
-  const trendsTakeaway = trendsInsight(data?.rates, classRows);
+  const overviewInsight = weekInsight(data?.rates, pastMonth);
+  const trendsTakeaway = trendsInsight(data?.rates, classRows, pastMonth);
   const donorTakeaway = donorInsight(t);
   const boardTakeaway = boardInsight(t);
 
@@ -174,35 +181,40 @@ function Reports({ role = "Manager" }) {
       icon: "🎒",
       label: "Learners enrolled",
       value: String(t.activeLearners),
+      ...STAT_COLOURS.learners,
     },
     {
       icon: "✅",
       label: "Learners who attended",
       // Marked present at least once this period; a dash until attendance has been taken.
       value: hasAttendance(t) ? String(t.learnersAttended) : "–",
+      ...STAT_COLOURS.attendance,
     },
     {
       icon: "📈",
       label: "Average attendance rate",
       value: pct(t.avgAttendance),
+      ...STAT_COLOURS.attendance,
     },
     {
       icon: "📝",
       label: "Development observations",
       value: String(t.observations),
+      ...STAT_COLOURS.observations,
     },
     {
-      icon: "🏠",
+      icon: "🚪",
       label: "Sign outs",
       value: String(t.signOutsThisMonth),
+      ...STAT_COLOURS.signOuts,
     },
   ];
 
   const boardKeyFigures = [
-    { label: "Active learners", value: String(t.activeLearners), icon: "🎒", tint: "bg-pink-50", text: "text-pink-500" },
-    { label: "Class groups", value: String(t.classes), icon: "🏫", tint: "bg-sky-50", text: "text-sky-600" },
-    { label: "Active teachers", value: String(t.teachers), icon: "👩‍🏫", tint: "bg-purple-50", text: "text-purple-600" },
-    { label: "Sign outs", value: String(t.signOutsThisMonth), icon: "🚪", tint: "bg-orange-50", text: "text-orange-500" },
+    { label: "Active learners", value: String(t.activeLearners), icon: "🎒", ...STAT_COLOURS.learners },
+    { label: "Class groups", value: String(t.classes), icon: "🏫", ...STAT_COLOURS.classes },
+    { label: "Active teachers", value: String(t.teachers), icon: "👩‍🏫", ...STAT_COLOURS.teachers },
+    { label: "Sign outs", value: String(t.signOutsThisMonth), icon: "🚪", ...STAT_COLOURS.signOuts },
   ];
 
   const boardEnrollment = [
@@ -211,7 +223,7 @@ function Reports({ role = "Manager" }) {
     `${t.teachers} active teacher${t.teachers === 1 ? "" : "s"}`,
   ];
   const boardOperations = [
-    `${t.signOutsThisMonth} sign out${t.signOutsThisMonth === 1 ? "" : "s"} this month`,
+    `${t.signOutsThisMonth} sign out${t.signOutsThisMonth === 1 ? "" : "s"} ${pastMonth ? `in ${pastMonth}` : "this month"}`,
   ];
   // The total, then each category with its count and average rating (busiest first).
   const boardDevelopment = [
@@ -225,123 +237,22 @@ function Reports({ role = "Manager" }) {
       ),
   ];
 
-  const exportOverview = () =>
-    generatePDF({
-      filename: "overview-report",
-      title: "Overview Report",
-      period: periodLabel,
-      summary: overviewInsight.text,
-      rows: overviewStats.map((r) => ({ label: r.label, value: r.value })),
-      charts: [
-        {
-          type: "split",
-          heading: "Present vs absent",
-          parts: [
-            { label: "Present", value: t.presentRecords, color: PRESENT_GREEN },
-            { label: "Absent", value: t.absentRecords, color: ABSENT_RED },
-          ],
-        },
-        {
-          type: "bars",
-          heading: "Present and absent each day this week",
-          items: weeklyDays.map((d) => ({
-            label: d.label,
-            parts: d.recorded
-              ? [
-                  { value: d.value, color: PRESENT_GREEN },
-                  { value: d.absent, color: ABSENT_RED },
-                ]
-              : null,
-            display: d.recorded ? `${d.value} present, ${d.absent} absent` : undefined,
-          })),
-        },
-        {
-          type: "bars",
-          heading: "Attendance by class",
-          max: 100,
-          items: attendanceByClass.map((c) => ({
-            label: c.name,
-            value: c.rate,
-            display: c.rate === null ? undefined : `${c.rate}%`,
-            color: colourForClass(c.name, c.colour),
-          })),
-        },
-        {
-          type: "bars",
-          heading: "Observations by development category",
-          items: devCategories.map((c) => ({
-            label: c.name,
-            value: c.count,
-            display: c.average === null ? String(c.count) : `${c.count} · avg ${c.average}/10`,
-            color: c.color,
-          })),
-        },
-      ],
-    });
-
-  const exportTrends = () =>
-    generatePDF({
-      filename: "trends-report",
-      title: "Attendance Trends",
-      period: "This week vs last week",
-      summary: trendsTakeaway.text,
-      charts: [
-        {
-          type: "line",
-          heading: `Organisation attendance ${trendPeriodWords}`,
-          points: trendPoints,
-        },
-        {
-          type: "bars",
-          heading: "Attendance by class this week",
-          max: 100,
-          items: classRows.map((c) => ({
-            label: c.name,
-            value: c.thisWeek,
-            display: c.thisWeek === null ? undefined : `${c.thisWeek}%`,
-            color: colourForClass(c.name, c.colour),
-          })),
-        },
-      ],
-      rows: classRows.map((c) => ({
-        label: c.name,
-        value:
-          c.thisWeek === null && c.lastWeek === null
-            ? NO_DATA
-            : `${pct(c.thisWeek)} this week / ${pct(c.lastWeek)} last week`,
-      })),
-    });
-
-  const exportTrendChart = () =>
-    generateChartPDF({
-      filename: "org-trend-chart",
-      title: "Organisation Trend",
-      period: periodLabel,
-      heading: `Attendance rate ${trendPeriodWords}`,
-      points: trendPoints,
-    });
-
-  const exportDonor = () =>
-    generatePDF({
-      filename: "donor-report",
-      title: "Donor Impact Report",
-      period: periodLabel,
-      summary: donorTakeaway.text,
-      rows: donorMetrics.map((r) => ({ label: r.label, value: r.value })),
-    });
-
-  const exportBoard = () =>
-    generatePDF({
-      filename: "board-report",
-      title: "Board Report",
-      period: periodLabel,
-      summary: boardTakeaway.text,
-      rows: [
-        ...boardEnrollment.map((text) => ({ label: "Enrollment", value: text })),
-        ...boardOperations.map((text) => ({ label: "Operations", value: text })),
-        ...boardDevelopment.map((text) => ({ label: "Development", value: text })),
-      ],
-    });
+  const exportPage = async (filename, title, onlySelector) => {
+    setExporting(true);
+    try {
+      await exportPagePdf({ root: reportRef.current, filename, title, onlySelector });
+    } catch (e) {
+      console.error("Could not create the PDF:", e);
+      setError("Couldn't create the PDF. Please try again.");
+    } finally {
+      setExporting(false);
+    }
+  };
+  const exportOverview = () => exportPage("overview-report", "Overview Report");
+  const exportTrends = () => exportPage("trends-report", "Attendance Trends");
+  const exportTrendChart = () => exportPage("org-trend-chart", "Organisation Trend", "[data-pdf-chart]");
+  const exportDonor = () => exportPage("donor-report", "Donor Impact Report");
+  const exportBoard = () => exportPage("board-report", "Board Report");
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
@@ -376,6 +287,20 @@ function Reports({ role = "Manager" }) {
 
         <ReportsTabs tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
+        <div className="flex items-center justify-end gap-2 mb-4">
+          <label htmlFor="report-month" className="text-sm font-medium text-gray-600">Month</label>
+          <select
+            id="report-month"
+            value={month}
+            onChange={chooseMonth}
+            className="px-3 py-2 rounded-xl border border-gray-200 bg-white text-sm shadow-md focus:outline-none focus:ring-2 focus:ring-orange-300"
+          >
+            {months.map((m) => (
+              <option key={m.start} value={m.start}>{m.label}</option>
+            ))}
+          </select>
+        </div>
+
         {loading && (
           <p className="text-sm text-gray-500 mb-4">Loading report data…</p>
         )}
@@ -385,6 +310,14 @@ function Reports({ role = "Manager" }) {
           </p>
         )}
 
+        {/* Covers the page while the report is briefly resized to be captured. */}
+        {exporting && (
+          <div role="status" className="fixed inset-0 z-50 flex items-center justify-center bg-white text-sm font-semibold text-gray-600">
+            Preparing your PDF…
+          </div>
+        )}
+
+        <div ref={reportRef}>
         {activeTab === "Overview" && (
           <ReportsOverview
             overviewStats={overviewStats}
@@ -397,6 +330,8 @@ function Reports({ role = "Manager" }) {
             totals={t}
             periodLabel={periodLabel}
             insight={overviewInsight}
+            pastMonth={pastMonth}
+            weekWords={weekWords}
             exportOverview={exportOverview}
             card={card}
             primary={primary}
@@ -409,6 +344,8 @@ function Reports({ role = "Manager" }) {
             orgTrendView={orgTrendView}
             classRows={classRows}
             insight={trendsTakeaway}
+            pastMonth={pastMonth}
+            weekWords={weekWords}
             exportTrends={exportTrends}
             exportChart={exportTrendChart}
             pct={pct}
@@ -420,6 +357,8 @@ function Reports({ role = "Manager" }) {
         {activeTab === "Donor Report" && (
           <ReportsDonor
             donorMetrics={donorMetrics}
+            classesThisMonth={classesThisMonth}
+            monthLabel={monthLabel}
             periodLabel={periodLabel}
             insight={donorTakeaway}
             t={t}
@@ -432,6 +371,8 @@ function Reports({ role = "Manager" }) {
         {activeTab === "Board Report" && (
           <ReportsBoard
             boardKeyFigures={boardKeyFigures}
+            classesThisMonth={classesThisMonth}
+            monthLabel={monthLabel}
             boardEnrollment={boardEnrollment}
             boardOperations={boardOperations}
             boardDevelopment={boardDevelopment}
@@ -442,6 +383,7 @@ function Reports({ role = "Manager" }) {
             primary={primary}
           />
         )}
+        </div>
       </div>
     </div>
   );

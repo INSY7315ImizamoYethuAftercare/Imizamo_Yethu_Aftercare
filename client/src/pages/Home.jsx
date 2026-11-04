@@ -5,6 +5,7 @@ import { apiClient } from "../services/apiClient";
 import { dataBus } from "../services/dataBus";
 import { useSession } from "../services/session";
 import { greeting, longDate, todayInSA } from "../utils/dates";
+import { STAT_COLOURS } from "../utils/statColours";
 import { getClasses, refreshClasses, useClasses } from "./UseClasses";
 import { useHeader } from "./UseHeader";
 import { refreshLearners, useLearners } from "./UseLearners";
@@ -88,10 +89,10 @@ function Home() {
 
   // Stat cards in the Figma style: tinted icon, coloured number, progress bar.
   const stats = [
-    { label: "Present", icon: "✅", value: present, bar: pct(present, total), tint: "bg-green-50", text: "text-green-600", fill: "bg-green-500" },
+    { label: "Present", icon: "✅", value: present, bar: pct(present, total), ...STAT_COLOURS.attendance },
     { label: "Absent", icon: "❌", value: absent, bar: pct(absent, total), tint: "bg-red-50", text: "text-red-500", fill: "bg-red-500" },
     // Signed out as a share of who came in today.
-    { label: "Signed out", icon: "🚪", value: signOuts.length, bar: pct(signOuts.length, present), tint: "bg-purple-50", text: "text-purple-600", fill: "bg-purple-500" },
+    { label: "Signed out", icon: "🚪", value: signOuts.length, bar: pct(signOuts.length, present), ...STAT_COLOURS.signOuts },
     // Turns green at 0 once everyone who came in has gone home.
     allCollected
       ? { label: "Still here", icon: "🏠", value: 0, bar: 0, tint: "bg-green-50", text: "text-green-600", fill: "bg-green-500" }

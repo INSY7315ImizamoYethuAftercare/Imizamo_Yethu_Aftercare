@@ -6,6 +6,7 @@ import { useHeader } from "./UseHeader";
 import { apiClient } from "../services/apiClient";
 import { isMasterAdmin, useSession } from "../services/session";
 import { greeting, longDate, todayInSA } from "../utils/dates";
+import { STAT_COLOURS } from "../utils/statColours";
 
 function ManagerHome() {
   const { displayName, displayRole } = useHeader();
@@ -53,11 +54,11 @@ function ManagerHome() {
 
   // Stat cards in the same style as the teacher home: tinted icon, coloured number, progress bar.
   const stats = today && [
-    { label: "Present Today", icon: "✅", value: today.present, bar: pct(today.present, today.activeLearners), tint: "bg-green-50", text: "text-green-600", fill: "bg-green-500" },
-    { label: "Signed Out", icon: "🚪", value: today.signedOut, bar: pct(today.signedOut, today.present), tint: "bg-purple-50", text: "text-purple-600", fill: "bg-purple-500" },
-    { label: "Total Learners", icon: "🎒", value: today.activeLearners, bar: 100, tint: "bg-sky-50", text: "text-sky-600", fill: "bg-sky-500" },
+    { label: "Present Today", icon: "✅", value: today.present, bar: pct(today.present, today.activeLearners), ...STAT_COLOURS.attendance },
+    { label: "Signed Out", icon: "🚪", value: today.signedOut, bar: pct(today.signedOut, today.present), ...STAT_COLOURS.signOuts },
+    { label: "Total Learners", icon: "🎒", value: today.activeLearners, bar: 100, ...STAT_COLOURS.learners },
     // Placeholder until escalations are stored on the server (the Escalations page is sample data).
-    { label: "Escalations", icon: "🚨", value: 3, bar: 0, tint: "bg-orange-50", text: "text-orange-500", fill: "bg-orange-500" },
+    { label: "Escalations", icon: "🚨", value: 3, bar: 0, ...STAT_COLOURS.escalations },
   ];
 
   const actions = [

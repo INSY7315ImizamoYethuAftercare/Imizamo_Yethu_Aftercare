@@ -8,6 +8,8 @@ function ReportsTrends({
   orgTrendView,
   classRows,
   insight,
+  pastMonth,
+  weekWords,
   exportTrends,
   exportChart,
   pct,
@@ -16,21 +18,26 @@ function ReportsTrends({
 }) {
   return (
     <div className="space-y-5 w-full pb-8">
-      <ReportsBanner icon="📈" title="Trends" subtitle="This week against last week" insight={insight} />
+      <ReportsBanner icon="📈" title="Trends" subtitle={pastMonth ? `${pastMonth}: the final week against the week before` : "This week against last week"} insight={insight} />
 
-      <div className={card}>
+      <div className={card} data-pdf-chart>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <div>
             <h3 className="font-semibold text-gray-900">Organisation trend</h3>
             {orgTrend.length > 0 && (
               <p className="text-xs text-gray-400 mt-0.5">
                 {orgTrendView === "daily"
-                  ? "Attendance day by day. This changes to weekly once two weeks are recorded."
-                  : "Attendance each week, Monday to Friday."}
+                  ? pastMonth
+                    ? `Attendance day by day, as only one week was recorded up to the end of ${pastMonth}.`
+                    : "Attendance day by day. This changes to weekly once two weeks are recorded."
+                  : pastMonth
+                    ? `Attendance each week, Monday to Friday, up to the end of ${pastMonth}.`
+                    : "Attendance each week, Monday to Friday."}
               </p>
             )}
           </div>
           <button
+            data-pdf-skip
             onClick={exportChart}
             className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-orange-500 border border-gray-200 shadow-lg hover:border-orange-300 active:scale-95 transition"
           >
@@ -47,8 +54,8 @@ function ReportsTrends({
             <thead>
               <tr className="text-left text-gray-500 border-b border-gray-100">
                 <th className="py-2 font-medium">Class</th>
-                <th className="py-2 font-medium">This week</th>
-                <th className="py-2 font-medium">Last week</th>
+                <th className="py-2 font-medium">{weekWords.Now}</th>
+                <th className="py-2 font-medium">{weekWords.Before}</th>
                 <th className="py-2 font-medium">Change</th>
               </tr>
             </thead>
@@ -85,7 +92,7 @@ function ReportsTrends({
         </div>
       </div>
 
-      <button onClick={exportTrends} className={primary}>
+      <button data-pdf-skip onClick={exportTrends} className={primary}>
         📄 Export as PDF
       </button>
     </div>

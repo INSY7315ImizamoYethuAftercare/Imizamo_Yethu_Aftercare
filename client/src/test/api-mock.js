@@ -28,8 +28,10 @@ export function resetApi() {
 
 const handle = (method) =>
   vi.fn(async (path, body) => {
-    const key = `${method} ${path}`
-    if (!routes.has(key)) throw new ApiError(`No mock for ${key}`, 404)
+    // A route registered without a query string also answers requests with one.
+    const exact = `${method} ${path}`
+    const key = routes.has(exact) ? exact : exact.split('?')[0]
+    if (!routes.has(key)) throw new ApiError(`No mock for ${exact}`, 404)
     const response = routes.get(key)
     const value = typeof response === 'function' ? await response(body) : response
     if (value instanceof Error) throw value

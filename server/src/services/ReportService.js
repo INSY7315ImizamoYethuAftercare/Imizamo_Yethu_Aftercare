@@ -167,14 +167,17 @@ export class ReportService {
 
     const weekStart = startOfWeekMonday(new Date(`${end}T00:00:00Z`))
     const thisWeekStart = toYmd(weekStart)
-    const thisWeekEnd = toYmd(addDays(weekStart, 4)) // Mon–Fri
+    const friday = toYmd(addDays(weekStart, 4)) // Mon–Fri
+    // A chosen month can end mid-week: don't count the next month's days.
+    const thisWeekEnd = friday < end ? friday : end
     const lastWeekStart = toYmd(addDays(weekStart, -7))
     const lastWeekEnd = toYmd(addDays(weekStart, -3))
 
     const monthStart = end.slice(0, 8) + '01'
 
-    const earliestTrendWeek = toYmd(addDays(weekStart, -7 * (TREND_WEEKS - 1)))
-    const trendStart = start > earliestTrendWeek ? start : earliestTrendWeek
+    // The trend looks back from the end of the period, even past its start, so
+    // choosing a single month still has earlier weeks to compare it with.
+    const trendStart = toYmd(addDays(weekStart, -7 * (TREND_WEEKS - 1)))
 
     const [
       learners,
@@ -193,6 +196,7 @@ export class ReportService {
       ratePeriod,
       signedOutToday,
       trendDays,
+      byClassThisMonth,
     ] = await Promise.all([
       this.learnerRepository.findAll(),
       this.schoolClassRepository.findAll({ includeInactive: false }),
@@ -210,6 +214,7 @@ export class ReportService {
       this.attendanceRepository.getAttendanceRate(start, end),
       this.signOutRepository.countByDateRange(todayInSA(), todayInSA()),
       this.attendanceRepository.getDailyPresentCounts(trendStart, end),
+      this.attendanceRepository.getAttendanceByClass(monthStart, end),
     ])
 
     const activeLearners = learners.filter((l) => l.is_active)
@@ -225,10 +230,13 @@ export class ReportService {
         { present: Number(r.present_count), absent: Number(r.absent_count ?? 0) },
       ]),
     )
+    // This week shows all five days; a past month stops where the month ends.
+    const isPastPeriod = end < todayInSA()
     const weeklyDays = []
     for (let i = 0; i < 5; i++) {
       const d = addDays(weekStart, i)
       const ymd = toYmd(d)
+      if (isPastPeriod && ymd > end) break
       const label = `${DAY_NAMES[d.getUTCDay()]} ${String(d.getUTCDate()).padStart(2, '0')}`
       const counts = dailyMap.get(ymd)
       weeklyDays.push({
@@ -277,7 +285,20 @@ export class ReportService {
       lastWeek: rateFor(byClassLastWeek, c.class_name),
     }))
 
-    const orgTrend = buildOrgTrend(trendDays, start, end, weekStart)
+    // Donor report: each class's active learners and how many of them came this
+    // month. attendedLearners is null (not 0) when the class has no register
+    // this month, so the page can show that nothing was recorded.
+    const classesThisMonth = classes.map((c) => {
+      const row = byClassThisMonth.find((r) => r.class_name === c.class_name)
+      return {
+        name: c.class_name,
+        colour: c.colour ?? null,
+        activeLearners: Number(c.active_learner_count) || 0,
+        attendedLearners: row ? Number(row.attended_learners ?? 0) : null,
+      }
+    })
+
+    const orgTrend = buildOrgTrend(trendDays, trendStart, end, weekStart)
 
     // null when no attendance was recorded in the period.
     const avgAttendance = ratePeriod
@@ -311,6 +332,7 @@ export class ReportService {
         averageRating: row.average_rating === null ? null : Number(row.average_rating),
       })),
       classTrends,
+      classesThisMonth,
       orgTrend: orgTrend.points,
       orgTrendView: orgTrend.view,
       // Today's numbers (South African date), per class and in total. Counts
