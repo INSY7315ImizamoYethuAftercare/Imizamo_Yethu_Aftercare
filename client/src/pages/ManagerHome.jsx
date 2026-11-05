@@ -44,6 +44,17 @@ function ManagerHome() {
       .catch((e) => { if (!cancelled) setActivityError(e?.message || "Couldn't load today's sign-outs."); });
     return () => { cancelled = true; };
   }, []);
+
+  // How many collections are waiting for a decision (GET /signout/escalations).
+  const [queueCount, setQueueCount] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    apiClient
+      .get("/signout/escalations")
+      .then(({ open }) => { if (!cancelled) setQueueCount(open.length); })
+      .catch(() => { /* The card shows a dash; the Queue page reports the error. */ });
+    return () => { cancelled = true; };
+  }, []);
   const navigate = useNavigate();
   const classOverview = classOverviewRows(useClasses());
   const comingSoon = () => alert("Coming soon");
@@ -57,16 +68,14 @@ function ManagerHome() {
     { label: "Present Today", icon: "✅", value: today.present, bar: pct(today.present, today.activeLearners), ...STAT_COLOURS.attendance },
     { label: "Signed Out", icon: "🚪", value: today.signedOut, bar: pct(today.signedOut, today.present), ...STAT_COLOURS.signOuts },
     { label: "Total Learners", icon: "🎒", value: today.activeLearners, bar: 100, ...STAT_COLOURS.learners },
-    // Placeholder until escalations are stored on the server (the Escalations page is sample data).
-    { label: "Escalations", icon: "🚨", value: 3, bar: 0, ...STAT_COLOURS.escalations },
+    { label: "Escalations", icon: "🚨", value: queueCount ?? "–", bar: 0, ...STAT_COLOURS.escalations },
   ];
 
   const actions = [
     { label: "Attendance", icon: "✅", tint: "bg-green-50", to: "/manager/attendance" },
     { label: "Learners", icon: "🎒", tint: "bg-pink-50", to: "/manager/learners" },
     { label: "Sign-Out", icon: "🚪", tint: "bg-orange-50", to: "/manager/signout" },
-    // Placeholder count, as on the Escalations card above.
-    { label: "Queue", icon: "🚨", tint: "bg-red-50", to: "/manager/escalations", badge: 3 },
+    { label: "Queue", icon: "🚨", tint: "bg-red-50", to: "/manager/escalations", badge: queueCount },
     { label: "Staff", icon: "👥", tint: "bg-purple-50", to: "/manager/staff" },
     { label: "Reports", icon: "📊", tint: "bg-sky-50", to: "/reports" },
   ];
@@ -131,7 +140,7 @@ function ManagerHome() {
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
           {actions.map((a) => (
             <button key={a.to} onClick={() => navigate(a.to)} className={action}>
-              {a.badge && (
+              {a.badge > 0 && (
                 <span className="absolute top-2 right-2 text-[10px] bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center">{a.badge}</span>
               )}
               <span className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-xl ${a.tint}`} aria-hidden="true">

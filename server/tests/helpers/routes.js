@@ -30,6 +30,14 @@ export const PROTECTED_ROUTES = [
   route('POST /api/signout/confirm', ['teacher', ...MANAGER], () => '/api/signout/confirm',
     (w) => ({ learnerId: w.learnerA.learner_id, guardianId: w.users.guardian.profile.guardian_id })),
 
+  route('POST /api/signout/escalations', ['teacher', ...MANAGER], () => '/api/signout/escalations',
+    (w) => ({ learnerId: w.learnerA.learner_id, collectorName: 'Random Stranger' })),
+  route('GET /api/signout/escalations', [...MANAGER], () => '/api/signout/escalations'),
+  // No such request (404): still proves the role gate let them through.
+  route('PATCH /api/signout/escalations/:escalationId', [...MANAGER], () => '/api/signout/escalations/999999',
+    () => ({ action: 'dismiss' })),
+
+  route('GET /api/guardian/me', ['guardian'], () => '/api/guardian/me'),
   route('GET /api/guardian/children', ['guardian'], () => '/api/guardian/children'),
   route('GET /api/guardian/children/:learnerId', ['guardian'], (w) => `/api/guardian/children/${w.learnerA.learner_id}`),
   route('GET /api/guardian/children/:learnerId/observations', ['guardian'],
@@ -39,6 +47,9 @@ export const PROTECTED_ROUTES = [
   route('POST /api/guardian/children/:learnerId/pickups', ['guardian'],
     (w) => `/api/guardian/children/${w.learnerA.learner_id}/pickups`,
     () => ({ fullName: 'Zainab Hendricks', relationship: 'Aunt', contactNumber: '0723456789' })),
+  route('PATCH /api/guardian/children/:learnerId/walk-home', ['guardian'],
+    (w) => `/api/guardian/children/${w.learnerA.learner_id}/walk-home`,
+    () => ({ canWalkHomeAlone: true })),
   route('PATCH /api/guardian/:guardianId/deactivate', [...MANAGER],
     (w) => `/api/guardian/${w.otherGuardian.profile.guardian_id}/deactivate`),
   route('PATCH /api/guardian/:guardianId/activate', [...MANAGER],

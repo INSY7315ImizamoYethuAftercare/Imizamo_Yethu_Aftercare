@@ -431,7 +431,137 @@ paths:
           description: The learner wasn't marked present today, or has already been signed out today
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
 
+  /api/signout/escalations:
+    post:
+      tags: [Sign-out]
+      summary: Send a collection to the manager's queue
+      description: |
+        Roles: teacher, manager, master admin. For a collector who isn't on the pickup list, or a
+        learner walking home without permission. Nothing is signed out until a manager approves it.
+      operationId: raiseSignOutEscalation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [learnerId, collectorName]
+              properties:
+                learnerId: { type: integer, minimum: 1 }
+                collectorName:
+                  type: string
+                  maxLength: 150
+                  nullable: true
+                  description: The name staff typed, or null when the learner wants to walk home alone.
+      responses:
+        '201':
+          description: Added to the queue
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignOutEscalation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: The learner isn't present today, has already gone, is already in the queue, or may walk home alone anyway
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    get:
+      tags: [Sign-out]
+      summary: Today's sign-out queue
+      description: |
+        Roles: manager, master admin. What still needs a decision today, and what has been decided.
+        An open request drops off once the learner has been signed out some other way.
+      operationId: getSignOutEscalations
+      responses:
+        '200':
+          description: Today's queue
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date: { $ref: '#/components/schemas/DbDate' }
+                  open:
+                    type: array
+                    items: { $ref: '#/components/schemas/SignOutEscalation' }
+                  resolved:
+                    type: array
+                    items: { $ref: '#/components/schemas/SignOutEscalation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/signout/escalations/{escalationId}:
+    patch:
+      tags: [Sign-out]
+      summary: Approve or dismiss a queued collection
+      description: |
+        Roles: manager, master admin. `approve` signs the learner out with the named collector and
+        records the manager as the person who did it. `dismiss` leaves the learner at the centre.
+      operationId: resolveSignOutEscalation
+      parameters:
+        - { name: escalationId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: { type: string, enum: [approve, dismiss] }
+      responses:
+        '200':
+          description: The decision was saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  escalationId: { type: integer }
+                  status: { type: string, enum: [approved, dismissed] }
+                  signOut:
+                    type: object
+                    nullable: true
+                    description: null when dismissed.
+                    properties:
+                      timeOut: { type: string, example: '16:45' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Already decided, from an earlier day, or the learner can no longer be signed out
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
   # ---------------------------------------------------------------- Guardian portal
+  /api/guardian/me:
+    get:
+      tags: [Guardian portal]
+      summary: My details
+      description: "Roles: guardian. The guardian's own contact details and children, for their Settings page."
+      operationId: getMyGuardianProfile
+      responses:
+        '200':
+          description: The guardian's details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fullName: { type: string }
+                  contactNumber: { type: string }
+                  relationship: { type: string }
+                  children:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        learnerId: { type: integer }
+                        name: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
   /api/guardian/children:
     get:
       tags: [Guardian portal]
@@ -513,8 +643,7 @@ paths:
       summary: Add someone who may collect my child
       description: |
         Roles: guardian, for their own child only. The person doesn't need an account and is
-        authorised straight away. `canWalkHomeAlone: true` also lets the child walk home alone.
-        Everything is saved together, or not at all.
+        authorised straight away.
       operationId: addChildPickup
       parameters:
         - $ref: '#/components/parameters/learnerId'
@@ -529,7 +658,6 @@ paths:
                 fullName: { type: string, maxLength: 150, example: Zainab Hendricks }
                 relationship: { type: string, maxLength: 50, example: Aunt }
                 contactNumber: { type: string, maxLength: 30, example: '0723456789' }
-                canWalkHomeAlone: { type: boolean, default: false }
       responses:
         '201':
           description: Person added
@@ -542,6 +670,37 @@ paths:
         '409':
           description: Someone with this name is already on the pickup list
           content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/guardian/children/{learnerId}/walk-home:
+    patch:
+      tags: [Guardian portal]
+      summary: Give or take back permission for my child to walk home alone
+      description: Roles = guardian, for their own child only.
+      operationId: setChildWalkHome
+      parameters:
+        - $ref: '#/components/parameters/learnerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [canWalkHomeAlone]
+              properties:
+                canWalkHomeAlone: { type: boolean }
+      responses:
+        '200':
+          description: Permission saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  learnerId: { type: integer }
+                  canWalkHomeAlone: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
 
   # ---------------------------------------------------------------- Guardian accounts
   /api/guardian/{guardianId}/deactivate:
@@ -1563,6 +1722,15 @@ components:
                   timeOut: { type: string, example: '16:45' }
                   collectedBy: { type: string }
                   recordedBy: { type: string, nullable: true, description: The teacher or manager who signed them out. }
+              escalation:
+                type: object
+                nullable: true
+                description: The learner's latest request in the manager's queue today. null if there is none, or once they have gone.
+                properties:
+                  status: { type: string, enum: [open, dismissed] }
+                  collectorName: { type: string, nullable: true, description: null when the learner wants to walk home alone. }
+                  resolvedBy: { type: string, nullable: true }
+                  resolvedAt: { type: string, nullable: true, example: '16:50' }
     SignOutCheck:
       type: object
       properties:
@@ -1581,6 +1749,20 @@ components:
         guardian_id: { type: integer, nullable: true, description: null when the learner walked home alone. }
         record_date: { $ref: '#/components/schemas/DbDate' }
         time_out: { type: string, example: '16:45:00' }
+
+    SignOutEscalation:
+      type: object
+      properties:
+        escalationId: { type: integer }
+        learnerId: { type: integer }
+        learnerName: { type: string }
+        className: { type: string, nullable: true }
+        collectorName: { type: string, nullable: true, description: null when the learner wants to walk home alone. }
+        raisedBy: { type: string, description: The teacher or manager who sent it to the queue. }
+        raisedAt: { type: string, example: '16:45' }
+        status: { type: string, enum: [open, approved, dismissed] }
+        resolvedBy: { type: string, nullable: true }
+        resolvedAt: { type: string, nullable: true, example: '16:50' }
 
     LearnerOverview:
       type: object

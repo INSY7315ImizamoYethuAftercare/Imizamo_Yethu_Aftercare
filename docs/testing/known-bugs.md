@@ -32,16 +32,12 @@ Still open: two features that aren't built yet, some screens that still show pla
 
 These are features, not bugs. The screens exist, but there's no backend yet. Worth creating a GitHub issue for them.
 
-- **Manager approval queue for flagged collections.** On the Sign-Out page, "Send to manager queue" saves nothing, and the screen tells staff so. A real queue needs an escalation table (learner, typed collector name, reason, who flagged it, status), API routes, and `client/src/pages/Escalations.jsx` reading from it.
 - **Changing your password.** The "Update password" form on the Settings pages only checks what's typed; there's no API for it yet. This matters now that managers give new teachers a starting password. It needs a route such as `PATCH /api/auth/password` (check the current password, then save the new hash with `UserRepository.updatePassword`), wired to `Settings.jsx` and `ParentSettings.jsx`.
-- **Manager override.** "Override and approve" is shown greyed out. It depends on the queue above, and on recording a collector who isn't on the pickup list.
 
 ## Screens still showing placeholder data
 
 These look finished but show hard-coded data. Don't demo them as real:
 
-- `client/src/pages/Reports.jsx`: the report figures are fixed. `GET /api/reports/donor` isn't called.
-- `client/src/pages/Escalations.jsx`: the sign-out queue is fixed data.
 - `client/src/App.jsx`: `/manager/observations` is declared twice.
 
 ## Hardening ideas (not covered by tests)

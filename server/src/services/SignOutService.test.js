@@ -13,6 +13,7 @@ describe('SignOutService', () => {
       managerRepository: { findByUserId: jest.fn().mockResolvedValue({ manager_id: 4 }) },
       learnerRepository: { findById: jest.fn().mockResolvedValue({ learner_id: 3, can_walk_home_alone: false }) },
       attendanceRepository: { findByLearnerAndDate: jest.fn().mockResolvedValue({ record_id: 1, status: 'present' }) },
+      escalationRepository: { findByDate: jest.fn().mockResolvedValue([]) },
     }
     service = new SignOutService(deps)
   })
@@ -120,11 +121,11 @@ describe('SignOutService', () => {
         {
           learnerId: 3, name: 'Aisha Petersen', className: 'Yellow', gradeRange: 'Gr 1-2', canWalkHomeAlone: false,
           pickups: [{ guardianId: 9, fullName: 'Fatima Petersen', relationship: 'Mother', isPrimaryContact: true }],
-          signedOut: null,
+          signedOut: null, escalation: null,
         },
         {
           learnerId: 5, name: 'Bongani Khumalo', className: 'Blue', gradeRange: 'Gr 7', canWalkHomeAlone: true,
-          pickups: [], signedOut: { timeOut: '16:10', collectedBy: 'Walked home alone', recordedBy: 'Ms Nkosi' },
+          pickups: [], signedOut: { timeOut: '16:10', collectedBy: 'Walked home alone', recordedBy: 'Ms Nkosi' }, escalation: null,
         },
       ],
     })

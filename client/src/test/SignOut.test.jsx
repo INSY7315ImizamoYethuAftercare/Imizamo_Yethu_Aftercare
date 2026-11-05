@@ -1,7 +1,7 @@
 // #52 — Sign-out flow against the (mocked) API: today's list, tapping an
 // authorised pickup, confirming, server errors, walking home, the flagged
 // path, and the manager view.
-import { render, screen, within } from '@testing-library/react'
+import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -194,6 +194,64 @@ describe('collecting a learner', () => {
   })
 })
 
+describe("the manager's decision on the list", () => {
+  const WAITING = { status: 'open', collectorName: 'Random Stranger', resolvedBy: null, resolvedAt: null }
+
+  it('shows a learner is waiting for a manager, and they can still be signed out', async () => {
+    onApi('GET', '/signout/today', today([{ ...AISHA, escalation: WAITING }]))
+    await renderAs()
+    expect(await screen.findByText('Waiting for manager • Random Stranger')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sign out Aisha Petersen' })).toBeEnabled()
+  })
+
+  it('shows a walking-home request without a name', async () => {
+    onApi('GET', '/signout/today', today([{ ...AISHA, escalation: { ...WAITING, collectorName: null } }]))
+    await renderAs()
+    expect(await screen.findByText('Waiting for manager • Walking home')).toBeInTheDocument()
+  })
+
+  it('shows who dismissed a request, and when', async () => {
+    onApi('GET', '/signout/today', today([{
+      ...AISHA, escalation: { status: 'dismissed', collectorName: 'Random Stranger', resolvedBy: 'Sarah Botha', resolvedAt: '16:50' },
+    }]))
+    await renderAs()
+    expect(await screen.findByText('Dismissed by Sarah Botha at 16:50 • Random Stranger')).toBeInTheDocument()
+    expect(screen.queryByText(/Waiting for manager/)).not.toBeInTheDocument()
+  })
+
+  it('shows no label when nothing has been sent to the manager', async () => {
+    onApi('GET', '/signout/today', today([{ ...AISHA, escalation: null }]))
+    await renderAs()
+    await screen.findByText('Aisha Petersen')
+    expect(screen.queryByText(/Waiting for manager|Dismissed by/)).not.toBeInTheDocument()
+  })
+
+  it('shows the label straight after sending a request and going back to the list', async () => {
+    onApi('POST', '/signout/escalations', () => {
+      onApi('GET', '/signout/today', today([{ ...AISHA, escalation: WAITING }]))
+      return { escalationId: 5 }
+    })
+    await renderAs()
+    await start('Aisha Petersen')
+    await userEvent.type(screen.getByLabelText('Enter the name of the person collecting'), 'Random Stranger')
+    await click('Verify')
+    await click('Send to manager queue')
+    await userEvent.click(await screen.findByRole('button', { name: 'Back to list' }))
+    expect(await screen.findByText('Waiting for manager • Random Stranger')).toBeInTheDocument()
+  })
+
+  it("picks up a manager's decision when staff come back to the tab", async () => {
+    onApi('GET', '/signout/today', today([{ ...AISHA, escalation: WAITING }]))
+    await renderAs()
+    await screen.findByText('Waiting for manager • Random Stranger')
+    onApi('GET', '/signout/today', today([{
+      ...AISHA, escalation: { status: 'dismissed', collectorName: 'Random Stranger', resolvedBy: 'Sarah Botha', resolvedAt: '16:50' },
+    }]))
+    window.dispatchEvent(new Event('focus'))
+    expect(await screen.findByText('Dismissed by Sarah Botha at 16:50 • Random Stranger')).toBeInTheDocument()
+  })
+})
+
 describe('validation and the flagged path', () => {
   it('asks for a choice when nobody is picked or typed', async () => {
     await renderAs()
@@ -229,10 +287,33 @@ describe('validation and the flagged path', () => {
     expect(screen.getByText('Random Stranger is not on the authorised pickup list.')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Override and approve' })).not.toBeInTheDocument()
 
+    onApi('POST', '/signout/escalations', { escalationId: 5 })
     await click('Send to manager queue')
-    expect(screen.getByText('Sent to the manager queue')).toBeInTheDocument()
-    expect(screen.getByText(/the manager queue isn't connected yet, so nothing has been sent or saved/)).toBeInTheDocument()
+    expect(await screen.findByText('Sent to the manager queue')).toBeInTheDocument()
+    expect(apiClient.post).toHaveBeenCalledWith('/signout/escalations', { learnerId: 3, collectorName: 'Random Stranger' })
     expect(apiClient.post).not.toHaveBeenCalledWith('/signout/confirm', expect.anything())
+  })
+
+  it('sends a learner walking home without permission to the queue with no name', async () => {
+    onApi('POST', '/signout/escalations', { escalationId: 6 })
+    await renderAs()
+    await start('Aisha Petersen')
+    await tap('Walking Home')
+    await click('Verify')
+    await click('Send to manager queue')
+    expect(await screen.findByText('Sent to the manager queue')).toBeInTheDocument()
+    expect(apiClient.post).toHaveBeenCalledWith('/signout/escalations', { learnerId: 3, collectorName: null })
+  })
+
+  it('stays on the screen and shows why if the queue refuses it', async () => {
+    onApi('POST', '/signout/escalations', () => { throw new ApiError('This learner is already waiting in the manager queue.', 409) })
+    await renderAs()
+    await start('Aisha Petersen')
+    await userEvent.type(screen.getByLabelText('Enter the name of the person collecting'), 'Random Stranger')
+    await click('Verify')
+    await click('Send to manager queue')
+    expect(await screen.findByText('This learner is already waiting in the manager queue.')).toBeInTheDocument()
+    expect(screen.queryByText('Sent to the manager queue')).not.toBeInTheDocument()
   })
 
   it('flags "Walking Home" for a learner without that permission', async () => {
@@ -262,13 +343,16 @@ describe('managers', () => {
     expect(await screen.findByText('Aisha is signed out!')).toBeInTheDocument()
   })
 
-  it('see the override button, but it is not available yet', async () => {
+  it('can override and approve a collector who is not on the list', async () => {
+    onApi('POST', '/signout/escalations', { escalationId: 7 })
+    onApi('PATCH', '/signout/escalations/7', { escalationId: 7, status: 'approved', signOut: { timeOut: '16:50' } })
     await renderAs('manager', { role: 'Manager' })
     await start('Aisha Petersen')
     await userEvent.type(screen.getByLabelText('Enter the name of the person collecting'), 'Uncle Sipho')
     await click('Verify')
-    const override = screen.getByRole('button', { name: 'Override and approve' })
-    expect(override).toBeDisabled()
-    expect(within(override.parentElement).getByText(/Override isn't available yet/)).toBeInTheDocument()
+    await click('Override and approve')
+    expect(await screen.findByText('Aisha is signed out!')).toBeInTheDocument()
+    expect(screen.getByText('Collected by Uncle Sipho at 16:50')).toBeInTheDocument()
+    expect(apiClient.patch).toHaveBeenCalledWith('/signout/escalations/7', { action: 'approve' })
   })
 })

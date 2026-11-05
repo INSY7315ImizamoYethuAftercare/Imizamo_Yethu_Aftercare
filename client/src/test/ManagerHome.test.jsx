@@ -1,6 +1,6 @@
 // Manager home (also the master admin's dashboard): greeting and today's
 // totals from GET /reports/overview, not placeholder text.
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import ManagerHome from '../pages/ManagerHome'
@@ -25,6 +25,7 @@ beforeEach(() => {
   onApi('GET', '/learners', LEARNERS)
   onApi('GET', '/reports/overview', { totals: {}, today: TODAY })
   onApi('GET', '/signout/today', { date: '2026-10-05', learners: [] })
+  onApi('GET', '/signout/escalations', { date: '2026-10-05', open: [], resolved: [] })
 })
 
 describe('Recent Activity', () => {
@@ -87,9 +88,25 @@ describe('Manager home', () => {
     expect(screen.queryByText(/sign-outs need review|29 July/)).not.toBeInTheDocument()
   })
 
-  it('still shows the Escalations placeholder until escalations are stored on the server', async () => {
+  it('counts the real requests waiting in the sign-out queue', async () => {
+    onApi('GET', '/signout/escalations', { date: '2026-10-05', open: [{ escalationId: 1 }, { escalationId: 2 }], resolved: [{ escalationId: 3 }] })
     await renderHome()
-    expect((await screen.findByText('Escalations')).previousElementSibling).toHaveTextContent('3')
+    const stat = (await screen.findByText('Escalations')).previousElementSibling
+    await waitFor(() => expect(stat).toHaveTextContent('2'))
+    expect(within(screen.getByRole('button', { name: /Queue/ })).getByText('2')).toBeInTheDocument()
+  })
+
+  it('shows no badge on an empty queue', async () => {
+    await renderHome()
+    const stat = (await screen.findByText('Escalations')).previousElementSibling
+    await waitFor(() => expect(stat).toHaveTextContent('0'))
+    expect(within(screen.getByRole('button', { name: /Queue/ })).queryByText('0')).not.toBeInTheDocument()
+  })
+
+  it('shows a dash when the queue cannot be loaded', async () => {
+    onApi('GET', '/signout/escalations', () => { throw new ApiError('Nope', 500) })
+    await renderHome()
+    expect((await screen.findByText('Escalations')).previousElementSibling).toHaveTextContent('–')
   })
 
   it("greets a manager by first name, with today's date", async () => {

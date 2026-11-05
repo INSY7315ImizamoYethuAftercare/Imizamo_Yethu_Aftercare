@@ -8,10 +8,11 @@ import { categoryChipClass } from "../utils/categories";
 //   GET  /api/guardian/children                         - this parent's children
 //   GET  /api/guardian/children/:id/overview            - everything on this page
 //   POST /api/guardian/children/:id/pickups             - add an authorised pickup
+//   PATCH /api/guardian/children/:id/walk-home          - may the child walk home alone
 // The server only ever returns the parent's own children.
 
 const card = "bg-white rounded-2xl shadow-lg border border-gray-100";
-const EMPTY_PICKUP = { fullName: "", relationship: "", contactNumber: "", canWalkHomeAlone: false };
+const EMPTY_PICKUP = { fullName: "", relationship: "", contactNumber: "" };
 
 function StatusBanner({ child, today }) {
   const first = child.firstName;
@@ -69,7 +70,6 @@ function AddPickupSheet({ child, onClose, onAdded }) {
         fullName: form.fullName.trim(),
         relationship: form.relationship.trim(),
         contactNumber: form.contactNumber.trim(),
-        canWalkHomeAlone: form.canWalkHomeAlone,
       });
       onAdded(pickup);
     } catch (err) {
@@ -107,21 +107,6 @@ function AddPickupSheet({ child, onClose, onAdded }) {
             <label htmlFor="pickup-contact" className={label}>CONTACT NUMBER *</label>
             <input id="pickup-contact" type="tel" value={form.contactNumber} onChange={set("contactNumber")} placeholder="e.g. 072 345 6789" className={input} />
           </div>
-          {!child.canWalkHomeAlone && (
-            <label htmlFor="pickup-walk" className="flex items-start gap-3 bg-orange-50/60 border border-orange-100 rounded-2xl px-4 py-3 cursor-pointer">
-              <input
-                id="pickup-walk"
-                type="checkbox"
-                checked={form.canWalkHomeAlone}
-                onChange={(e) => setForm((f) => ({ ...f, canWalkHomeAlone: e.target.checked }))}
-                className="mt-1 w-5 h-5 accent-orange-400"
-              />
-              <span>
-                <span className="block font-semibold text-gray-900">{child.firstName} may walk home alone</span>
-                <span className="block text-xs text-gray-400">I give permission for my child to leave the hub unaccompanied</span>
-              </span>
-            </label>
-          )}
         </div>
 
         {error && <p role="alert" className="text-sm text-red-500 mb-3">{error}</p>}
@@ -155,6 +140,8 @@ function ParentHome() {
   const [showAll, setShowAll] = useState(false);
   const [adding, setAdding] = useState(false);
   const [banner, setBanner] = useState("");
+  const [walkSaving, setWalkSaving] = useState(false);
+  const [walkError, setWalkError] = useState("");
 
   useEffect(() => {
     apiClient
@@ -176,6 +163,7 @@ function ParentHome() {
   }, []);
 
   useEffect(() => {
+    setWalkError("");
     if (selectedId) loadOverview(selectedId);
   }, [selectedId, loadOverview]);
 
@@ -215,6 +203,22 @@ function ParentHome() {
 
   const { child, today, attendance, week, pickups, teacher, observations } = data;
   const shownObservations = showAll ? observations : observations.slice(0, 1);
+
+  const setWalkHome = async (allowed) => {
+    setWalkSaving(true);
+    setWalkError("");
+    try {
+      await apiClient.patch(`/guardian/children/${child.learnerId}/walk-home`, { canWalkHomeAlone: allowed });
+      // Only if the parent is still looking at this child.
+      setData((d) => (d.child.learnerId === child.learnerId ? { ...d, child: { ...d.child, canWalkHomeAlone: allowed } } : d));
+      setBanner(allowed ? `${child.firstName} may now walk home alone.` : `${child.firstName} must now be collected by someone on the pickup list.`);
+      setTimeout(() => setBanner(""), 3000);
+    } catch (err) {
+      setWalkError(err.message || "Could not save this. Please try again.");
+    } finally {
+      setWalkSaving(false);
+    }
+  };
   const todayLabel =
     today.status === "present" ? "Present ✓" : today.status === "absent" ? "Absent" : "Not marked";
   const todayColour =
@@ -341,14 +345,25 @@ function ParentHome() {
             <span className="px-2.5 py-1 rounded-full bg-green-50 text-green-600 text-xs font-semibold">✓ Authorised</span>
           </div>
         ))}
-        {child.canWalkHomeAlone && (
-          <div className="flex items-center gap-3 px-4 py-3">
-            <span aria-hidden="true" className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center">🚶</span>
-            <p className="flex-1 font-medium text-gray-900">May walk home alone</p>
-            <span className="px-2.5 py-1 rounded-full bg-green-50 text-green-600 text-xs font-semibold">✓ Allowed</span>
-          </div>
-        )}
       </div>
+
+      <h2 className="font-bold text-gray-900 mb-3">Walking Home</h2>
+      <label htmlFor="walk-home" className={`${card} flex items-center gap-3 px-4 py-3 ${walkError ? "mb-2" : "mb-6"} ${walkSaving ? "opacity-60" : "cursor-pointer"}`}>
+        <span aria-hidden="true" className="w-10 h-10 shrink-0 rounded-full bg-orange-50 flex items-center justify-center">🚶</span>
+        <span className="flex-1 min-w-0">
+          <span className="block font-medium text-gray-900">{child.firstName} may walk home alone</span>
+          <span className="block text-xs text-gray-400">I give permission for my child to leave the hub unaccompanied</span>
+        </span>
+        <input
+          id="walk-home"
+          type="checkbox"
+          checked={child.canWalkHomeAlone}
+          disabled={walkSaving}
+          onChange={(e) => setWalkHome(e.target.checked)}
+          className="w-6 h-6 shrink-0 accent-orange-400"
+        />
+      </label>
+      {walkError && <p role="alert" className="text-sm text-red-500 mb-6">{walkError}</p>}
 
       <h2 className="font-bold text-gray-900 mb-3">This Week</h2>
       <div className={`${card} divide-y divide-gray-100 mb-6 md:divide-y-0 md:grid md:grid-cols-2`}>
