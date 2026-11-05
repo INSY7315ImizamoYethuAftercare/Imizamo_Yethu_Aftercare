@@ -4,7 +4,6 @@ import LearnerRepository from '../repositories/LearnerRepository.js'
 import SchoolClassRepository from '../repositories/SchoolClassRepository.js'
 import TeacherRepository from '../repositories/TeacherRepository.js'
 import { pool } from '../db/pool.js'
-import * as validate from '../utils/validation.js'
 
 const observationService = new ObservationService({
   observationRepository: new ObservationRepository(pool),
@@ -15,18 +14,10 @@ const observationService = new ObservationService({
 
 export async function addObservation(req, res, next) {
   try {
-   const { learnerId, category, rating, notes } = req.body ?? {}
-    if (!learnerId || !category || rating === undefined) {
-      const err = new Error('learnerId, category and rating are required')
-      err.status = 400
-      throw err
-    }
-    validate.rating(rating)
-    validate.text(category, 'category', { max: validate.LIMITS.category })
-    validate.text(notes, 'notes', { max: validate.LIMITS.notes, required: false })
+    const { learnerId, category, rating, notes } = req.validated.body
     const recordDate = new Date().toISOString().slice(0, 10)
     const observation = await observationService.addObservation({
-      userId: req.user.userId, learnerId: validate.parseId(learnerId, 'learnerId'), category, rating, notes, recordDate,
+      userId: req.user.userId, learnerId, category, rating, notes, recordDate,
     })
     res.status(201).json(observation)
   } catch (err) {
@@ -38,7 +29,7 @@ export async function getLearnerObservations(req, res, next) {
   try {
     const observations = await observationService.getLearnerObservations({
       userId: req.user.userId,
-      learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
+      learnerId: req.validated.params.learnerId,
     })
     res.json(observations)
   } catch (err) {
@@ -48,18 +39,11 @@ export async function getLearnerObservations(req, res, next) {
 
 export async function updateObservation(req, res, next) {
   try {
-
-    const { category, rating, notes } = req.body ?? {}
-
-    const fields = {}
-    if (category !== undefined) fields.category = validate.text(category, 'category', { max: validate.LIMITS.category })
-    if (rating !== undefined) fields.rating = validate.rating(rating)
-    if (notes !== undefined) fields.notes = notes === null ? null : validate.text(notes, 'notes', { max: validate.LIMITS.notes, required: false })
-
+    // The schema keeps only the sent fields; a null notes clears the notes.
     const updated = await observationService.updateObservation({
       userId: req.user.userId,
-      observationId: validate.parseId(req.params.observationId, 'observationId'),
-      fields,
+      observationId: req.validated.params.observationId,
+      fields: req.validated.body,
     })
     res.json(updated)
   } 
@@ -72,7 +56,7 @@ export async function deleteObservation(req, res, next) {
   try {
     await observationService.deleteObservation({
       userId: req.user.userId,
-      observationId: validate.parseId(req.params.observationId, 'observationId'),
+      observationId: req.validated.params.observationId,
     })
     res.status(204).send()
   } catch (err) {

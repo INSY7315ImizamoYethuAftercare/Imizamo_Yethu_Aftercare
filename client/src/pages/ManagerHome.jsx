@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import SettingsButton from "../components/SettingsButton";
 import { useClasses, classOverviewRows } from "./UseClasses";
 import { useHeader } from "./UseHeader";
 import { apiClient } from "../services/apiClient";
 import { isMasterAdmin, useSession } from "../services/session";
 import { greeting, longDate, todayInSA } from "../utils/dates";
+import { STAT_COLOURS } from "../utils/statColours";
 
 function ManagerHome() {
   const { displayName, displayRole } = useHeader();
@@ -42,15 +44,44 @@ function ManagerHome() {
       .catch((e) => { if (!cancelled) setActivityError(e?.message || "Couldn't load today's sign-outs."); });
     return () => { cancelled = true; };
   }, []);
+
+  // How many collections are waiting for a decision (GET /signout/escalations).
+  const [queueCount, setQueueCount] = useState(null);
+  useEffect(() => {
+    let cancelled = false;
+    apiClient
+      .get("/signout/escalations")
+      .then(({ open }) => { if (!cancelled) setQueueCount(open.length); })
+      .catch(() => { /* The card shows a dash; the Queue page reports the error. */ });
+    return () => { cancelled = true; };
+  }, []);
   const navigate = useNavigate();
   const classOverview = classOverviewRows(useClasses());
   const comingSoon = () => alert("Coming soon");
   const card = "bg-white rounded-2xl p-4 shadow-lg border border-gray-200";
   const action =
-    "bg-white rounded-2xl p-4 shadow-lg border border-gray-200 flex flex-col items-center gap-2 hover:shadow-xl hover:border-orange-300 active:scale-[0.97] transition relative";
+    "bg-white rounded-2xl p-3 shadow-lg border border-gray-200 flex items-center gap-3 hover:shadow-xl hover:border-orange-300 active:scale-[0.97] transition relative";
+  const pct = (n, of) => (of > 0 ? Math.min(Math.round((n / of) * 100), 100) : 0);
+
+  // Stat cards in the same style as the teacher home: tinted icon, coloured number, progress bar.
+  const stats = today && [
+    { label: "Present Today", icon: "✅", value: today.present, bar: pct(today.present, today.activeLearners), ...STAT_COLOURS.attendance },
+    { label: "Signed Out", icon: "🚪", value: today.signedOut, bar: pct(today.signedOut, today.present), ...STAT_COLOURS.signOuts },
+    { label: "Total Learners", icon: "🎒", value: today.activeLearners, bar: 100, ...STAT_COLOURS.learners },
+    { label: "Escalations", icon: "🚨", value: queueCount ?? "–", bar: 0, ...STAT_COLOURS.escalations },
+  ];
+
+  const actions = [
+    { label: "Attendance", icon: "✅", tint: "bg-green-50", to: "/manager/attendance" },
+    { label: "Learners", icon: "🎒", tint: "bg-pink-50", to: "/manager/learners" },
+    { label: "Sign-Out", icon: "🚪", tint: "bg-orange-50", to: "/manager/signout" },
+    { label: "Queue", icon: "🚨", tint: "bg-red-50", to: "/manager/escalations", badge: queueCount },
+    { label: "Staff", icon: "👥", tint: "bg-purple-50", to: "/manager/staff" },
+    { label: "Reports", icon: "📊", tint: "bg-sky-50", to: "/reports" },
+  ];
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       <div className="bg-white">
         <div className="max-w-5xl mx-auto flex items-center justify-between px-4 pt-4 pb-3">
           <div className="flex items-center gap-2">
@@ -61,21 +92,26 @@ function ManagerHome() {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200">🔔</button>
-            <button onClick={() => navigate("/settings")} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200">⚙️</button>
+            <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
+            <SettingsButton />
           </div>
         </div>
       </div>
 
       <div className="flex-1 px-4 pt-5 pb-32 max-w-5xl mx-auto w-full">
-        <div className="bg-gradient-to-r from-orange-400 to-orange-300 rounded-2xl p-5 mb-5 text-white shadow-lg">
-          <p className="text-sm opacity-90">{longDate(todayInSA())}</p>
-          <h1 className="text-xl font-bold mt-1">{greeting()}, {greetName}! 👋</h1>
-          {today && (
-            <p className="text-sm mt-1 opacity-90">
-              {today.present} of {today.activeLearners} learners present today • {today.signedOut} signed out
-            </p>
-          )}
+        {/* Welcome banner with soft decorative circles, as on the teacher home. */}
+        <div className="relative overflow-hidden bg-gradient-to-r from-orange-500 to-orange-300 rounded-2xl p-5 mb-5 text-white shadow-lg">
+          <span aria-hidden="true" className="absolute -top-10 -right-6 w-36 h-36 rounded-full bg-white/15" />
+          <span aria-hidden="true" className="absolute -bottom-12 right-20 w-28 h-28 rounded-full bg-white/10" />
+          <div className="relative">
+            <p className="text-sm opacity-90">{longDate(todayInSA())}</p>
+            <h1 className="text-xl md:text-2xl font-bold mt-1">{greeting()}, {greetName}! 👋</h1>
+            {today && (
+              <p className="text-sm mt-1 opacity-90">
+                {today.present} of {today.activeLearners} learners present today • {today.signedOut} signed out
+              </p>
+            )}
+          </div>
         </div>
 
         {error && (
@@ -85,54 +121,34 @@ function ManagerHome() {
 
         {today && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-            <div className={card}>
-              <p className="text-2xl font-bold text-gray-900">{today.present}</p>
-              <p className="text-xs text-gray-500">Present Today</p>
-            </div>
-            <div className={card}>
-              <p className="text-2xl font-bold text-gray-900">{today.signedOut}</p>
-              <p className="text-xs text-gray-500">Signed Out</p>
-            </div>
-            <div className={card}>
-              <p className="text-2xl font-bold text-gray-900">{today.activeLearners}</p>
-              <p className="text-xs text-gray-500">Total Learners</p>
-            </div>
-            {/* Placeholder until escalations are stored on the server (the Escalations page is sample data). */}
-            <div className={card}>
-              <p className="text-2xl font-bold text-orange-500">3</p>
-              <p className="text-xs text-gray-500">Escalations</p>
-            </div>
+            {stats.map((s) => (
+              <div key={s.label} className={card}>
+                <span className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg ${s.tint}`} aria-hidden="true">
+                  {s.icon}
+                </span>
+                <p className={`text-2xl font-bold mt-3 ${s.text}`}>{s.value}</p>
+                <p className="text-xs text-gray-500 mt-1">{s.label}</p>
+                <div className="h-1.5 rounded-full bg-gray-100 mt-2 overflow-hidden">
+                  <div className={`h-full rounded-full ${s.fill}`} style={{ width: `${s.bar}%` }} />
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
         <h2 className="font-semibold text-gray-900 mb-3">Quick Actions</h2>
         <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-          <button onClick={() => navigate("/manager/attendance")} className={action}>
-            <span className="text-2xl text-green-500">✓</span>
-            <span className="text-sm font-semibold text-gray-800">Attendance</span>
-          </button>
-          <button onClick={() => navigate("/manager/learners")} className={action}>
-            <span className="text-2xl">🎒</span>
-            <span className="text-sm font-semibold text-gray-800">Learners</span>
-          </button>
-          <button onClick={() => navigate("/manager/signout")} className={action}>
-            <span className="text-2xl">🚪</span>
-            <span className="text-sm font-semibold text-gray-800">Sign-Out</span>
-          </button>
-          <button onClick={() => navigate("/manager/escalations")} className={action}>
-            {/* Placeholder count, as on the Escalations card above. */}
-            <span className="absolute top-2 right-2 text-[10px] bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center">3</span>
-            <span className="text-2xl">🚨</span>
-            <span className="text-sm font-semibold text-gray-800">Queue</span>
-          </button>
-          <button onClick={() => navigate("/manager/staff")} className={action}>
-            <span className="text-2xl">👥</span>
-            <span className="text-sm font-semibold text-gray-800">Staff</span>
-          </button>
-          <button onClick={() => navigate("/reports")} className={action}>
-            <span className="text-2xl">📊</span>
-            <span className="text-sm font-semibold text-gray-800">Reports</span>
-          </button>
+          {actions.map((a) => (
+            <button key={a.to} onClick={() => navigate(a.to)} className={action}>
+              {a.badge > 0 && (
+                <span className="absolute top-2 right-2 text-[10px] bg-orange-500 text-white rounded-full w-5 h-5 flex items-center justify-center">{a.badge}</span>
+              )}
+              <span className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center text-xl ${a.tint}`} aria-hidden="true">
+                {a.icon}
+              </span>
+              <span className="text-sm font-semibold text-gray-800 text-left leading-tight">{a.label}</span>
+            </button>
+          ))}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

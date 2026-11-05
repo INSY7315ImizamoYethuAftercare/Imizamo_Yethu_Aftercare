@@ -12,7 +12,11 @@
     "test:unit": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand --selectProjects unit",
     "test:integration": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand --selectProjects integration",
     "test:coverage": "cross-env NODE_OPTIONS=--experimental-vm-modules jest --runInBand --coverage",
-    "seed:demo": "node src/db/seedDemo.js"
+    "seed:demo": "node src/db/seedDemo.js",
+    "migrate": "node-pg-migrate -m src/db/migrations up",
+    "migrate:down": "node-pg-migrate -m src/db/migrations down",
+    "migrate:create": "node-pg-migrate -m src/db/migrations --migration-file-language sql create",
+    "seed:e2e": "node src/db/seedDemo.js --apply --reset"
   },
   "license": "UNLICENSED",
   "dependencies": {
@@ -25,7 +29,11 @@
     "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.12.0",
-    "pg": "^8.13.1"
+    "node-pg-migrate": "^9.0.0",
+    "pg": "^8.13.1",
+    "swagger-ui-express": "^5.0.1",
+    "yaml": "^2.9.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "cross-env": "^7.0.3",

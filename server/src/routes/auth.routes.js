@@ -6,6 +6,8 @@
 import { Router } from 'express'
 import { register, login, logout, me, changePassword } from '../controllers/authController.js'
 import { authenticateAllowingPasswordChange } from '../middleware/auth.js'
+import { validate } from '../middleware/validate.js'
+import * as schemas from '../validation/schemas/authSchemas.js'
 import { clientIpKey, createRateLimiter } from '../middleware/rateLimiter.js'
 
 export const authRouter = Router()
@@ -33,8 +35,8 @@ const loginIpLimiter = createRateLimiter({
   keyGenerator: clientIpKey,
 })
 
-authRouter.post('/register', register)
-authRouter.post('/login', loginIpLimiter, loginAccountLimiter, login)
+authRouter.post('/register', validate(schemas.register), register)
+authRouter.post('/login', loginIpLimiter, loginAccountLimiter, validate(schemas.login), login)
 authRouter.post('/logout', logout)
 // Both allow a user who must choose a new password (after a master admin's
 // reset): /me so the app knows to ask, /change-password so they can.
@@ -48,4 +50,4 @@ const changePasswordLimiter = createRateLimiter({
   skipSuccessfulRequests: true,
   keyGenerator: (req) => `user:${req.user.userId}`,
 })
-authRouter.post('/change-password', authenticateAllowingPasswordChange, changePasswordLimiter, changePassword)
+authRouter.post('/change-password', authenticateAllowingPasswordChange, changePasswordLimiter, validate(schemas.changePassword), changePassword)

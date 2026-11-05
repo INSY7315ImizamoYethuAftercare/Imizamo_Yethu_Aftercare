@@ -6,7 +6,7 @@
 // still be imizamo_test on a local host: assertSafeTestDatabase() enforces it.
 
 export const TEST_DATABASE_URL =
-  process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:postgres@localhost:5432/imizamo_test'
+  process.env.TEST_DATABASE_URL ?? 'postgresql://postgres:Aftercare2345@localhost:5432/imizamo_test'
 
 export const TEST_ENV = {
   NODE_ENV: 'test',

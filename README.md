@@ -6,6 +6,18 @@
 
 ---
 
+# 👨‍💻 Team
+
+## NovaTech Solutions
+
+| Student Number | Team Member |
+|---|---|
+| **ST10445500** | Isabelle Kathryn Devlin |
+| **ST10068995** | Thomas Pheiffer |
+| **ST10325652** | Michaela Ferraris |
+| **ST10301146** | Nomsa Mkoka |
+| **ST10280758** | Justin Fussell |
+
 ## 🌍 Project Overview
 
 The **Imizamo Yethu Aftercare Management System** is a full-stack web application developed and donated by **NovaTech Solutions** to support the daily operations of the Imizamo Yethu Aftercare.
@@ -108,8 +120,8 @@ The architectural decisions, technology evaluation, cloud architecture, security
 │       │                            # logging and error handling
 │       ├── config/                 # Environment configuration
 │       └── db/                     # Database-related scripts
-│
-├── database/                       # Database schema and scripts
+│           ├── migrations/         # node-pg-migrate SQL files
+│           └── legacy/             # old one-off migration history
 │
 ├── package.json                    # Root workspace configuration
 └── .nvmrc                          # Node.js version specification
@@ -189,7 +201,8 @@ Update the environment variables with the appropriate local PostgreSQL and appli
 
 # 🗄️ Database Setup
 
-The project uses **PostgreSQL** as its relational database.
+The project uses **PostgreSQL** as its relational database.  
+Schema changes are managed with **node-pg-migrate**. The baseline migration under `server/src/db/migrations/` is the source of truth.
 
 ## 1. Create the Development Database
 
@@ -197,15 +210,6 @@ From a PostgreSQL-enabled terminal:
 
 ```bash
 psql -U postgres -c "CREATE DATABASE imizamo_dev;"
-```
-
-This only needs to be performed once.
-
-## 2. Apply the Database Schema
-
-```bash
-psql -U postgres -d imizamo_dev -f database/schema.sql
-```
 
 The `database/schema.sql` file acts as the source of truth for the database structure.
 
@@ -259,6 +263,28 @@ A successful response should look similar to:
   "timestamp": "..."
 }
 ```
+
+---
+
+# 📖 API Documentation (OpenAPI)
+
+Every endpoint is described in an **OpenAPI 3.0** specification, so other clients can discover and use the API without reading the code.
+
+| | Live (Azure) | Local |
+|---|---|---|
+| **Interactive docs (Swagger UI)** | [/api/docs](https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net/api/docs) | http://localhost:4000/api/docs |
+| **Raw spec (JSON)** | [/api/openapi.json](https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net/api/openapi.json) | http://localhost:4000/api/openapi.json |
+
+The spec covers all 47 endpoints, grouped by feature (Auth, Attendance, Sign-out, Guardian portal, Observations, Reports, Learners, Classes, Teachers, Accounts). For each one it lists:
+
+- the request body, path and query parameters, with their validation rules (lengths, formats, ranges)
+- the success response
+- every error it can return (400, 401, 403, 404, 409, 429), all with the same `{ "message": "..." }` body
+- which roles may call it
+
+**Trying it out:** open `/api/docs`, run `POST /api/auth/login` with "Try it out", and the session cookie is set for the page. The other endpoints then work as that user.
+
+**Keeping it up to date:** the spec is in [`server/src/docs/openapi.yaml`](server/src/docs/openapi.yaml). The test [`server/tests/api/openapi.test.js`](server/tests/api/openapi.test.js) fails if a route in the role matrix (`server/tests/helpers/routes.js`) is missing from the spec, or the spec lists a route that doesn't exist. When you add or change a route, update the spec in the same pull request.
 
 ---
 
@@ -413,20 +439,6 @@ The implementation considers the following non-functional requirements:
 | **Scalability** | Layered architecture and cloud deployment |
 | **Maintainability** | Separation of controllers, services and repositories |
 | **Portability** | Web-based application accessible across modern devices |
-
----
-
-# 👨‍💻 Team
-
-## NovaTech Solutions
-
-| Student Number | Team Member |
-|---|---|
-| **ST10445500** | Isabelle Kathryn Devlin |
-| **ST10068995** | Thomas Pheiffer |
-| **ST10325652** | Michaela Ferraris |
-| **ST10301146** | Nomsa Mkoka |
-| **ST10280758** | Justin Fussell |
 
 ---
 

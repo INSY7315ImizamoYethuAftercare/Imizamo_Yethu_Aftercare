@@ -1,0 +1,1953 @@
+openapi: 3.0.3
+info:
+  title: Imizamo Yethu Aftercare API
+  version: 1.0.0
+  license:
+    name: Proprietary (NovaTech Solutions for Imizamo Yethu Aftercare)
+  description: |
+    REST API for the Imizamo Yethu Aftercare Management System (NovaTech Solutions, INSY7315).
+    The React app uses it to take attendance, sign learners out, record development
+    observations, run the parent portal and build donor reports.
+
+    **Signing in.** `POST /api/auth/login` sets an httpOnly, SameSite=Strict cookie called
+    `token` (a JWT that lasts 8 hours). The browser sends it with every later request. On this
+    page, use "Try it out" on login first; the other endpoints then work in the same tab.
+
+    **Roles.** `teacher`, `manager`, `guardian` and `admin`. An admin is either `standard` or
+    `master`. A master admin can do everything a manager can. Every endpoint lists the roles
+    allowed to call it. Anyone else gets a 403.
+
+    **Errors.** Every error has the same body: `{ "message": "..." }`. 500 errors never
+    include internal details in production.
+
+    **Dates and times.** Dates sent to the API are `YYYY-MM-DD`; times are `HH:MM` or
+    `HH:MM:SS` (24-hour). "Today" always means today in South Africa (Africa/Johannesburg).
+    Records returned straight from the database (snake_case fields) give `record_date` as an
+    ISO timestamp at midnight UTC, for example `2026-10-29T00:00:00.000Z`.
+servers:
+  - url: /
+    description: The server this page is served from
+tags:
+  - name: Health
+    description: Is the API up?
+  - name: Auth
+    description: Sign in, sign out, parent registration and passwords
+  - name: Attendance
+    description: Daily register (teachers record it, managers can view it)
+  - name: Sign-out
+    description: Collection at the end of the day, with pickup permission checks
+  - name: Guardian portal
+    description: A parent's view of their own children only
+  - name: Guardian accounts
+    description: Managers suspend or restore parent accounts
+  - name: Observations
+    description: Development observations recorded by teachers
+  - name: Reports
+    description: Live dashboard and donor report data
+  - name: Learners
+    description: Learner records
+  - name: Classes
+    description: Classes (Yellow, Green, Red, Blue, Orange and any added later)
+  - name: Teachers
+    description: Teacher accounts, managed by a manager
+  - name: Accounts
+    description: Staff accounts, managed by the master admin
+security:
+  - cookieAuth: []
+
+paths:
+  # ---------------------------------------------------------------- Health
+  /api/health:
+    get:
+      tags: [Health]
+      summary: Check the API is running
+      description: Public. Used by Azure App Service and the deploy pipeline.
+      operationId: getHealth
+      security: []
+      responses:
+        '200':
+          description: The API is up
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+                  timestamp: { type: string, format: date-time }
+
+  # ---------------------------------------------------------------- Auth
+  /api/auth/register:
+    post:
+      tags: [Auth]
+      summary: Register as a parent or guardian
+      description: |
+        Public. Only `guardian` can self-register; staff accounts are created by a manager or
+        the master admin. The child's name and date of birth must match an enrolled learner.
+        The new guardian becomes that learner's primary contact and may collect them.
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, role, fullName, contactNumber, relationship, claimedLearnerName, claimedLearnerDob]
+              properties:
+                email: { type: string, format: email, maxLength: 255 }
+                password: { $ref: '#/components/schemas/Password' }
+                role: { type: string, enum: [guardian] }
+                fullName: { type: string, maxLength: 150 }
+                contactNumber: { type: string, maxLength: 30 }
+                relationship: { type: string, maxLength: 50, example: Mother }
+                claimedLearnerName: { type: string, maxLength: 200, example: Aisha Daniels }
+                claimedLearnerDob: { type: string, format: date, example: '2018-03-14' }
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId: { type: integer }
+                  email: { type: string }
+                  role: { type: string, enum: [guardian] }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '403':
+          description: A staff role tried to self-register
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '404':
+          description: No learner matches that name and date of birth
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '409':
+          description: An account with this email already exists
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/auth/login:
+    post:
+      tags: [Auth]
+      summary: Sign in
+      description: |
+        Public. On success sets the `token` session cookie. "Invalid email or password" is
+        returned for both an unknown email and a wrong password, so the form can't be used to
+        find registered emails.
+
+        Rate limited: 5 failed attempts per account per IP, and 30 failed attempts per IP,
+        in any 15 minutes. Successful sign-ins don't count.
+      operationId: login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, example: teacher@iylh.org }
+                password: { type: string, format: password }
+                role:
+                  type: string
+                  enum: [admin, manager, teacher, guardian]
+                  description: Optional. The role card picked on the login screen; must match the account.
+      responses:
+        '200':
+          description: Signed in. The response sets the `token` cookie.
+          headers:
+            Set-Cookie:
+              description: '`token=<JWT>; HttpOnly; SameSite=Strict; Max-Age=28800` (plus `Secure` in production)'
+              schema: { type: string }
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/UserProfile' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401':
+          description: Invalid email or password
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '403':
+          description: The account is deactivated, or the role picked doesn't match the account
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  /api/auth/logout:
+    post:
+      tags: [Auth]
+      summary: Sign out
+      description: Public. Clears the session cookie (works even if there isn't one).
+      operationId: logout
+      security: []
+      responses:
+        '200':
+          description: Signed out
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+
+  /api/auth/me:
+    get:
+      tags: [Auth]
+      summary: Who is signed in
+      description: |
+        Roles: any signed-in user. The app calls this on page load to restore the session.
+        Also allowed for a user who must choose a new password after a reset
+        (`mustChangePassword: true`).
+      operationId: getMe
+      responses:
+        '200':
+          description: The signed-in user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user: { $ref: '#/components/schemas/UserProfile' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+
+  /api/auth/change-password:
+    post:
+      tags: [Auth]
+      summary: Change your own password
+      description: |
+        Roles: any signed-in user, including one who must choose a new password after a reset.
+        Signs the account out on every other device; this session gets a fresh cookie.
+        A wrong current password returns 400 (not 401), so the app doesn't treat it as an
+        expired session. Rate limited to 5 wrong attempts per account per 15 minutes.
+      operationId: changePassword
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [currentPassword, newPassword]
+              properties:
+                currentPassword: { type: string, format: password }
+                newPassword: { $ref: '#/components/schemas/Password' }
+      responses:
+        '200':
+          description: Password changed. The response sets a new `token` cookie.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message: { type: string, example: Password updated }
+                  user: { $ref: '#/components/schemas/UserProfile' }
+        '400':
+          description: Missing fields, new password too short or long, current password wrong, or new password the same as the old one
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '429': { $ref: '#/components/responses/TooManyRequests' }
+
+  # ---------------------------------------------------------------- Attendance
+  /api/attendance:
+    post:
+      tags: [Attendance]
+      summary: Mark a learner present or absent today
+      description: |
+        Roles: teacher. Records today's attendance (South African date). Any teacher may take
+        any class's register. If `timeIn` is left out for a present learner, the current time
+        is used.
+      operationId: recordAttendance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [learnerId, status]
+              properties:
+                learnerId: { type: integer, minimum: 1 }
+                classId:
+                  type: integer
+                  minimum: 1
+                  description: Optional. When given, the learner must be in this class.
+                status: { type: string, enum: [present, absent] }
+                timeIn: { $ref: '#/components/schemas/TimeOfDay' }
+      responses:
+        '201':
+          description: Attendance recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttendanceRecord' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Attendance is already recorded for this learner today
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/attendance/class/{classId}:
+    get:
+      tags: [Attendance]
+      summary: A class's attendance for a day
+      description: 'Roles: teacher, manager (read-only), master admin.'
+      operationId: getClassAttendance
+      parameters:
+        - $ref: '#/components/parameters/classId'
+        - name: date
+          in: query
+          required: false
+          description: Day to show. Defaults to today.
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: One record per learner who has been marked
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AttendanceRecord' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/attendance/{recordId}:
+    patch:
+      tags: [Attendance]
+      summary: Correct an attendance record
+      description: |
+        Roles: teacher. Changes a record to present or absent. Changing to absent clears
+        `time_in`; changing to present keeps the old time, or uses `timeIn`, or now.
+      operationId: updateAttendance
+      parameters:
+        - name: recordId
+          in: path
+          required: true
+          schema: { type: integer, minimum: 1 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { type: string, enum: [present, absent] }
+                timeIn: { $ref: '#/components/schemas/TimeOfDay' }
+      responses:
+        '200':
+          description: The updated record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AttendanceRecord' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- Sign-out
+  /api/signout/today:
+    get:
+      tags: [Sign-out]
+      summary: Today's collection list
+      description: |
+        Roles: teacher, manager, master admin. Every active learner marked present today,
+        who may collect them, and whether they have already gone. Pickup people are names and
+        relationships only, no contact details (POPIA).
+      operationId: getSignOutToday
+      responses:
+        '200':
+          description: Today's list
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignOutDay' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/signout/verify:
+    post:
+      tags: [Sign-out]
+      summary: Check whether someone may collect a learner
+      description: |
+        Roles: teacher, manager, master admin. Read-only: nothing is recorded. Lets the screen
+        show "authorised" or "not authorised" before the teacher confirms.
+      operationId: verifySignOut
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [learnerId, guardianId]
+              properties:
+                learnerId: { type: integer, minimum: 1 }
+                guardianId: { type: integer, minimum: 1 }
+      responses:
+        '200':
+          description: The result of the check (also returned when the person is not authorised)
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignOutCheck' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/signout/confirm:
+    post:
+      tags: [Sign-out]
+      summary: Record that a learner has been collected
+      description: |
+        Roles: teacher, manager, master admin. The server checks the pickup permission again
+        and never trusts an earlier `verify` call. Send `guardianId: null` for a learner walking
+        home alone, which only works if they have that permission. If `timeOut` is left out,
+        the current time is used.
+      operationId: confirmSignOut
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [learnerId, guardianId]
+              properties:
+                learnerId: { type: integer, minimum: 1 }
+                guardianId:
+                  type: integer
+                  minimum: 1
+                  nullable: true
+                  description: The person collecting the learner, or null when the learner walks home alone.
+                timeOut: { $ref: '#/components/schemas/TimeOfDay' }
+      responses:
+        '201':
+          description: Sign-out recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignOutRecord' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403':
+          description: This person may not collect the learner, the learner may not walk home alone, or the caller is not a teacher or manager
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: The learner wasn't marked present today, or has already been signed out today
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/signout/escalations:
+    post:
+      tags: [Sign-out]
+      summary: Send a collection to the manager's queue
+      description: |
+        Roles: teacher, manager, master admin. For a collector who isn't on the pickup list, or a
+        learner walking home without permission. Nothing is signed out until a manager approves it.
+      operationId: raiseSignOutEscalation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [learnerId, collectorName]
+              properties:
+                learnerId: { type: integer, minimum: 1 }
+                collectorName:
+                  type: string
+                  maxLength: 150
+                  nullable: true
+                  description: The name staff typed, or null when the learner wants to walk home alone.
+      responses:
+        '201':
+          description: Added to the queue
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SignOutEscalation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: The learner isn't present today, has already gone, is already in the queue, or may walk home alone anyway
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    get:
+      tags: [Sign-out]
+      summary: Today's sign-out queue
+      description: |
+        Roles: manager, master admin. What still needs a decision today, and what has been decided.
+        An open request drops off once the learner has been signed out some other way.
+      operationId: getSignOutEscalations
+      responses:
+        '200':
+          description: Today's queue
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  date: { $ref: '#/components/schemas/DbDate' }
+                  open:
+                    type: array
+                    items: { $ref: '#/components/schemas/SignOutEscalation' }
+                  resolved:
+                    type: array
+                    items: { $ref: '#/components/schemas/SignOutEscalation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/signout/escalations/{escalationId}:
+    patch:
+      tags: [Sign-out]
+      summary: Approve or dismiss a queued collection
+      description: |
+        Roles: manager, master admin. `approve` signs the learner out with the named collector and
+        records the manager as the person who did it. `dismiss` leaves the learner at the centre.
+      operationId: resolveSignOutEscalation
+      parameters:
+        - { name: escalationId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action: { type: string, enum: [approve, dismiss] }
+      responses:
+        '200':
+          description: The decision was saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  escalationId: { type: integer }
+                  status: { type: string, enum: [approved, dismissed] }
+                  signOut:
+                    type: object
+                    nullable: true
+                    description: null when dismissed.
+                    properties:
+                      timeOut: { type: string, example: '16:45' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Already decided, from an earlier day, or the learner can no longer be signed out
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  # ---------------------------------------------------------------- Guardian portal
+  /api/guardian/me:
+    get:
+      tags: [Guardian portal]
+      summary: My details
+      description: "Roles: guardian. The guardian's own contact details and children, for their Settings page."
+      operationId: getMyGuardianProfile
+      responses:
+        '200':
+          description: The guardian's details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  fullName: { type: string }
+                  contactNumber: { type: string }
+                  relationship: { type: string }
+                  children:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        learnerId: { type: integer }
+                        name: { type: string }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/guardian/children:
+    get:
+      tags: [Guardian portal]
+      summary: My children
+      description: 'Roles: guardian. Only learners this guardian has pickup permission for.'
+      operationId: getMyChildren
+      responses:
+        '200':
+          description: The guardian's children
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Learner' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/guardian/children/{learnerId}:
+    get:
+      tags: [Guardian portal]
+      summary: One of my children's profile
+      description: "Roles: guardian. 403 if it isn't the guardian's own child."
+      operationId: getChildProfile
+      parameters:
+        - $ref: '#/components/parameters/learnerId'
+      responses:
+        '200':
+          description: The learner, with their class
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LearnerWithClass' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/guardian/children/{learnerId}/observations:
+    get:
+      tags: [Guardian portal]
+      summary: One of my children's observations
+      description: "Roles: guardian. Newest first. 403 if it isn't the guardian's own child."
+      operationId: getChildObservations
+      parameters:
+        - $ref: '#/components/parameters/learnerId'
+      responses:
+        '200':
+          description: The observations
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Observation' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/guardian/children/{learnerId}/overview:
+    get:
+      tags: [Guardian portal]
+      summary: Everything the parent home page shows for one child
+      description: |
+        Roles: guardian. Today's status, attendance over the last 30 days, the last 7 days,
+        who may collect the child, the class teacher's contact details and the observations.
+        403 if it isn't the guardian's own child.
+      operationId: getChildOverview
+      parameters:
+        - $ref: '#/components/parameters/learnerId'
+      responses:
+        '200':
+          description: The overview
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ChildOverview' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/guardian/children/{learnerId}/pickups:
+    post:
+      tags: [Guardian portal]
+      summary: Add someone who may collect my child
+      description: |
+        Roles: guardian, for their own child only. The person doesn't need an account and is
+        authorised straight away.
+      operationId: addChildPickup
+      parameters:
+        - $ref: '#/components/parameters/learnerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [fullName, relationship, contactNumber]
+              properties:
+                fullName: { type: string, maxLength: 150, example: Zainab Hendricks }
+                relationship: { type: string, maxLength: 50, example: Aunt }
+                contactNumber: { type: string, maxLength: 30, example: '0723456789' }
+      responses:
+        '201':
+          description: Person added
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GuardianPickupPerson' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: Someone with this name is already on the pickup list
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/guardian/children/{learnerId}/walk-home:
+    patch:
+      tags: [Guardian portal]
+      summary: Give or take back permission for my child to walk home alone
+      description: Roles = guardian, for their own child only.
+      operationId: setChildWalkHome
+      parameters:
+        - $ref: '#/components/parameters/learnerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [canWalkHomeAlone]
+              properties:
+                canWalkHomeAlone: { type: boolean }
+      responses:
+        '200':
+          description: Permission saved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  learnerId: { type: integer }
+                  canWalkHomeAlone: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  # ---------------------------------------------------------------- Guardian accounts
+  /api/guardian/{guardianId}/deactivate:
+    patch:
+      tags: [Guardian accounts]
+      summary: Suspend a parent's account
+      description: "Roles: manager, master admin. The parent can't sign in until reactivated. Their records are kept."
+      operationId: deactivateGuardian
+      parameters:
+        - $ref: '#/components/parameters/guardianId'
+      responses:
+        '200':
+          description: Account deactivated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GuardianActiveState' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/guardian/{guardianId}/activate:
+    patch:
+      tags: [Guardian accounts]
+      summary: Restore a parent's account
+      description: 'Roles: manager, master admin.'
+      operationId: activateGuardian
+      parameters:
+        - $ref: '#/components/parameters/guardianId'
+      responses:
+        '200':
+          description: Account reactivated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GuardianActiveState' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- Observations
+  /api/observations:
+    post:
+      tags: [Observations]
+      summary: Record an observation
+      description: "Roles: teacher. Any teacher may record observations for any learner. Dated today."
+      operationId: addObservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [learnerId, category, rating]
+              properties:
+                learnerId: { type: integer, minimum: 1 }
+                category: { type: string, maxLength: 100, example: Reading }
+                rating: { type: integer, minimum: 1, maximum: 10 }
+                notes: { type: string, maxLength: 2000 }
+      responses:
+        '201':
+          description: Observation recorded
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Observation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/observations/learner/{learnerId}:
+    get:
+      tags: [Observations]
+      summary: A learner's observations
+      description: 'Roles: teacher. Newest first.'
+      operationId: getLearnerObservations
+      parameters:
+        - $ref: '#/components/parameters/learnerId'
+      responses:
+        '200':
+          description: The observations
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Observation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/observations/{observationId}:
+    patch:
+      tags: [Observations]
+      summary: Edit an observation
+      description: 'Roles: teacher. Send only the fields to change. `notes: null` clears the notes.'
+      operationId: updateObservation
+      parameters:
+        - $ref: '#/components/parameters/observationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                category: { type: string, maxLength: 100 }
+                rating: { type: integer, minimum: 1, maximum: 10 }
+                notes: { type: string, maxLength: 2000, nullable: true }
+      responses:
+        '200':
+          description: The updated observation
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Observation' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [Observations]
+      summary: Delete an observation
+      description: 'Roles: teacher.'
+      operationId: deleteObservation
+      parameters:
+        - $ref: '#/components/parameters/observationId'
+      responses:
+        '204': { description: Deleted }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- Reports
+  /api/reports/overview:
+    get:
+      tags: [Reports]
+      summary: Reports dashboard data
+      description: |
+        Roles: manager, admin (standard or master). Totals, this week's attendance, attendance
+        and trends per class, observations per category and today's numbers. Counts only, no
+        learner names, so standard admins can see it too (POPIA). Without a period, uses the
+        last 90 days up to today.
+      operationId: getReportsOverview
+      parameters:
+        - name: periodStart
+          in: query
+          required: false
+          schema: { type: string, format: date }
+        - name: periodEnd
+          in: query
+          required: false
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: The dashboard data
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReportsOverview' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  /api/reports/donor:
+    get:
+      tags: [Reports]
+      summary: Donor report data for a period
+      description: |
+        Roles: manager, admin (standard or master). Attendance totals and observations per
+        category for the period. The app turns this into the PDF export.
+      operationId: getDonorReport
+      parameters:
+        - name: periodStart
+          in: query
+          required: true
+          schema: { type: string, format: date, example: '2026-01-01' }
+        - name: periodEnd
+          in: query
+          required: true
+          description: Must not be before periodStart.
+          schema: { type: string, format: date, example: '2026-12-31' }
+      responses:
+        '200':
+          description: The report data
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DonorReport' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+
+  # ---------------------------------------------------------------- Learners
+  /api/learners:
+    get:
+      tags: [Learners]
+      summary: All learners
+      description: 'Roles: teacher, manager, master admin. Includes inactive learners. Ordered by class, then surname.'
+      operationId: listLearners
+      responses:
+        '200':
+          description: Every learner
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/LearnerWithClass' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Learners]
+      summary: Enrol a learner
+      description: 'Roles: manager, master admin. The class must exist and be active.'
+      operationId: createLearner
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [classId, firstName, lastName]
+              properties:
+                classId: { type: integer, minimum: 1 }
+                firstName: { type: string, maxLength: 100 }
+                lastName: { type: string, maxLength: 100 }
+                dateOfBirth: { type: string, format: date, description: Optional. }
+                canWalkHomeAlone: { type: boolean, default: false }
+      responses:
+        '201':
+          description: Learner created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Learner' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: The class has been removed (deactivated)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/learners/{learnerId}:
+    get:
+      tags: [Learners]
+      summary: One learner
+      description: 'Roles: teacher, manager, master admin.'
+      operationId: getLearner
+      parameters:
+        - $ref: '#/components/parameters/learnerId'
+      responses:
+        '200':
+          description: The learner, with their class
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LearnerWithClass' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Learners]
+      summary: Edit a learner or move them to another class
+      description: |
+        Roles: manager, master admin. Send only the fields to change. `dateOfBirth: null`
+        clears it. `isActive: false` marks a learner who has left.
+      operationId: updateLearner
+      parameters:
+        - $ref: '#/components/parameters/learnerId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                firstName: { type: string, maxLength: 100 }
+                lastName: { type: string, maxLength: 100 }
+                dateOfBirth: { type: string, format: date, nullable: true }
+                canWalkHomeAlone: { type: boolean }
+                classId: { type: integer, minimum: 1 }
+                isActive: { type: boolean }
+      responses:
+        '200':
+          description: The updated learner
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Learner' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: The new class has been removed (deactivated)
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+    delete:
+      tags: [Learners]
+      summary: Delete a learner
+      description: |
+        Roles: manager, master admin. Only works for a learner with no attendance,
+        observations, pickups or sign-outs; otherwise deactivate them instead.
+      operationId: deleteLearner
+      parameters:
+        - $ref: '#/components/parameters/learnerId'
+      responses:
+        '204': { description: Deleted }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: The learner still has linked records
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/learners/{learnerId}/overview:
+    get:
+      tags: [Learners]
+      summary: Staff learner profile data
+      description: |
+        Roles: teacher, manager, master admin. Attendance over the last 30 days, the 14 most
+        recent days (with who collected them), who may collect them, and the observations.
+        Pickup people are names and relationships only (POPIA).
+      operationId: getLearnerOverview
+      parameters:
+        - $ref: '#/components/parameters/learnerId'
+      responses:
+        '200':
+          description: The profile data
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/LearnerOverview' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- Classes
+  /api/classes:
+    get:
+      tags: [Classes]
+      summary: All classes
+      description: 'Roles: teacher, manager, master admin. With teacher name, learner counts and how many are present today.'
+      operationId: listClasses
+      parameters:
+        - name: includeInactive
+          in: query
+          required: false
+          description: Also return removed (deactivated) classes.
+          schema: { type: boolean, default: false }
+      responses:
+        '200':
+          description: The classes, by name
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SchoolClassSummary' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Classes]
+      summary: Create a class
+      description: 'Roles: manager, master admin. Only one active class may have a given name.'
+      operationId: createClass
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [className, gradeRange]
+              properties:
+                className: { type: string, maxLength: 100, example: Purple }
+                gradeRange: { type: string, maxLength: 50, example: Gr 1 }
+                teacherId: { type: integer, minimum: 1, nullable: true, description: Optional. Leave out for "Unassigned". }
+                colour: { $ref: '#/components/schemas/HexColour' }
+      responses:
+        '201':
+          description: Class created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SchoolClass' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: An active class with this name already exists
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/classes/{classId}:
+    get:
+      tags: [Classes]
+      summary: One class
+      description: 'Roles: teacher, manager, master admin.'
+      operationId: getClass
+      parameters:
+        - $ref: '#/components/parameters/classId'
+      responses:
+        '200':
+          description: The class
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SchoolClass' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+    patch:
+      tags: [Classes]
+      summary: Edit a class or assign its teacher
+      description: |
+        Roles: manager, master admin. Send only the fields to change. `teacherId: null`
+        unassigns the teacher; `colour: null` goes back to the colour matching the name.
+      operationId: updateClass
+      parameters:
+        - $ref: '#/components/parameters/classId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                className: { type: string, maxLength: 100 }
+                gradeRange: { type: string, maxLength: 50 }
+                teacherId: { type: integer, minimum: 1, nullable: true }
+                colour: { $ref: '#/components/schemas/HexColour' }
+      responses:
+        '200':
+          description: The updated class
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SchoolClass' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: An active class with this name already exists
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/classes/{classId}/deactivate:
+    patch:
+      tags: [Classes]
+      summary: Remove a class
+      description: 'Roles: manager, master admin. Only works when no active learners are in it. The class is kept for history.'
+      operationId: deactivateClass
+      parameters:
+        - $ref: '#/components/parameters/classId'
+      responses:
+        '200':
+          description: Class deactivated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ClassActiveState' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Active learners are still in this class
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/classes/{classId}/activate:
+    patch:
+      tags: [Classes]
+      summary: Restore a removed class
+      description: 'Roles: manager, master admin.'
+      operationId: activateClass
+      parameters:
+        - $ref: '#/components/parameters/classId'
+      responses:
+        '200':
+          description: Class reactivated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ClassActiveState' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Another active class already has this name
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/classes/{classId}/learners:
+    get:
+      tags: [Classes]
+      summary: A class's register (active learners)
+      description: 'Roles: teacher, manager, master admin. Ordered by surname.'
+      operationId: getClassRoster
+      parameters:
+        - $ref: '#/components/parameters/classId'
+      responses:
+        '200':
+          description: The learners in the class
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/RosterLearner' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- Teachers
+  /api/teacher:
+    get:
+      tags: [Teachers]
+      summary: All teachers
+      description: 'Roles: manager, master admin.'
+      operationId: listTeachers
+      responses:
+        '200':
+          description: The teachers, by name
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - $ref: '#/components/schemas/Teacher'
+                    - type: object
+                      properties:
+                        is_active: { type: boolean }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Teachers]
+      summary: Create a teacher account
+      description: 'Roles: manager, master admin.'
+      operationId: createTeacher
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, fullName]
+              properties:
+                email: { type: string, format: email, maxLength: 255, description: Used to sign in. }
+                password: { $ref: '#/components/schemas/Password' }
+                fullName: { type: string, maxLength: 150 }
+                contactEmail: { type: string, format: email, description: Shown to parents. Defaults to `email`. }
+      responses:
+        '201':
+          description: Teacher created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Teacher' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: An account with this email already exists
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/teacher/{teacherId}:
+    patch:
+      tags: [Teachers]
+      summary: Edit a teacher
+      description: 'Roles: manager, master admin. Send at least one field.'
+      operationId: updateTeacher
+      parameters:
+        - $ref: '#/components/parameters/teacherId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                fullName: { type: string, maxLength: 150 }
+                contactEmail: { type: string, format: email }
+      responses:
+        '200':
+          description: The updated teacher
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Teacher' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/teacher/{teacherId}/deactivate:
+    patch:
+      tags: [Teachers]
+      summary: Suspend a teacher's account
+      description: "Roles: manager, master admin. Takes effect immediately, even on a session that's already signed in."
+      operationId: deactivateTeacher
+      parameters:
+        - $ref: '#/components/parameters/teacherId'
+      responses:
+        '200':
+          description: Account deactivated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TeacherActiveState' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /api/teacher/{teacherId}/activate:
+    patch:
+      tags: [Teachers]
+      summary: Restore a teacher's account
+      description: 'Roles: manager, master admin.'
+      operationId: activateTeacher
+      parameters:
+        - $ref: '#/components/parameters/teacherId'
+      responses:
+        '200':
+          description: Account reactivated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TeacherActiveState' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  # ---------------------------------------------------------------- Accounts
+  /api/accounts:
+    get:
+      tags: [Accounts]
+      summary: Manager and admin accounts
+      description: 'Roles: master admin only.'
+      operationId: listAccounts
+      responses:
+        '200':
+          description: The accounts
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/StaffAccount' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+    post:
+      tags: [Accounts]
+      summary: Create a manager or standard admin
+      description: 'Roles: master admin only.'
+      operationId: createAccount
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, fullName, email, password]
+              properties:
+                type: { type: string, enum: [manager, standard_admin] }
+                fullName: { type: string, maxLength: 150 }
+                email: { type: string, format: email, maxLength: 255 }
+                password: { $ref: '#/components/schemas/Password' }
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffAccount' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '409':
+          description: An account with this email already exists
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/accounts/{userId}:
+    patch:
+      tags: [Accounts]
+      summary: Edit a staff account's name or sign-in email
+      description: |
+        Roles: master admin only. Works for teacher, manager and admin accounts, but not
+        parents or another master admin. Passwords can't be changed here (use reset-password).
+      operationId: updateAccount
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                fullName: { type: string, maxLength: 150 }
+                email: { type: string, format: email, maxLength: 255 }
+      responses:
+        '200':
+          description: The updated account
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  userId: { type: integer }
+                  fullName: { type: string }
+                  email: { type: string }
+                  role: { type: string, enum: [admin, manager, teacher] }
+                  isActive: { type: boolean }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '409':
+          description: Another account already uses this email
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error' } } }
+
+  /api/accounts/{userId}/reset-password:
+    post:
+      tags: [Accounts]
+      summary: Set a temporary password for a staff member
+      description: |
+        Roles: master admin only. For a teacher, manager or standard admin who forgot their
+        password. Signs them out everywhere, and they must choose their own password the next
+        time they sign in. Not for your own account (use change-password).
+      operationId: resetPassword
+      parameters:
+        - $ref: '#/components/parameters/userId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [password]
+              properties:
+                password: { $ref: '#/components/schemas/Password' }
+      responses:
+        '200':
+          description: Password reset
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '401': { $ref: '#/components/responses/Unauthorized' }
+        '403': { $ref: '#/components/responses/Forbidden' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+      description: httpOnly session cookie set by `POST /api/auth/login`.
+
+  parameters:
+    learnerId:
+      name: learnerId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    classId:
+      name: classId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    guardianId:
+      name: guardianId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    observationId:
+      name: observationId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    teacherId:
+      name: teacherId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+    userId:
+      name: userId
+      in: path
+      required: true
+      schema: { type: integer, minimum: 1 }
+
+  responses:
+    BadRequest:
+      description: The request is invalid (missing or wrongly formatted fields, or an id that isn't a positive whole number)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { message: learnerId must be a positive whole number }
+    Unauthorized:
+      description: Not signed in, or the session has expired, been signed out by a password change, or belongs to a deactivated account
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { message: Not authenticated }
+    Forbidden:
+      description: Signed in, but this role may not do this (or the user must choose a new password first)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { message: You do not have permission to perform this action }
+    NotFound:
+      description: The learner, class, record or account doesn't exist
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { message: Learner not found }
+    TooManyRequests:
+      description: Too many failed attempts. Try again in 15 minutes. `RateLimit-*` headers show the limit.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Error' }
+          example: { message: 'Too many requests, please try again later.' }
+
+  schemas:
+    Error:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+    Message:
+      type: object
+      properties:
+        message: { type: string }
+    Password:
+      type: string
+      format: password
+      minLength: 8
+      maxLength: 72
+    TimeOfDay:
+      type: string
+      pattern: '^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$'
+      example: '14:30'
+      description: Optional. 24-hour HH:MM or HH:MM:SS. Defaults to now (South African time).
+    HexColour:
+      type: string
+      pattern: '^#[0-9A-Fa-f]{6}$'
+      nullable: true
+      example: '#FFD166'
+      description: Optional. null means "use the colour matching the class name".
+    DbDate:
+      type: string
+      format: date-time
+      example: '2026-10-29T00:00:00.000Z'
+      description: A calendar date, returned as midnight UTC.
+
+    UserProfile:
+      type: object
+      properties:
+        userId: { type: integer }
+        email: { type: string }
+        role: { type: string, enum: [admin, manager, teacher, guardian] }
+        fullName: { type: string }
+        accessLevel:
+          type: string
+          enum: [standard, master]
+          description: Admins only.
+        mustChangePassword:
+          type: boolean
+          description: Only present (true) after a master admin's reset.
+
+    AttendanceRecord:
+      type: object
+      properties:
+        record_id: { type: integer }
+        learner_id: { type: integer }
+        teacher_id: { type: integer, description: The teacher who took the register. }
+        record_date: { $ref: '#/components/schemas/DbDate' }
+        time_in: { type: string, nullable: true, example: '14:05:00' }
+        status: { type: string, enum: [present, absent] }
+
+    Learner:
+      type: object
+      properties:
+        learner_id: { type: integer }
+        class_id: { type: integer }
+        first_name: { type: string }
+        last_name: { type: string }
+        date_of_birth: { type: string, format: date, nullable: true }
+        can_walk_home_alone: { type: boolean }
+        is_active: { type: boolean }
+    LearnerWithClass:
+      allOf:
+        - $ref: '#/components/schemas/Learner'
+        - type: object
+          properties:
+            class_name: { type: string }
+            grade_range: { type: string }
+            class_colour: { type: string, nullable: true }
+    RosterLearner:
+      type: object
+      properties:
+        learner_id: { type: integer }
+        first_name: { type: string }
+        last_name: { type: string }
+        can_walk_home_alone: { type: boolean }
+
+    SchoolClass:
+      type: object
+      properties:
+        class_id: { type: integer }
+        teacher_id: { type: integer, nullable: true }
+        class_name: { type: string }
+        grade_range: { type: string }
+        colour: { type: string, nullable: true }
+        is_active: { type: boolean }
+    SchoolClassSummary:
+      allOf:
+        - $ref: '#/components/schemas/SchoolClass'
+        - type: object
+          properties:
+            teacher_name: { type: string, nullable: true }
+            learner_count: { type: integer }
+            active_learner_count: { type: integer }
+            present_today: { type: integer }
+    ClassActiveState:
+      type: object
+      properties:
+        class_id: { type: integer }
+        is_active: { type: boolean }
+
+    Teacher:
+      type: object
+      properties:
+        teacher_id: { type: integer }
+        user_id: { type: integer }
+        full_name: { type: string }
+        contact_email: { type: string }
+    TeacherActiveState:
+      type: object
+      properties:
+        teacher_id: { type: integer }
+        is_active: { type: boolean }
+    GuardianActiveState:
+      type: object
+      properties:
+        guardian_id: { type: integer }
+        is_active: { type: boolean }
+
+    StaffAccount:
+      type: object
+      properties:
+        userId: { type: integer }
+        fullName: { type: string }
+        email: { type: string }
+        type: { type: string, enum: [manager, standard_admin, master_admin] }
+        isActive: { type: boolean }
+
+    Observation:
+      type: object
+      properties:
+        observation_id: { type: integer }
+        learner_id: { type: integer }
+        teacher_id: { type: integer }
+        record_date: { $ref: '#/components/schemas/DbDate' }
+        category: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 10 }
+        notes: { type: string, nullable: true }
+    ObservationSummary:
+      type: object
+      properties:
+        observationId: { type: integer }
+        date: { $ref: '#/components/schemas/DbDate' }
+        category: { type: string }
+        rating: { type: integer, minimum: 1, maximum: 10 }
+        notes: { type: string, nullable: true }
+        teacherName: { type: string }
+
+    PickupPerson:
+      type: object
+      properties:
+        guardianId: { type: integer }
+        fullName: { type: string }
+        relationship: { type: string }
+        isPrimaryContact: { type: boolean }
+    GuardianPickupPerson:
+      allOf:
+        - $ref: '#/components/schemas/PickupPerson'
+        - type: object
+          properties:
+            isYou: { type: boolean, description: True for the signed-in guardian. }
+    Collection:
+      type: object
+      nullable: true
+      description: null until the learner has been signed out that day.
+      properties:
+        timeOut: { type: string, example: '16:45' }
+        collectedBy: { type: string, example: Walked home alone }
+    AttendanceSummary:
+      type: object
+      properties:
+        periodDays: { type: integer, example: 30 }
+        presentDays: { type: integer }
+        markedDays: { type: integer }
+        percent: { type: integer, nullable: true, description: null when no days have been marked. }
+
+    SignOutDay:
+      type: object
+      properties:
+        date: { type: string, format: date }
+        learners:
+          type: array
+          items:
+            type: object
+            properties:
+              learnerId: { type: integer }
+              name: { type: string }
+              className: { type: string }
+              gradeRange: { type: string }
+              canWalkHomeAlone: { type: boolean }
+              pickups:
+                type: array
+                items: { $ref: '#/components/schemas/PickupPerson' }
+              signedOut:
+                type: object
+                nullable: true
+                properties:
+                  timeOut: { type: string, example: '16:45' }
+                  collectedBy: { type: string }
+                  recordedBy: { type: string, nullable: true, description: The teacher or manager who signed them out. }
+              escalation:
+                type: object
+                nullable: true
+                description: The learner's latest request in the manager's queue today. null if there is none, or once they have gone.
+                properties:
+                  status: { type: string, enum: [open, dismissed] }
+                  collectorName: { type: string, nullable: true, description: null when the learner wants to walk home alone. }
+                  resolvedBy: { type: string, nullable: true }
+                  resolvedAt: { type: string, nullable: true, example: '16:50' }
+    SignOutCheck:
+      type: object
+      properties:
+        authorised: { type: boolean }
+        learnerId: { type: integer }
+        guardianId: { type: integer }
+        canWalkHomeAlone: { type: boolean }
+        message: { type: string, example: Guardian is authorised to collect this learner }
+    SignOutRecord:
+      type: object
+      properties:
+        record_id: { type: integer }
+        learner_id: { type: integer }
+        teacher_id: { type: integer, nullable: true }
+        manager_id: { type: integer, nullable: true, description: Exactly one of teacher_id and manager_id is set. }
+        guardian_id: { type: integer, nullable: true, description: null when the learner walked home alone. }
+        record_date: { $ref: '#/components/schemas/DbDate' }
+        time_out: { type: string, example: '16:45:00' }
+
+    SignOutEscalation:
+      type: object
+      properties:
+        escalationId: { type: integer }
+        learnerId: { type: integer }
+        learnerName: { type: string }
+        className: { type: string, nullable: true }
+        collectorName: { type: string, nullable: true, description: null when the learner wants to walk home alone. }
+        raisedBy: { type: string, description: The teacher or manager who sent it to the queue. }
+        raisedAt: { type: string, example: '16:45' }
+        status: { type: string, enum: [open, approved, dismissed] }
+        resolvedBy: { type: string, nullable: true }
+        resolvedAt: { type: string, nullable: true, example: '16:50' }
+
+    LearnerOverview:
+      type: object
+      properties:
+        learnerId: { type: integer }
+        canWalkHomeAlone: { type: boolean }
+        attendance: { $ref: '#/components/schemas/AttendanceSummary' }
+        recent:
+          type: array
+          description: The 14 most recent marked days, newest first.
+          items:
+            type: object
+            properties:
+              date: { type: string, format: date }
+              status: { type: string, enum: [present, absent] }
+              timeIn: { type: string, nullable: true }
+              signedOut: { $ref: '#/components/schemas/Collection' }
+        pickups:
+          type: array
+          items: { $ref: '#/components/schemas/PickupPerson' }
+        observations:
+          type: array
+          items: { $ref: '#/components/schemas/ObservationSummary' }
+
+    ChildOverview:
+      type: object
+      properties:
+        child:
+          type: object
+          properties:
+            learnerId: { type: integer }
+            firstName: { type: string }
+            lastName: { type: string }
+            name: { type: string }
+            className: { type: string }
+            gradeRange: { type: string }
+            canWalkHomeAlone: { type: boolean }
+        today:
+          type: object
+          properties:
+            date: { type: string, format: date }
+            status: { type: string, enum: [present, absent], nullable: true }
+            timeIn: { type: string, nullable: true }
+            signedOut: { $ref: '#/components/schemas/Collection' }
+        attendance: { $ref: '#/components/schemas/AttendanceSummary' }
+        week:
+          type: array
+          description: Marked days in the last 7 days.
+          items:
+            type: object
+            properties:
+              date: { type: string, format: date }
+              status: { type: string, enum: [present, absent] }
+              signedOut: { $ref: '#/components/schemas/Collection' }
+        pickups:
+          type: array
+          items: { $ref: '#/components/schemas/GuardianPickupPerson' }
+        teacher:
+          type: object
+          nullable: true
+          description: null when the class has no teacher assigned.
+          properties:
+            name: { type: string }
+            email: { type: string }
+        observations:
+          type: array
+          items: { $ref: '#/components/schemas/ObservationSummary' }
+
+    CategorySummary:
+      type: object
+      properties:
+        category: { type: string }
+        observationCount: { type: integer }
+        averageRating: { type: number, nullable: true }
+    DonorReport:
+      type: object
+      properties:
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        attendance:
+          type: object
+          properties:
+            totalPresent: { type: integer }
+            totalAbsent: { type: integer }
+            uniqueLearners: { type: integer }
+        observationsByCategory:
+          type: array
+          items: { $ref: '#/components/schemas/CategorySummary' }
+    ReportsOverview:
+      type: object
+      properties:
+        periodStart: { type: string, format: date }
+        periodEnd: { type: string, format: date }
+        thisWeekStart: { type: string, format: date, description: Monday of the week containing periodEnd. }
+        thisWeekEnd: { type: string, format: date, description: "Friday of that week, or periodEnd if that comes first." }
+        monthStart: { type: string, format: date }
+        totals:
+          type: object
+          properties:
+            activeLearners: { type: integer }
+            classes: { type: integer }
+            teachers: { type: integer }
+            observations: { type: integer }
+            avgAttendance: { type: number }
+            signOutsThisMonth: { type: integer }
+            daysDelivered: { type: integer }
+            uniqueLearnersServed: { type: integer, description: Learners with any attendance record in the period. }
+            learnersAttended: { type: integer, description: Learners marked present at least once in the period. }
+        weeklyDays:
+          type: array
+          description: Learners present each day, Monday to Friday this week.
+          items:
+            type: object
+            properties:
+              label: { type: string, example: Mon 26 }
+              day: { type: string, example: Mon }
+              date: { type: string, format: date }
+              value: { type: integer }
+        attendanceByClass:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              colour: { type: string, nullable: true }
+              learners: { type: integer }
+              rate: { type: integer, description: Percentage present over the period. }
+        observationsByCategory:
+          type: array
+          items: { $ref: '#/components/schemas/CategorySummary' }
+        classTrends:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              colour: { type: string, nullable: true }
+              thisWeek: { type: integer, nullable: true }
+              lastWeek: { type: integer, nullable: true }
+        orgTrend:
+          type: array
+          description: >-
+            Attendance rate per Monday-Friday week for up to the 8 weeks ending at periodEnd, starting at the
+            first week with attendance. With only one such week, that week day by day instead.
+            A null rate means no attendance was recorded.
+          items:
+            type: object
+            properties:
+              label: { type: string, example: 12 Oct }
+              rate: { type: integer, nullable: true }
+        classesThisMonth:
+          type: array
+          description: Each active class for the month starting at monthStart.
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              colour: { type: string, nullable: true }
+              activeLearners: { type: integer }
+              attendedLearners:
+                type: integer
+                nullable: true
+                description: Active learners marked present at least once this month. Null when the class has no register this month.
+        orgTrendView:
+          type: string
+          enum: [weekly, daily]
+        today:
+          type: object
+          properties:
+            date: { type: string, format: date }
+            present: { type: integer }
+            activeLearners: { type: integer }
+            signedOut: { type: integer }
+            classes:
+              type: array
+              items:
+                type: object
+                properties:
+                  name: { type: string }
+                  colour: { type: string, nullable: true }
+                  present: { type: integer }
+                  activeLearners: { type: integer }
+        rates:
+          type: object
+          properties:
+            thisWeek: { type: number, nullable: true }
+            lastWeek: { type: number, nullable: true }
+            period: { type: number, nullable: true }

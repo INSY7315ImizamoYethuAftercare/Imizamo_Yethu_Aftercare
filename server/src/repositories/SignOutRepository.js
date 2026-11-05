@@ -64,24 +64,26 @@ class SignOutRepository {
      * @param {number} params.learnerId - The unique identifier of the learner.
      * @param {number|null} params.teacherId - The teacher who recorded it (or null if a manager did).
      * @param {number|null} params.managerId - The manager who recorded it (or null if a teacher did).
-     * @param {number|null} params.guardianId - The guardian who collected; null = walked home alone.
+     * @param {number|null} params.guardianId - The guardian who collected; null = walked home alone,
+     * unless collectorName is set.
+     * @param {string|null} [params.collectorName] - A manager-approved collector who isn't on the pickup list.
      * @param {string} params.recordDate - The date the sign out of a leaner was recorded.
      * @param {string} params.timeOut - The time the sign out of a learner was recorded.
      * @returns {Promise<Object>} The newly created sign out record.
      */
-  async create({ learnerId, teacherId = null, managerId = null, guardianId, recordDate, timeOut }) {
+  async create({ learnerId, teacherId = null, managerId = null, guardianId, collectorName = null, recordDate, timeOut }) {
     const result = await this.pool.query(
-      `INSERT INTO sign_out_records ("learner_id", "teacher_id", "manager_id", "guardian_id", "record_date", "time_out")
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO sign_out_records ("learner_id", "teacher_id", "manager_id", "guardian_id", "record_date", "time_out", "collector_name")
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING "record_id", "learner_id", "teacher_id", "manager_id", "guardian_id", "record_date", "time_out"`,
-      [learnerId, teacherId, managerId, guardianId, recordDate, timeOut]
+      [learnerId, teacherId, managerId, guardianId, recordDate, timeOut, collectorName]
     );
     return result.rows[0];
   }
 
   /**
    * One learner's sign-outs from a date onwards, with who collected them
-   * (null guardian = walked home alone). Dates as YYYY-MM-DD text.
+   * (no name = walked home alone). Dates as YYYY-MM-DD text.
    *
    * @param {number} learnerId
    * @param {string} fromDate - YYYY-MM-DD (inclusive)
@@ -89,7 +91,7 @@ class SignOutRepository {
    */
   async findByLearnerSince(learnerId, fromDate) {
     const result = await this.pool.query(
-      `SELECT s."record_date"::text AS "record_date", s."time_out", g."full_name" AS "guardian_name"
+      `SELECT s."record_date"::text AS "record_date", s."time_out", COALESCE(g."full_name", s."collector_name") AS "guardian_name"
        FROM sign_out_records s
        LEFT JOIN guardians g ON g."guardian_id" = s."guardian_id"
        WHERE s."learner_id" = $1 AND s."record_date" >= $2
@@ -100,8 +102,8 @@ class SignOutRepository {
   }
 
   /**
-   * Every sign-out on one date, with who collected the learner (null
-   * guardian = walked home alone) and the teacher or manager who recorded
+   * Every sign-out on one date, with who collected the learner (no name =
+   * walked home alone) and the teacher or manager who recorded
    * it. Feeds the Sign-Out page's "already collected today" list and the
    * manager dashboard's Recent Activity.
    *
@@ -110,7 +112,7 @@ class SignOutRepository {
    */
   async findByDate(date) {
     const result = await this.pool.query(
-      `SELECT s."record_id", s."learner_id", s."guardian_id", s."time_out", g."full_name" AS "guardian_name",
+      `SELECT s."record_id", s."learner_id", s."guardian_id", s."time_out", COALESCE(g."full_name", s."collector_name") AS "guardian_name",
               COALESCE(t."full_name", m."full_name") AS "recorded_by_name"
        FROM sign_out_records s
        LEFT JOIN guardians g ON g."guardian_id" = s."guardian_id"

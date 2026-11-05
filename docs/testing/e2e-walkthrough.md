@@ -10,15 +10,11 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 
 1. **Point your local API at a local database.** Use `imizamo_dev` or `imizamo_test`; never Azure. The seed script refuses anything else. Your `server/.env` controls which database `npm run dev:server` uses.
 
-2. **One-off: update an existing database.** If your local database was created before these changes, run the migrations once, in order. They are safe to run again:
+2. **Apply / update the database schema** with migrations:
 
    ```powershell
-   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/001_signout_by_manager.sql
-   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/002_pickups_without_accounts.sql
-   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/003_class_colour.sql
-   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/004_master_admin_manages.sql
-   & "C:/Program Files/PostgreSQL/17/bin/psql.exe" -h localhost -U postgres -d imizamo_dev -f server/src/db/migrations/005_password_security.sql
-   ```
+   $env:DATABASE_URL = "postgresql://postgres:YOUR_PASSWORD@localhost:5432/imizamo_dev"
+   npm run migrate -w server
 
    A database built fresh from `schema.sql` already has it.
 
@@ -111,6 +107,8 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 | M3 | Open **Learners** and add **Sizwe Ndlovu**, Yellow class. | Sizwe appears in the list. The Yellow learner count goes up on **Classes**. |
 | M3a | On **Classes**, tap **+ Add Class**. Type **Brown**, choose **Gr 5-6** and the purple colour, then tap **Add Classroom**. | The preview card shows *Brown* / *Gr 5-6* in purple as you go. Brown appears in the list with a purple bar; adding **yellow** (any letter case) says *"There's already a class called yellow."* Escape or Cancel closes the form. |
 | M3b | Open **Sizwe Ndlovu**, go to **Profile**, tap **Edit details**, change **Class** to **Green**, and tap **Save**. | *"Learner details saved"*. The banner and the Class row show **Green**. On **Classes**, Yellow's count goes down by one and Green's goes up. |
+| M3c | On **Learners**, tap ⏸ next to **Sizwe Ndlovu**, then **Deactivate**. | *"Deactivate Learner?"* asks first. Sizwe stays in the list, greyed out with a **Deactivated** badge, and can't be opened. Teachers see him locked (🔒) and he's not on **Attendance**. |
+| M3d | Tap ↩ next to Sizwe, then **Reactivate**. | He's back to normal and can be opened again. (Ethan Fortuin, deactivated in the demo data, shows ↩ too: leave him deactivated for T4/T9 on the next run.) |
 | M4 | On **Classes**, tap 🗑 on **Orange**. | *"2 learners are still in this class. Move them to another class first."* with a **Move all 2 to** box. **Move & remove** stays greyed out until you choose a class. Tap **Cancel** for now (M11 does the real removal). |
 | M5 | Open **Staff**. | 5 teachers are listed with their active status. There are **no Edit or Reset password** buttons and no *Managers & admins* section: those are the master admin's (A6–A8). |
 | M5a | Tap **+ Add teacher**, enter **Sipho Ndlovu**, `sipho.ndlovu@iylh.test` and a starting password of 8+ characters, then tap **Add teacher**. | *"Sipho Ndlovu was added. Give them their email and starting password to sign in."* He appears in the list as Active. |
@@ -119,8 +117,8 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 | M6 | Deactivate **Sipho Dlamini**, then sign in as `s.dlamini@iylh.test` in a private window. | *"This account has been deactivated"*. If Sipho was **already** signed in elsewhere, his next click sends him back to the sign-in page. |
 | M7 | Reactivate Sipho. | He can sign in again. |
 | M8 | Open **Sign Out** and sign out **Zoe Ntombela** by tapping **Grace Ntombela**. | *"Zoe is signed out"*. Managers can sign learners out, and the record shows the manager as the person who did it: back on **Home**, Zoe appears in Recent Activity with *"Collected by Grace Ntombela"* and *"Signed out by Sarah Botha"*. |
-| M8a | Start a sign-out for **Keanu Abrahams**, type an unknown name, and tap **Verify**. | **"Override and approve"** is visible but greyed out, with *"Override isn't available yet: it needs the approval queue."* |
-| M9 | Open **Reports**. | Tabs: Overview, Trends, Donor Report, Board Report. (The figures are currently static placeholders, not live data.) |
+| M8a | Start a sign-out for **Keanu Abrahams**, type an unknown name, and tap **Verify**. | **"Override and approve"** is available. Tap **Send to manager queue**, then open **Queue**: Keanu is listed with the typed name. Approve it, and he appears in Recent Activity as collected by that name. |
+| M9 | Open **Reports**. | Tabs: Overview, Trends, Donor Report, Board Report. |
 | M10 | Open `http://localhost:5173/admin`. | You're sent back to `/manager`. |
 | M11 | On **Classes**, tap 🗑 on **Orange**, choose **Blue**, and tap **Move & remove**. | Orange disappears. Lwazi and Chloe are now in Blue (check **Learners**, and Blue's count on **Classes**). Teachers no longer see an Orange filter. To get Orange back for the next run, re-run the demo seed with `--reset`. |
 | M11a | Open any learner's **Edit details**. | Orange is no longer offered as a class. |

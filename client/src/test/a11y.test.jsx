@@ -7,6 +7,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import AdminHome from '../pages/AdminHome'
 import Attendance from '../pages/Attendance'
 import Home from '../pages/Home'
+import Learners from '../pages/Learners'
 import Login from '../pages/Login'
 import ManagerHome from '../pages/ManagerHome'
 import ParentHome from '../pages/ParentHome'
@@ -25,6 +26,7 @@ const PAGES = [
   ['Register', null, Register],
   ['Teacher home', 'teacher', Home],
   ['Attendance', 'teacher', Attendance],
+  ['Learners', 'teacher', Learners],
   ['Sign-out', 'teacher', SignOut],
   ['Manager home', 'manager', ManagerHome],
   ['Admin home', 'admin', AdminHome],

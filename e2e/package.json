@@ -1,0 +1,6 @@
+{
+  "name": "e2e",
+  "private": true,
+  "type": "module",
+  "description": "Playwright end-to-end tests. Not a workspace: @playwright/test is a root devDependency."
+}

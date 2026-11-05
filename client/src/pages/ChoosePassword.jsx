@@ -15,7 +15,7 @@ function ChoosePassword() {
 
   if (status === "unknown") {
     return (
-      <div className="min-h-screen bg-[#FFFBF5] flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center">
         <p className="text-sm text-gray-400">Loading...</p>
       </div>
     );
@@ -24,13 +24,13 @@ function ChoosePassword() {
   if (!user.mustChangePassword) return <Navigate to={homePathFor(user.appRole)} replace />;
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] flex flex-col items-center px-4 pt-10 pb-8">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col items-center px-4 pt-10 pb-8">
       <div className="w-full max-w-sm space-y-4">
         <div className="text-center">
           <img src="/logo.png" alt="Logo" className="w-16 h-16 mx-auto mb-3 object-contain" />
           <h1 className="text-2xl font-bold text-gray-900">Choose a new password</h1>
           <p className="text-sm text-gray-500 mt-2">
-            Hi {user.fullName}. Your password was reset by the master admin. Enter the temporary password you were given,
+            Hi {user.fullName}. Your password was set for you by someone else. Enter the temporary password you were given,
             then choose your own. Only you will know it.
           </p>
         </div>

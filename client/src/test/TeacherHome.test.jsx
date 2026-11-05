@@ -1,7 +1,7 @@
 // Teacher home: real totals for the teacher's own class, which follow the
 // manager's changes (learners added or moved) and today's attendance.
 import { act, fireEvent, render, screen } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import Home from '../pages/Home'
 import { dataBus } from '../services/dataBus'
@@ -35,7 +35,8 @@ beforeEach(() => {
   onApi('GET', '/signout/today', SIGN_OUTS)
 })
 
-const stat = (label) => screen.getByText(label).previousElementSibling
+// The stat card with this label (icon, number, progress bar, label).
+const stat = (label) => screen.getByText(label).closest('[data-stat]')
 
 describe('Teacher home', () => {
   it("shows today's real totals for the teacher's class", async () => {
@@ -92,6 +93,63 @@ describe('Teacher home', () => {
     expect(await screen.findByText('Yellow class • 1 of 2 present')).toBeInTheDocument()
     expect(stat('Absent')).toHaveTextContent('1')
     expect(screen.getByText('Complete: 1 present, 1 absent')).toBeInTheDocument()
+  })
+
+  it('prompts the teacher to take attendance until everyone is marked', async () => {
+    onApi('GET', '/attendance/class/1', [])
+    await signInAs('teacher')
+    render(
+      <MemoryRouter initialEntries={['/home']}>
+        <Routes>
+          <Route path="/home" element={<Home />} />
+          <Route path="/attendance" element={<p>attendance page</p>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+    expect(await screen.findByText('Attendance not taken yet')).toBeInTheDocument()
+    expect(screen.getByText('2 learners still to mark')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Mark now' }))
+    expect(screen.getByText('attendance page')).toBeInTheDocument()
+  })
+
+  it('says "not finished" when only some are marked, and hides the prompt once complete', async () => {
+    onApi('GET', '/attendance/class/1', [{ record_id: 1, learner_id: 11, status: 'present' }])
+    await renderHome()
+    expect(await screen.findByText('Attendance not finished')).toBeInTheDocument()
+    expect(screen.getByText('1 learner still to mark')).toBeInTheDocument()
+
+    onApi('GET', '/attendance/class/1', [
+      { record_id: 1, learner_id: 11, status: 'present' },
+      { record_id: 2, learner_id: 12, status: 'absent' },
+    ])
+    await act(async () => { dataBus.emit('classes') })
+    expect(await screen.findByText('Complete: 1 present, 1 absent')).toBeInTheDocument()
+    expect(screen.queryByText(/Attendance not (taken|finished)/)).not.toBeInTheDocument()
+  })
+
+  it('"Still here" counts present learners not yet collected', async () => {
+    onApi('GET', '/attendance/class/1', [
+      { record_id: 1, learner_id: 11, status: 'present' },
+      { record_id: 2, learner_id: 12, status: 'present' },
+    ])
+    await renderHome()
+    await screen.findByText('Yellow class • 2 of 2 present')
+    expect(stat('Still here')).toHaveTextContent('1') // Aisha has gone, Liam is still here
+    expect(screen.queryByText('Total learners')).not.toBeInTheDocument()
+  })
+
+  it('shows "–" instead of 0s until today\'s attendance has loaded', async () => {
+    let finish
+    onApi('GET', '/attendance/class/1', () => new Promise((resolve) => { finish = resolve }))
+    await renderHome()
+    await screen.findByText('Yellow class')
+    expect(stat('Present')).toHaveTextContent('–')
+    expect(stat('Present')).not.toHaveTextContent('0')
+    expect(screen.queryByText('Attendance not taken yet')).not.toBeInTheDocument()
+
+    await act(async () => { finish([{ record_id: 1, learner_id: 11, status: 'present' }]) })
+    expect(await screen.findByText('Yellow class • 1 of 2 present')).toBeInTheDocument()
+    expect(stat('Present')).toHaveTextContent('1')
   })
 
   it('says so when the teacher has no class', async () => {

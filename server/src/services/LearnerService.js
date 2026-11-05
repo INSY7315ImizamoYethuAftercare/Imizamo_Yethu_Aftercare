@@ -1,9 +1,31 @@
+/** YYYY-MM-DD minus n days, as YYYY-MM-DD (calendar arithmetic, no time zones). */
+const daysBefore = (date, n) => {
+  const d = new Date(`${date}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() - n);
+  return d.toISOString().slice(0, 10);
+};
+
+const hhmm = (time) => (time ? String(time).slice(0, 5) : null);
+
+// The learner profile shows attendance over this many days, and lists the
+// most recent of them day by day.
+export const PROFILE_PERIOD_DAYS = 30;
+export const PROFILE_RECENT_DAYS = 14;
+
 export class LearnerService {
-  constructor({ learnerRepository, schoolClassRepository, managerRepository, teacherRepository }) {
+  constructor({
+    learnerRepository, schoolClassRepository, managerRepository, teacherRepository,
+    attendanceRepository, signOutRepository, pickupPermissionRepository, observationRepository,
+  }) {
     this.learnerRepository = learnerRepository;
     this.schoolClassRepository = schoolClassRepository;
     this.managerRepository = managerRepository;
     this.teacherRepository = teacherRepository;
+    // Only needed for getLearnerOverview.
+    this.attendanceRepository = attendanceRepository;
+    this.signOutRepository = signOutRepository;
+    this.pickupPermissionRepository = pickupPermissionRepository;
+    this.observationRepository = observationRepository;
   }
 
   /**
@@ -69,6 +91,68 @@ export class LearnerService {
     }
 
     return learner;
+  }
+
+  /**
+   * Everything the staff learner profile shows beyond the learner's own
+   * details: attendance over the last 30 days, the most recent days (with who
+   * collected them), who may collect them, and the teachers' observations.
+   * Same access as getLearner: any teacher or manager.
+   *
+   * Pickups are names and relationships only, no contact details (POPIA),
+   * the same as on the Sign-Out page.
+   *
+   * @param {{ userId: number, learnerId: number, today: string }} params - today is the SA date, YYYY-MM-DD
+   */
+  async getLearnerOverview({ userId, learnerId, today }) {
+    const learner = await this.getLearner({ userId, learnerId });
+
+    const periodStart = daysBefore(today, PROFILE_PERIOD_DAYS - 1);
+    const [attendance, signOuts, pickups, observations] = await Promise.all([
+      this.attendanceRepository.findByLearnerSince(learnerId, periodStart),
+      this.signOutRepository.findByLearnerSince(learnerId, periodStart),
+      this.pickupPermissionRepository.findActiveByLearnerIds([learnerId]),
+      this.observationRepository.findByLearnerIdWithTeacher(learnerId),
+    ]);
+
+    const signOutOn = (date) => {
+      const s = signOuts.find((o) => o.record_date === date);
+      return s ? { timeOut: hhmm(s.time_out), collectedBy: s.guardian_name ?? "Walked home alone" } : null;
+    };
+    const presentDays = attendance.filter((a) => a.status === "present").length;
+
+    return {
+      learnerId: learner.learner_id,
+      canWalkHomeAlone: learner.can_walk_home_alone,
+      attendance: {
+        periodDays: PROFILE_PERIOD_DAYS,
+        presentDays,
+        markedDays: attendance.length,
+        // null when nothing has been marked yet, so the page can show "—" not 0%.
+        percent: attendance.length ? Math.round((presentDays / attendance.length) * 100) : null,
+      },
+      // Newest first (the repository orders by date descending).
+      recent: attendance.slice(0, PROFILE_RECENT_DAYS).map((a) => ({
+        date: a.record_date,
+        status: a.status,
+        timeIn: hhmm(a.time_in),
+        signedOut: signOutOn(a.record_date),
+      })),
+      pickups: pickups.map((p) => ({
+        guardianId: p.guardian_id,
+        fullName: p.full_name,
+        relationship: p.relationship,
+        isPrimaryContact: p.is_primary_contact,
+      })),
+      observations: observations.map((o) => ({
+        observationId: o.observation_id,
+        date: o.record_date,
+        category: o.category,
+        rating: o.rating,
+        notes: o.notes,
+        teacherName: o.teacher_name,
+      })),
+    };
   }
 
   /**

@@ -1,18 +1,17 @@
 import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import MoreMenu from "../components/MoreMenu";
+import SettingsButton from "../components/SettingsButton";
 import { useClasses } from "./UseClasses";
 import { useLearners, useLearnersLoading, addLearner, deleteLearner, setLearnerStatus } from "./UseLearners";
 import AddLearnerSheet from "./AddLearnerSheet";
 import { colourForClass } from "./AddClassSheet";
 import { useHeader } from "./UseHeader";
+import { useSession } from "../services/session";
 
 function Learners({ role = "Teacher" }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const comingSoon = () => alert("Coming soon");
-  const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
-  const showSettings = role === "Manager" || role === "Admin";
   const iconBtn =
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
@@ -22,10 +21,6 @@ function Learners({ role = "Teacher" }) {
     role === "Admin" ? "/admin/observations" :
     role === "Manager" ? "/manager/observations" : "/observations";
 
-  const startGroup = searchParams.get("group") || "All";
-  const [search, setSearch] = useState("");
-  const [selectedClass, setSelectedClass] = useState(startGroup);
-
   const learners = useLearners();
   const loadingLearners = useLearnersLoading();
   const isManager = role === "Manager";
@@ -33,6 +28,16 @@ function Learners({ role = "Teacher" }) {
   const [pending, setPending] = useState(null); // { type: "delete" | "deactivate" | "reactivate", learner }
 
   const allClasses = useClasses();
+
+  // Start on ?group= if a link asked for one; otherwise a teacher opens on
+  // the class they lead (same rule as the header), and everyone else on All.
+  // `chosenClass` stays null until a filter is tapped, so the default can
+  // follow the class list once it has loaded.
+  const { user } = useSession();
+  const myClass = role === "Teacher" ? allClasses.find((c) => c.teacher === user?.fullName) : null;
+  const [search, setSearch] = useState("");
+  const [chosenClass, setSelectedClass] = useState(searchParams.get("group"));
+  const selectedClass = chosenClass ?? myClass?.name ?? "All";
   const classes = ["All", ...allClasses.map((c) => c.name)];
 
   const filtered = learners.filter((l) => {
@@ -41,10 +46,10 @@ function Learners({ role = "Teacher" }) {
     return matchesSearch && matchesClass;
   });
 
-  const shell = role === "Teacher" ? "max-w-lg mx-auto w-full" : "max-w-5xl mx-auto w-full";
+  const shell = "max-w-lg md:max-w-3xl lg:max-w-5xl mx-auto w-full";
 
   return (
-    <div className="min-h-screen bg-[#FFFBF5] flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
@@ -55,10 +60,7 @@ function Learners({ role = "Teacher" }) {
         </div>
         <div className="flex items-center gap-3">
           <button onClick={comingSoon} className={iconBtn}>🔔</button>
-          {showSettings && (
-            <button onClick={() => navigate(settingsPath)} className={iconBtn}>⚙️</button>
-          )}
-          <MoreMenu />
+          <SettingsButton />
         </div>
       </div>
 
@@ -112,18 +114,60 @@ function Learners({ role = "Teacher" }) {
         )}
 
         <div className="space-y-3">
-          {filtered.map((learner) => (
-            <button
-              key={learner.id}
-              onClick={() => navigate(`${observationsPath}?id=${learner.id}`)}
-              className="w-full bg-white rounded-2xl px-4 py-3 flex items-center justify-between shadow-lg border border-gray-200 text-left hover:border-orange-300 active:scale-[0.98] transition"
-            >
-              <div>
-                <p className="font-semibold text-gray-900">{learner.name}</p>
-                <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
+          {filtered.map((learner) => {
+            // A deactivated learner stays listed, greyed out, and can't be opened
+            // until a manager reactivates them.
+            const off = learner.status === "deactivated";
+            return (
+              <div
+                key={learner.id}
+                className={`w-full rounded-2xl px-4 py-3 flex items-center justify-between gap-3 border transition ${
+                  off
+                    ? "bg-gray-100 border-gray-200 opacity-70"
+                    : "bg-white shadow-lg border-gray-200 hover:border-orange-300"
+                }`}
+              >
+                <button
+                  type="button"
+                  disabled={off}
+                  onClick={() => navigate(`${observationsPath}?id=${learner.id}`)}
+                  className={`flex-1 min-w-0 text-left ${off ? "cursor-not-allowed" : "active:scale-[0.98] transition"}`}
+                >
+                  <p className="font-semibold text-gray-900">{learner.name}</p>
+                  <p className="text-xs text-gray-500">{learner.grade} • {learner.group}</p>
+                  {off && (
+                    <span className="inline-block mt-1 text-[11px] font-semibold text-gray-500 bg-gray-200 rounded-full px-2 py-0.5">Deactivated</span>
+                  )}
+                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  {isManager && (
+                    <>
+                      <button
+                        type="button"
+                        aria-label={`${off ? "Reactivate" : "Deactivate"} ${learner.name}`}
+                        title={off ? "Reactivate" : "Deactivate"}
+                        onClick={() => setPending({ type: off ? "reactivate" : "deactivate", learner })}
+                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-orange-50 text-orange-500 hover:bg-orange-100 active:scale-95 transition"
+                      >
+                        {off ? "↩" : "⏸"}
+                      </button>
+                      <button
+                        type="button"
+                        aria-label={`Delete ${learner.name}`}
+                        title="Delete"
+                        onClick={() => setPending({ type: "delete", learner })}
+                        className="w-9 h-9 flex items-center justify-center rounded-xl bg-red-50 text-red-500 hover:bg-red-100 active:scale-95 transition"
+                      >
+                        🗑
+                      </button>
+                    </>
+                  )}
+                  {!off && !isManager && <span className="text-orange-400 font-semibold" aria-hidden="true">→</span>}
+                  {off && !isManager && <span className="text-gray-400" aria-hidden="true">🔒</span>}
+                </div>
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
       </div>
       {isManager && showAdd && (
@@ -168,7 +212,7 @@ function Learners({ role = "Teacher" }) {
               </div>
               <p className="text-sm text-gray-500 text-center mb-5">{copy.body}</p>
               <div className="flex gap-3">
-                <button onClick={() => setPending(null)} className="flex-1 py-3 rounded-xl bg-[#F5F0EA] text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
+                <button onClick={() => setPending(null)} className="flex-1 py-3 rounded-xl bg-beige text-sm font-semibold text-gray-500 active:scale-95 transition">Cancel</button>
                 <button
                   onClick={() => { copy.act(); setPending(null); }}
                   className="flex-1 py-3 rounded-xl bg-orange-500 text-sm font-semibold text-white shadow-md active:scale-95 transition"

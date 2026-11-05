@@ -67,15 +67,16 @@ class UserRepository {
     * @param {string} params.passwordHash - The user's password hashed.
     * @param {string} params.fullName - The user's full name.
     * @param {boolean} params.isActive - If the user's account is active or not
-    * 
+    * @param {boolean} [params.mustChangePassword=false] - Make them choose their own password at first sign-in.
+    *
     * @returns {Promise<Object>} The newly created user record.
     */
-    async createUser({ email, role, passwordHash, fullName, isActive }) {
+    async createUser({ email, role, passwordHash, fullName, isActive, mustChangePassword = false }) {
          const result = await this.pool.query(
-            `INSERT INTO users ("email", "role", "password_hash", "full_name", "is_active")
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO users ("email", "role", "password_hash", "full_name", "is_active", "must_change_password")
+             VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING "user_id", "email", "role", "full_name", "is_active"`,
-             [email, role, passwordHash, fullName, isActive]
+             [email, role, passwordHash, fullName, isActive, mustChangePassword]
     );
         return result.rows[0];
     }

@@ -12,16 +12,18 @@ import path from 'node:path'
 const apply = process.argv.includes('--apply')
 const file = path.join(path.dirname(fileURLToPath(import.meta.url)), 'seed', 'learners.json')
 const learners = JSON.parse(readFileSync(file, 'utf8'))
-
+// A missing date of birth is allowed (learners.date_of_birth is nullable).
+// A date that IS given must be YYYY-MM-DD.
 const dobPattern = /^\d{4}-\d{2}-\d{2}$/
-const badDob = learners.filter((l) => !dobPattern.test(l.date_of_birth ?? ''))
+const badDob = learners.filter(
+  (l) => l.date_of_birth != null && l.date_of_birth !== '' && !dobPattern.test(l.date_of_birth),
+)
 if (badDob.length > 0) {
-  console.error(
-    `${badDob.length} learner(s) missing a valid date_of_birth ("YYYY-MM-DD"):`,
-    badDob.map((l) => `${l.first_name} ${l.last_name}`).join(', '),
-  )
+  console.error(`${badDob.length} learner(s) have a date_of_birth that is not "YYYY-MM-DD".`)
   process.exit(1)
 }
+const noDob = learners.filter((l) => l.date_of_birth == null || l.date_of_birth === '').length
+if (noDob > 0) console.log(`${noDob} learner(s) have no date of birth (stored as NULL).`)
 
 const counts = learners.reduce((m, l) => ((m[l.class_name] = (m[l.class_name] ?? 0) + 1), m), {})
 console.log(`Loaded ${learners.length} learners:`, counts)

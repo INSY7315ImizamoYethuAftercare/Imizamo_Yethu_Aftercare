@@ -80,9 +80,9 @@ Run this before merging a PR into `main`. Copy the list into the PR description 
 - [ ] Verify with nobody chosen and nothing typed shows an error.
 - [ ] A typed name not on the list is flagged *"Needs manager approval"*. A typed name that **is** on the list says to tap it instead.
 - [ ] "Walking Home" works for a learner allowed to walk home alone, and is flagged for everyone else.
-- [ ] A manager can sign a learner out. The Override button is greyed out with a "not available yet" note.
+- [ ] A manager can sign a learner out. "Override and approve" signs out a collector who isn't on the list, and the record shows their name and the manager.
 - [ ] Server errors show in the red box (e.g. sign the same learner out in two tabs: the second gets *"already signed out today"*).
-- [ ] The manager queue and override are **not built yet**: "Send to manager queue" saves nothing, and the screen says so. Tell the manager in person.
+- [ ] "Send to manager queue" adds the collection to the manager's **Queue**, and the count on the manager home goes up. The learner shows "Waiting for manager" on the Sign-Out list. Approving signs them out with the typed name; dismissing leaves them on the list, marked with who dismissed it and when. The label updates within 30 seconds without a refresh.
 
 ## F. Responsive layout
 

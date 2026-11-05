@@ -1,10 +1,10 @@
-// The teacher's Settings page, the ⋮ menu's Settings link, and choosing your
+// The teacher's Settings page, the header's Settings button, and choosing your
 // own password after a master admin reset a forgotten one.
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import MoreMenu from '../components/MoreMenu'
+import SettingsButton from '../components/SettingsButton'
 import ChoosePassword from '../pages/ChoosePassword'
 import TeacherSettings from '../pages/TeacherSettings'
 import { apiClient, onApi, resetApi } from './api-mock'
@@ -20,6 +20,8 @@ function renderAt(path, element) {
         <Route path="/home" element={<p>teacher home</p>} />
         <Route path="/teacher/settings" element={<p>teacher settings</p>} />
         <Route path="/settings" element={<p>manager settings</p>} />
+        <Route path="/admin/settings" element={<p>admin settings</p>} />
+        <Route path="/parent/settings" element={<p>parent settings</p>} />
         <Route path={path} element={element} />
       </Routes>
     </MemoryRouter>,
@@ -32,14 +34,15 @@ beforeEach(() => {
   onApi('POST', '/auth/logout', { message: 'ok' })
 })
 
-describe('⋮ menu', () => {
+describe('Header settings button', () => {
   it.each([
-    ['teacher', '/attendance', 'teacher settings'],
-    ['manager', '/manager/escalations', 'manager settings'],
-  ])('a %s opens their own Settings page', async (role, path, page) => {
+    ['teacher', 'teacher settings'],
+    ['manager', 'manager settings'],
+    ['admin', 'admin settings'],
+    ['guardian', 'parent settings'],
+  ])('the ⚙️ takes a %s to their own Settings page', async (role, page) => {
     await signInAs(role)
-    renderAt(path, <MoreMenu />)
-    await userEvent.click(screen.getByRole('button', { name: '⋮' }))
+    renderAt('/somewhere', <SettingsButton />)
     await userEvent.click(screen.getByRole('button', { name: 'Settings' }))
     expect(screen.getByText(page)).toBeInTheDocument()
   })

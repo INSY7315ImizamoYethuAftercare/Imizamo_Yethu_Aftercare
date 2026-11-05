@@ -146,9 +146,40 @@ describe('POST /api/guardian/children/:learnerId/pickups', () => {
     expect((await overview()).body.today.signedOut.collectedBy).toBe('Zainab Hendricks')
   })
 
-  it('records permission to walk home alone when ticked', async () => {
+  it('adding a person never changes the walk-home permission', async () => {
     await addPickup({ ...ZAINAB, canWalkHomeAlone: true })
-    expect((await overview()).body.child.canWalkHomeAlone).toBe(true)
+    expect((await overview()).body.child.canWalkHomeAlone).toBe(false)
+  })
+
+  describe('walk-home permission', () => {
+    const setWalkHome = (body, learner = aisha) =>
+      request(app).patch(`/api/guardian/children/${learner.learner_id}/walk-home`).set('Cookie', fatima.cookie).send(body)
+
+    it('can be given without adding anyone, then taken back', async () => {
+      const given = await setWalkHome({ canWalkHomeAlone: true })
+      expect(given.status).toBe(200)
+      expect(given.body).toEqual({ learnerId: aisha.learner_id, canWalkHomeAlone: true })
+      const after = await overview()
+      expect(after.body.child.canWalkHomeAlone).toBe(true)
+      expect(after.body.pickups).toHaveLength(1)
+
+      expect((await setWalkHome({ canWalkHomeAlone: false })).status).toBe(200)
+      expect((await overview()).body.child.canWalkHomeAlone).toBe(false)
+    })
+
+    it.each([[{}], [{ canWalkHomeAlone: 'true' }], [{ canWalkHomeAlone: 1 }], [{ canWalkHomeAlone: null }]])(
+      'rejects %o with 400 and changes nothing',
+      async (body) => {
+        expect((await setWalkHome(body)).status).toBe(400)
+        expect((await overview()).body.child.canWalkHomeAlone).toBe(false)
+      },
+    )
+
+    it("refuses another family's child and changes nothing", async () => {
+      expect((await setWalkHome({ canWalkHomeAlone: true }, otherChild)).status).toBe(403)
+      const { rows } = await pool.query('SELECT "can_walk_home_alone" FROM learners WHERE "learner_id" = $1', [otherChild.learner_id])
+      expect(rows[0].can_walk_home_alone).toBe(false)
+    })
   })
 
   it('refuses someone already on the list (any letter case) with 409', async () => {

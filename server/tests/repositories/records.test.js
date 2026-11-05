@@ -164,7 +164,7 @@ describe('AttendanceRepository', () => {
     await markAttendance(b, teacher, { recordDate: '2026-03-02', status: 'absent' })
     await markAttendance(a, teacher, { recordDate: '2026-04-01' })
     const agg = await attendance.getAggregateByDateRange('2026-03-01', '2026-03-31')
-    expect(agg).toEqual({ total_present: '1', total_absent: '1', unique_learners: '2' })
+    expect(agg).toEqual({ total_present: '1', total_absent: '1', unique_learners: '2', attended_learners: '1' })
   })
 })
 
@@ -333,22 +333,26 @@ describe('ON DELETE RESTRICT on sign_out_records', () => {
     })
   })
 
-  it('blocks deleting a teacher referenced by a sign-out (23503)', async () => {
-    await expect(pool.query('DELETE FROM teachers WHERE "teacher_id" = $1', [teacher.profile.teacher_id])).rejects.toMatchObject({
-      code: '23503',
-    })
+    // Postgres reports 23503 (foreign_key_violation) on older versions and
+  // 23001 (restrict_violation) on newer ones for ON DELETE RESTRICT.
+  const FK_BLOCKED = { code: expect.stringMatching(/^23(503|001)$/) }
+
+  it('blocks deleting a teacher referenced by a sign-out (23503 or 23001)', async () => {
+    await expect(pool.query('DELETE FROM teachers WHERE "teacher_id" = $1', [teacher.profile.teacher_id])).rejects.toMatchObject(
+      FK_BLOCKED,
+    )
   })
 
-  it('blocks deleting a guardian referenced by a sign-out (23503)', async () => {
+  it('blocks deleting a guardian referenced by a sign-out (23503 or 23001)', async () => {
     await expect(
       pool.query('DELETE FROM guardians WHERE "guardian_id" = $1', [guardian.profile.guardian_id]),
-    ).rejects.toMatchObject({ code: '23503' })
+    ).rejects.toMatchObject(FK_BLOCKED)
   })
 
-  it('blocks deleting the user account behind such a teacher, via the cascade (23503)', async () => {
-    await expect(pool.query('DELETE FROM users WHERE "user_id" = $1', [teacher.user.user_id])).rejects.toMatchObject({
-      code: '23503',
-    })
+  it('blocks deleting the user account behind such a teacher, via the cascade (23503 or 23001)', async () => {
+    await expect(pool.query('DELETE FROM users WHERE "user_id" = $1', [teacher.user.user_id])).rejects.toMatchObject(
+      FK_BLOCKED,
+    )
   })
 
   // The API exposes no way to delete a teacher or guardian (they are

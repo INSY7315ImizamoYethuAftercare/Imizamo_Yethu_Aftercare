@@ -55,7 +55,7 @@ function EditAccountForm({ account, onSaved, onCancel }) {
       </div>
       {error && <p role="alert" className="text-sm text-red-500 mb-3">{error}</p>}
       <div className="flex gap-3">
-        <button type="button" onClick={onCancel} className="flex-1 py-2.5 rounded-full bg-white text-gray-600 font-medium border border-gray-200 shadow-md">
+        <button type="button" onClick={onCancel} className="flex-1 py-2.5 rounded-full bg-beige text-gray-500 font-semibold">
           Cancel
         </button>
         <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-full bg-orange-400 text-white font-semibold shadow-md disabled:opacity-60">

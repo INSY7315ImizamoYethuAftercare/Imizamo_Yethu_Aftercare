@@ -6,10 +6,10 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import MoreMenu from '../components/MoreMenu'
 import Login from '../pages/Login'
 import ParentSettings from '../pages/ParentSettings'
 import Settings from '../pages/Settings'
+import TeacherSettings from '../pages/TeacherSettings'
 import { apiClient, onApi, resetApi } from './api-mock'
 import { CLASSES, signInAs } from './session-helpers'
 
@@ -54,21 +54,18 @@ describe('Log out button on the Settings page', () => {
     await expectLoggedOut()
   })
 
-  it('logs a guardian out from Parent settings', async () => {
-    await signInAs('guardian')
-    renderAt('/parent/settings', <ParentSettings />)
+  it('logs a teacher out from Teacher settings', async () => {
+    await signInAs('teacher')
+    renderAt('/teacher/settings', <TeacherSettings />)
     apiClient.post.mockClear()
     await userEvent.click(screen.getByRole('button', { name: 'Log out' }))
     await expectLoggedOut()
   })
-})
 
-describe('Log out in the ⋮ menu', () => {
-  it('logs a teacher out', async () => {
-    await signInAs('teacher')
-    renderAt('/attendance', <MoreMenu />)
+  it('logs a guardian out from Parent settings', async () => {
+    await signInAs('guardian')
+    renderAt('/parent/settings', <ParentSettings />)
     apiClient.post.mockClear()
-    await userEvent.click(screen.getByRole('button', { name: '⋮' }))
     await userEvent.click(screen.getByRole('button', { name: 'Log out' }))
     await expectLoggedOut()
   })
