@@ -22,12 +22,7 @@ const reportService = new ReportService({
 
 export async function getDonorReport(req, res, next) {
   try {
-    const { periodStart, periodEnd } = req.query
-    if (!periodStart || !periodEnd) {
-      const err = new Error('periodStart and periodEnd query parameters are required')
-      err.status = 400
-      throw err
-    }
+    const { periodStart, periodEnd } = req.validated.query
     const report = await reportService.getDonorReportData({
       userId: req.user.userId,
       periodStart,
@@ -45,7 +40,7 @@ export async function getDonorReport(req, res, next) {
  */
 export async function getOverview(req, res, next) {
   try {
-    const { periodStart, periodEnd } = req.query
+    const { periodStart, periodEnd } = req.validated.query
     const report = await reportService.getOverviewData({
       userId: req.user.userId,
       periodStart,

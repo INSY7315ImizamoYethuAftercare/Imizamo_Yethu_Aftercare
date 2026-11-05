@@ -18,7 +18,6 @@ import TeacherRepository from '../repositories/TeacherRepository.js'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
 import { todayInSA } from '../services/AttendanceService.js'
-import * as validate from '../utils/validation.js'
 
 const guardianService = new GuardianService({
   guardianRepository: new GuardianRepository(pool),
@@ -63,7 +62,7 @@ export async function getMyChildren(req, res, next) {
 export async function getChildProfile(req, res, next) {
   try {
     const profile = await guardianService.getChildProfile({
-      userId: req.user.userId, learnerId: req.params.learnerId,
+      userId: req.user.userId, learnerId: req.validated.params.learnerId,
     })
     res.json(profile)
   } catch (err) {
@@ -75,7 +74,7 @@ export async function getChildProfile(req, res, next) {
 export async function getChildObservations(req, res, next) {
   try {
     const observations = await guardianService.getChildObservations({
-      userId: req.user.userId, learnerId: req.params.learnerId,
+      userId: req.user.userId, learnerId: req.validated.params.learnerId,
     })
     res.json(observations)
   } catch (err) {
@@ -91,7 +90,7 @@ export async function getChildOverview(req, res, next) {
   try {
     res.json(await guardianService.getChildOverview({
       userId: req.user.userId,
-      learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
+      learnerId: req.validated.params.learnerId,
       today: todayInSA(),
     }))
   } catch (err) {
@@ -102,17 +101,18 @@ export async function getChildOverview(req, res, next) {
 /**
  * POST /api/guardian/children/:learnerId/pickups
  * The guardian adds someone who may collect their child.
- * Body: { fullName, relationship, contactNumber }
+ * Body: { fullName, relationship, contactNumber, canWalkHomeAlone? }
  */
 export async function addChildPickup(req, res, next) {
   try {
-    const { fullName, relationship, contactNumber } = req.body ?? {}
+    const { fullName, relationship, contactNumber, canWalkHomeAlone } = req.validated.body
     const pickup = await guardianService.addPickup({
       userId: req.user.userId,
-      learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
-      fullName: validate.text(fullName, 'fullName', { max: validate.LIMITS.fullName }),
-      relationship: validate.text(relationship, 'relationship', { max: validate.LIMITS.relationship }),
-      contactNumber: validate.text(contactNumber, 'contactNumber', { max: validate.LIMITS.contactNumber }),
+      learnerId: req.validated.params.learnerId,
+      fullName,
+      relationship,
+      contactNumber,
+      canWalkHomeAlone,
       today: todayInSA(),
     })
     res.status(201).json(pickup)
@@ -128,12 +128,10 @@ export async function addChildPickup(req, res, next) {
  */
 export async function setChildWalkHome(req, res, next) {
   try {
-    const { canWalkHomeAlone } = req.body ?? {}
-    // Strictly true or false: this decides whether a child may leave unaccompanied.
-    if (typeof canWalkHomeAlone !== 'boolean') throw validate.badRequest('canWalkHomeAlone must be true or false')
+    const { canWalkHomeAlone } = req.validated.body
     const result = await guardianService.setWalkHome({
       userId: req.user.userId,
-      learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
+      learnerId: req.validated.params.learnerId,
       canWalkHomeAlone,
     })
     res.json(result)
@@ -146,7 +144,7 @@ const setGuardianActiveHandler = (isActive) => async (req, res, next) => {
   try {
     const updated = await guardianService.setGuardianActive({
       userId: req.user.userId,
-      guardianId: validate.parseId(req.params.guardianId, 'guardianId'),
+      guardianId: req.validated.params.guardianId,
       isActive,
     })
     res.json(updated)
