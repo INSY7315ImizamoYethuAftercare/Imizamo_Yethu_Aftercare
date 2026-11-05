@@ -6,6 +6,18 @@
 
 ---
 
+# 👨‍💻 Team
+
+## NovaTech Solutions
+
+| Student Number | Team Member |
+|---|---|
+| **ST10445500** | Isabelle Kathryn Devlin |
+| **ST10068995** | Thomas Pheiffer |
+| **ST10325652** | Michaela Ferraris |
+| **ST10301146** | Nomsa Mkoka |
+| **ST10280758** | Justin Fussell |
+
 ## 🌍 Project Overview
 
 The **Imizamo Yethu Aftercare Management System** is a full-stack web application developed and donated by **NovaTech Solutions** to support the daily operations of the Imizamo Yethu Aftercare.
@@ -427,20 +439,6 @@ The implementation considers the following non-functional requirements:
 | **Scalability** | Layered architecture and cloud deployment |
 | **Maintainability** | Separation of controllers, services and repositories |
 | **Portability** | Web-based application accessible across modern devices |
-
----
-
-# 👨‍💻 Team
-
-## NovaTech Solutions
-
-| Student Number | Team Member |
-|---|---|
-| **ST10445500** | Isabelle Kathryn Devlin |
-| **ST10068995** | Thomas Pheiffer |
-| **ST10325652** | Michaela Ferraris |
-| **ST10301146** | Nomsa Mkoka |
-| **ST10280758** | Justin Fussell |
 
 ---
 

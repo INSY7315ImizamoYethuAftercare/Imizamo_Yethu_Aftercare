@@ -72,7 +72,7 @@ export class AccountService {
 
     try {
       return await this.runInTransaction(async ({ userRepository, managerRepository, adminRepository }) => {
-        const user = await userRepository.createUser({ email, role, passwordHash, fullName, isActive: true })
+        const user = await userRepository.createUser({ email, role, passwordHash, fullName, isActive: true, mustChangePassword: true })
         if (role === 'manager') {
           await managerRepository.create({ userId: user.user_id, fullName })
         } else {

@@ -36,6 +36,9 @@ describe('AttendanceRepository aggregates (live reports)', () => {
     )
     expect(byDate['2026-03-02']).toBe(2)
     expect(byDate['2026-03-03']).toBe(1)
+    const absent = Object.fromEntries(rows.map((r) => [String(r.record_date).slice(0, 10), Number(r.absent_count)]))
+    expect(absent['2026-03-02']).toBe(0)
+    expect(absent['2026-03-03']).toBe(1)
   })
 
   it('getAttendanceByClass returns rate inputs per class', async () => {
@@ -52,6 +55,20 @@ describe('AttendanceRepository aggregates (live reports)', () => {
     expect(Number(y.total_count)).toBe(2)
     expect(Number(g.present_count)).toBe(1)
     expect(Number(g.total_count)).toBe(1)
+  })
+
+  it('getAttendanceByClass counts each active learner who came once, however many days', async () => {
+    const regular = await createLearner({ className: 'Yellow' })
+    const neverPresent = await createLearner({ className: 'Yellow' })
+    const left = await createLearner({ className: 'Yellow' })
+    await markAttendance(regular, teacher, { recordDate: '2026-03-02' })
+    await markAttendance(regular, teacher, { recordDate: '2026-03-03' })
+    await markAttendance(neverPresent, teacher, { recordDate: '2026-03-02', status: 'absent' })
+    await markAttendance(left, teacher, { recordDate: '2026-03-02' })
+    await pool.query('UPDATE learners SET "is_active" = false WHERE "learner_id" = $1', [left.learner_id])
+
+    const rows = await attendance.getAttendanceByClass('2026-03-01', '2026-03-31')
+    expect(Number(rows.find((r) => r.class_name === 'Yellow').attended_learners)).toBe(1)
   })
 
   it('getAttendanceRate returns null when empty, otherwise a 0–100 integer', async () => {

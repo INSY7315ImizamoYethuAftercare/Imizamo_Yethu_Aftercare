@@ -45,7 +45,7 @@ describe('Staff page: add a teacher', () => {
     onApi('GET', '/teacher', [NKOSI, NEW])
     await userEvent.click(screen.getByRole('button', { name: 'Add teacher' }))
 
-    expect(await screen.findByText('Sipho Dlamini was added. Give them their email and starting password to sign in.')).toBeInTheDocument()
+    expect(await screen.findByText('Sipho Dlamini was added. Give them their email and starting password to sign in. They\'ll choose their own password the first time.')).toBeInTheDocument()
     expect(screen.getByText('Sipho Dlamini')).toBeInTheDocument()
     expect(teacherPosts()).toEqual([['/teacher', { fullName: 'Sipho Dlamini', email: 'sipho@iylh.org', password: 'Starting-pass-1' }]])
     expect(screen.queryByLabelText('FULL NAME')).not.toBeInTheDocument()

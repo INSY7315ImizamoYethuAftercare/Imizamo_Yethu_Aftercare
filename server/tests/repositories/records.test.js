@@ -164,7 +164,7 @@ describe('AttendanceRepository', () => {
     await markAttendance(b, teacher, { recordDate: '2026-03-02', status: 'absent' })
     await markAttendance(a, teacher, { recordDate: '2026-04-01' })
     const agg = await attendance.getAggregateByDateRange('2026-03-01', '2026-03-31')
-    expect(agg).toEqual({ total_present: '1', total_absent: '1', unique_learners: '2' })
+    expect(agg).toEqual({ total_present: '1', total_absent: '1', unique_learners: '2', attended_learners: '1' })
   })
 })
 

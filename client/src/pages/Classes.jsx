@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import MoreMenu from "../components/MoreMenu";
+import SettingsButton from "../components/SettingsButton";
 import AddClassSheet, { colourForClass, UNASSIGNED_GRADE } from "./AddClassSheet";
 import EditClassSheet from "./EditClassSheet.jsx";
 import { addClass, removeClass, updateClassGrade, assignTeacher, learnerCount, useClasses, useClassesLoading } from "./UseClasses";
@@ -32,8 +32,8 @@ function Classes({ role = "Teacher" }) {
   const [moveError, setMoveError] = useState("");
 
   // Throws if the server refuses (the sheet shows the message and stays open).
-  const handleAdd = async ({ name, grade, colour }) => {
-    await addClass({ name, grade, colour });
+  const handleAdd = async ({ name, grade, colour, teacher }) => {
+    await addClass({ name, grade, colour, teacher });
     setShowAdd(false);
   };
 
@@ -83,7 +83,7 @@ function Classes({ role = "Teacher" }) {
   };
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
@@ -94,10 +94,7 @@ function Classes({ role = "Teacher" }) {
         </div>
         <div className="flex items-center gap-3">
           <button onClick={comingSoon} className={iconBtn}>🔔</button>
-          {isManager && (
-            <button onClick={() => navigate("/settings")} className={iconBtn}>⚙️</button>
-          )}
-          <MoreMenu />
+          <SettingsButton />
         </div>
       </div>
 
@@ -178,6 +175,7 @@ function Classes({ role = "Teacher" }) {
       {isManager && showAdd && (
         <AddClassSheet
           existingNames={classes.map((c) => c.name)}
+          classes={classes}
           onAdd={handleAdd}
           onClose={() => setShowAdd(false)}
         />

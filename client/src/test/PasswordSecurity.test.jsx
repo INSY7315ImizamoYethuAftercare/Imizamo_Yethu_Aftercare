@@ -4,7 +4,7 @@ import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import MoreMenu from '../components/MoreMenu'
+import SettingsButton from '../components/SettingsButton'
 import ChoosePassword from '../pages/ChoosePassword'
 import TeacherSettings from '../pages/TeacherSettings'
 import { apiClient, onApi, resetApi } from './api-mock'
@@ -20,6 +20,8 @@ function renderAt(path, element) {
         <Route path="/home" element={<p>teacher home</p>} />
         <Route path="/teacher/settings" element={<p>teacher settings</p>} />
         <Route path="/settings" element={<p>manager settings</p>} />
+        <Route path="/admin/settings" element={<p>admin settings</p>} />
+        <Route path="/parent/settings" element={<p>parent settings</p>} />
         <Route path={path} element={element} />
       </Routes>
     </MemoryRouter>,
@@ -33,20 +35,16 @@ beforeEach(() => {
 })
 
 describe('Header settings button', () => {
-  it('a teacher gets a ⚙️ button (no ⋮ menu) that opens their Settings page', async () => {
-    await signInAs('teacher')
-    renderAt('/attendance', <MoreMenu />)
-    expect(screen.queryByRole('button', { name: '⋮' })).not.toBeInTheDocument()
+  it.each([
+    ['teacher', 'teacher settings'],
+    ['manager', 'manager settings'],
+    ['admin', 'admin settings'],
+    ['guardian', 'parent settings'],
+  ])('the ⚙️ takes a %s to their own Settings page', async (role, page) => {
+    await signInAs(role)
+    renderAt('/somewhere', <SettingsButton />)
     await userEvent.click(screen.getByRole('button', { name: 'Settings' }))
-    expect(screen.getByText('teacher settings')).toBeInTheDocument()
-  })
-
-  it('a manager opens their own Settings page from the ⋮ menu', async () => {
-    await signInAs('manager')
-    renderAt('/manager/escalations', <MoreMenu />)
-    await userEvent.click(screen.getByRole('button', { name: '⋮' }))
-    await userEvent.click(screen.getByRole('button', { name: 'Settings' }))
-    expect(screen.getByText('manager settings')).toBeInTheDocument()
+    expect(screen.getByText(page)).toBeInTheDocument()
   })
 })
 

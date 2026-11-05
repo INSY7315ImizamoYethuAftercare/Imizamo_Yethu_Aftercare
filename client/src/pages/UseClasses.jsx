@@ -76,9 +76,31 @@ const fail = (e) => alert(e.message || "Something went wrong. Please try again."
 
 // Unlike the helpers below it doesn't alert: it throws (e.g. 409 for a name
 // that's taken), so the form can show the message.
-export async function addClass({ name, grade, colour }) {
-  await apiClient.post("/classes", { className: name, gradeRange: grade, ...(colour ? { colour } : {}) });
-  await refreshClasses();
+// `teacher` is an optional teacher's name. A teacher only leads one class, so
+// if they were on another class they are moved off it first (and put back if
+// the new class is refused).
+export async function addClass({ name, grade, colour, teacher }) {
+  let teacherId = null;
+  let other = null;
+  if (teacher && teacher !== NO_TEACHER) {
+    teacherId = getStaff().find((s) => s.role === "Teacher" && s.name === teacher)?.id;
+    if (!teacherId) throw new Error(`Could not find teacher "${teacher}".`);
+    other = classes.find((c) => c.teacherId === teacherId) ?? null;
+    if (other) await apiClient.patch(`/classes/${other.id}`, { teacherId: null });
+  }
+  try {
+    await apiClient.post("/classes", {
+      className: name,
+      gradeRange: grade,
+      ...(colour ? { colour } : {}),
+      ...(teacherId ? { teacherId } : {}),
+    });
+  } catch (e) {
+    if (other) await apiClient.patch(`/classes/${other.id}`, { teacherId }).catch(() => {});
+    throw e;
+  } finally {
+    await refreshClasses();
+  }
 }
 
 // Change which grade a class is assigned to ("Unassigned" for no grade).

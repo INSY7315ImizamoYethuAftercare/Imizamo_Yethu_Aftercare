@@ -19,10 +19,25 @@ const httpError = (message, status) => {
   return err
 }
 
+/** One row of the manager's queue, as the API sends it. */
+const toEscalation = (row) => ({
+  escalationId: row.escalation_id,
+  learnerId: row.learner_id,
+  learnerName: `${row.first_name} ${row.last_name}`,
+  className: row.class_name ?? null,
+  collectorName: row.collector_name, // null = wants to walk home alone
+  raisedBy: row.raised_by_name,
+  raisedAt: row.raised_time,
+  status: row.status,
+  resolvedBy: row.resolved_by_name,
+  resolvedAt: row.resolved_time,
+})
+
 export class SignOutService {
 
   constructor({
     signOutRepository, pickupPermissionRepository, teacherRepository, managerRepository, learnerRepository, attendanceRepository,
+    escalationRepository, runInTransaction,
   }) {
     this.signOutRepository = signOutRepository
     this.pickupPermissionRepository = pickupPermissionRepository
@@ -30,6 +45,8 @@ export class SignOutService {
     this.managerRepository = managerRepository
     this.learnerRepository = learnerRepository
     this.attendanceRepository = attendanceRepository
+    this.escalationRepository = escalationRepository
+    this.runInTransaction = runInTransaction
   }
 
   /**
@@ -53,8 +70,8 @@ export class SignOutService {
 
   /**
    * Everything the Sign-Out page needs for one day: each active learner
-   * marked present, who may collect them, and whether they have already
-   * gone (and with whom).
+   * marked present, who may collect them, whether they have already gone
+   * (and with whom), and any request waiting for or turned down by a manager.
    *
    * @param {{ userId: number, role?: string, date: string }} params
    * @returns {Promise<{ date: string, learners: Array<Object> }>}
@@ -64,13 +81,16 @@ export class SignOutService {
 
     const present = await this.attendanceRepository.findPresentByDate(date)
     const ids = present.map((l) => l.learner_id)
-    const [pickups, signOuts] = await Promise.all([
+    const [pickups, signOuts, escalations] = await Promise.all([
       this.pickupPermissionRepository.findActiveByLearnerIds(ids),
       this.signOutRepository.findByDate(date),
+      this.escalationRepository.findByDate(date),
     ])
 
     const learners = present.map((l) => {
       const out = signOuts.find((s) => s.learner_id === l.learner_id)
+      // The newest request is the one that counts (the queue is oldest first).
+      const request = escalations.filter((e) => e.learner_id === l.learner_id).at(-1)
       return {
         learnerId: l.learner_id,
         name: `${l.first_name} ${l.last_name}`,
@@ -90,6 +110,16 @@ export class SignOutService {
               timeOut: String(out.time_out).slice(0, 5),
               collectedBy: out.guardian_name ?? 'Walked home alone',
               recordedBy: out.recorded_by_name ?? null, // the teacher or manager who signed them out
+            }
+          : null,
+        // What the manager has decided, so staff don't have to guess. Once a
+        // learner has gone, the sign-out above says all there is to say.
+        escalation: request && !out
+          ? {
+              status: request.status,
+              collectorName: request.collector_name, // null = wants to walk home alone
+              resolvedBy: request.resolved_by_name,
+              resolvedAt: request.resolved_time,
             }
           : null,
       }
@@ -172,7 +202,14 @@ export class SignOutService {
       }
     }
 
-    const attendance = await this.attendanceRepository.findByLearnerAndDate(learnerId, recordDate)
+    await this.#assertCanLeave(learnerId, recordDate)
+
+    return this.signOutRepository.create({ learnerId, teacherId, managerId, guardianId, recordDate, timeOut })
+  }
+
+  /** A learner can only leave if they came in today and haven't already gone. */
+  async #assertCanLeave(learnerId, date, signOutRepository = this.signOutRepository) {
+    const attendance = await this.attendanceRepository.findByLearnerAndDate(learnerId, date)
 
     if (attendance?.status !== 'present') {
       throw httpError(
@@ -183,12 +220,104 @@ export class SignOutService {
       )
     }
 
-    const alreadySignedOut = await this.signOutRepository.findByLearnerAndDate(learnerId, recordDate)
+    const alreadySignedOut = await signOutRepository.findByLearnerAndDate(learnerId, date)
 
     if (alreadySignedOut) {
       throw httpError(`This learner was already signed out today at ${String(alreadySignedOut.time_out).slice(0, 5)}.`, 409)
     }
+  }
 
-    return this.signOutRepository.create({ learnerId, teacherId, managerId, guardianId, recordDate, timeOut })
+  /**
+   * Sends a collection staff couldn't verify to the manager's queue. Nothing
+   * is signed out until a manager approves it.
+   *
+   * @param {Object} params
+   * @param {number} params.userId
+   * @param {string} [params.role]
+   * @param {number} params.learnerId
+   * @param {string|null} params.collectorName - The typed name; null = wants to walk home alone.
+   * @param {string} params.date - Today, YYYY-MM-DD.
+   * @returns {Promise<Object>} The new queue entry.
+   */
+  async raiseEscalation({ userId, role, learnerId, collectorName, date }) {
+    const { teacherId, managerId } = await this.#getRecorder(userId, role)
+
+    const learner = await this.learnerRepository.findById(learnerId)
+    if (!learner) throw httpError('Learner not found', 404)
+    if (collectorName === null && learner.can_walk_home_alone) {
+      throw httpError('This learner is allowed to walk home alone, so no approval is needed.', 409)
+    }
+
+    await this.#assertCanLeave(learnerId, date)
+
+    try {
+      const row = await this.escalationRepository.create({ learnerId, recordDate: date, collectorName, teacherId, managerId })
+      return toEscalation(row)
+    } catch (err) {
+      if (err.code === '23505') throw httpError('This learner is already waiting in the manager queue.', 409)
+      throw err
+    }
+  }
+
+  /**
+   * Today's queue for the manager: what still needs a decision, and what has
+   * been decided.
+   *
+   * @param {{ date: string }} params - date is YYYY-MM-DD.
+   * @returns {Promise<{ date: string, open: Array<Object>, resolved: Array<Object> }>}
+   */
+  async getEscalations({ date }) {
+    const rows = (await this.escalationRepository.findByDate(date)).map(toEscalation)
+    return {
+      date,
+      open: rows.filter((r) => r.status === 'open'),
+      resolved: rows.filter((r) => r.status !== 'open'),
+    }
+  }
+
+  /**
+   * A manager's decision on a queue entry. Approving signs the learner out in
+   * the same transaction, recording the manager as the person who did it and
+   * the approved collector's name. Dismissing leaves the learner at the centre.
+   *
+   * @param {Object} params
+   * @param {number} params.userId
+   * @param {string} [params.role]
+   * @param {number} params.escalationId
+   * @param {'approve'|'dismiss'} params.action
+   * @param {string} params.today - YYYY-MM-DD.
+   * @param {string} params.timeOut - The sign-out time, if approved.
+   * @returns {Promise<Object>} { escalationId, status, signOut: { timeOut }|null }
+   */
+  async resolveEscalation({ userId, role, escalationId, action, today, timeOut }) {
+    const { managerId } = await this.#getRecorder(userId, role)
+    if (!managerId) throw httpError('Only a manager can decide on the sign-out queue', 403)
+
+    return this.runInTransaction(async ({ escalationRepository, signOutRepository }) => {
+      const status = action === 'approve' ? 'approved' : 'dismissed'
+      const closed = await escalationRepository.resolve({ escalationId, status, managerId })
+      if (!closed) {
+        const existing = await escalationRepository.findById(escalationId)
+        if (!existing) throw httpError('This request is no longer in the queue', 404)
+        throw httpError(`This request has already been ${existing.status}.`, 409)
+      }
+      if (status === 'dismissed') return { escalationId, status, signOut: null }
+
+      if (closed.record_date !== today) {
+        throw httpError('This request is from an earlier day, so it can only be dismissed.', 409)
+      }
+      await this.#assertCanLeave(closed.learner_id, today, signOutRepository)
+
+      const record = await signOutRepository.create({
+        learnerId: closed.learner_id,
+        teacherId: null,
+        managerId,
+        guardianId: null,
+        collectorName: closed.collector_name,
+        recordDate: today,
+        timeOut,
+      })
+      return { escalationId, status, signOut: { timeOut: String(record.time_out).slice(0, 5) } }
+    })
   }
 }

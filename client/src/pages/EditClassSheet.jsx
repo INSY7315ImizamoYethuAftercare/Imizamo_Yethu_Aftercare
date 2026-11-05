@@ -49,7 +49,7 @@ function EditClassSheet({ cls, classes = [], onSave, onClose }) {
               type="button"
               onClick={() => setGrade(g)}
               className={`px-4 py-2 rounded-full text-xs font-semibold transition ${
-                grade === g ? "bg-navy text-white" : "bg-beige text-gray-500 hover:bg-gray-200"
+                grade === g ? "bg-orange-400 text-white" : "bg-beige text-gray-500 hover:bg-gray-200"
               }`}
             >
               {g === UNASSIGNED_GRADE ? "Not assigned" : g}
@@ -65,7 +65,7 @@ function EditClassSheet({ cls, classes = [], onSave, onClose }) {
               type="button"
               onClick={() => setTeacher(name)}
               className={`px-4 py-2 rounded-full text-xs font-semibold transition ${
-                teacher === name ? "bg-navy text-white" : "bg-beige text-gray-500 hover:bg-gray-200"
+                teacher === name ? "bg-orange-400 text-white" : "bg-beige text-gray-500 hover:bg-gray-200"
               }`}
             >
               {name === NO_TEACHER ? "No teacher" : name}

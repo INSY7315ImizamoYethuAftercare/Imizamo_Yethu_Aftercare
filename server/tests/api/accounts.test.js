@@ -67,6 +67,14 @@ describe('GET /api/accounts', () => {
   })
 })
 
+// A new account signs in with the starting password, then picks its own; returns the fresh cookie.
+async function chooseOwnPassword(signedIn, currentPassword) {
+  const changed = await request(app).post('/api/auth/change-password').set('Cookie', signedIn.headers['set-cookie'])
+    .send({ currentPassword, newPassword: 'Their-own-pass-1' })
+  expect(changed.status).toBe(200)
+  return changed.headers['set-cookie']
+}
+
 describe('POST /api/accounts', () => {
   it('creates a manager who can sign in and use manager features', async () => {
     const res = await create(NEW_MANAGER)
@@ -74,8 +82,10 @@ describe('POST /api/accounts', () => {
     expect(res.body).toMatchObject({ fullName: 'Thabo Manager', email: 'thabo.manager@iylh.test', type: 'manager', isActive: true })
 
     const signedIn = await login('thabo.manager@iylh.test', 'Starting-pass-1')
-    expect(signedIn.body.user).toMatchObject({ role: 'manager', fullName: 'Thabo Manager' })
-    const cookie = signedIn.headers['set-cookie']
+    expect(signedIn.body.user).toMatchObject({ role: 'manager', fullName: 'Thabo Manager', mustChangePassword: true })
+    // They must choose their own password before using the app.
+    expect((await request(app).get('/api/teacher').set('Cookie', signedIn.headers['set-cookie'])).status).toBe(403)
+    const cookie = await chooseOwnPassword(signedIn, 'Starting-pass-1')
     expect((await request(app).get('/api/teacher').set('Cookie', cookie)).status).toBe(200)
   })
 
@@ -85,8 +95,8 @@ describe('POST /api/accounts', () => {
     expect(res.body).toMatchObject({ type: 'standard_admin' })
 
     const signedIn = await login('lerato.admin@iylh.test', 'Starting-pass-1')
-    expect(signedIn.body.user).toMatchObject({ role: 'admin', accessLevel: 'standard' })
-    const cookie = signedIn.headers['set-cookie']
+    expect(signedIn.body.user).toMatchObject({ role: 'admin', accessLevel: 'standard', mustChangePassword: true })
+    const cookie = await chooseOwnPassword(signedIn, 'Starting-pass-1')
     expect((await request(app).get('/api/reports/overview').set('Cookie', cookie)).status).toBe(200)
     expect((await request(app).get('/api/learners').set('Cookie', cookie)).status).toBe(403)
     expect((await request(app).get('/api/accounts').set('Cookie', cookie)).status).toBe(403)
