@@ -19,7 +19,10 @@ const MOUNTS = {
   'schoolClass.routes.js': '/api/classes', 'signout.routes.js': '/api/signout', 'teacher.routes.js': '/api/teacher',
   'health.routes.js': '/api', 'account.routes.js': '/api/accounts', 'docs.routes.js': '/api',
 }
-const PUBLIC = ['POST /api/auth/register', 'POST /api/auth/login', 'POST /api/auth/logout', 'GET /api/health', 'GET /api/openapi.json']
+const PUBLIC = [
+  'POST /api/auth/register', 'POST /api/auth/login', 'POST /api/auth/logout', 'GET /api/health',
+  'GET /api/openapi.json',
+]
 const routesDir = new URL('../../src/routes/', import.meta.url)
 const registered = []
 for (const file of await readdir(routesDir)) {

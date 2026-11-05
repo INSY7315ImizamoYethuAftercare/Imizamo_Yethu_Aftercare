@@ -12,7 +12,6 @@ import SchoolClassRepository from '../repositories/SchoolClassRepository.js'
 import TeacherRepository from '../repositories/TeacherRepository.js'
 import LearnerRepository from '../repositories/LearnerRepository.js'
 import { pool } from '../db/pool.js'
-import * as validate from '../utils/validation.js'
 import { actingRole } from '../middleware/auth.js'
 
 const attendanceService = new AttendanceService({
@@ -30,18 +29,13 @@ const attendanceService = new AttendanceService({
  */
 export async function recordAttendance(req, res, next) {
   try {
-    const { learnerId, classId, status, timeIn } = req.body ?? {}
-    if (!learnerId || !status) {
-      const err = new Error('learnerId and status are required')
-      err.status = 400
-      throw err
-    }
+    const { learnerId, classId, status, timeIn } = req.validated.body
     const record = await attendanceService.recordAttendance({
       userId: req.user.userId,
-      learnerId: validate.parseId(learnerId, 'learnerId'),
-      classId: validate.optionalId(classId, 'classId'),
-      status: validate.text(status, 'status', { max: 10 }),
-      timeIn: validate.timeOfDay(timeIn, 'timeIn'),
+      learnerId,
+      classId,
+      status,
+      timeIn,
       recordDate: todayInSA(),
     })
     res.status(201).json(record)
@@ -56,17 +50,12 @@ export async function recordAttendance(req, res, next) {
  */
 export async function updateAttendance(req, res, next) {
   try {
-    const { status, timeIn } = req.body ?? {}
-    if (!status) {
-      const err = new Error('status is required')
-      err.status = 400
-      throw err
-    }
+    const { status, timeIn } = req.validated.body
     const record = await attendanceService.updateAttendanceStatus({
       userId: req.user.userId,
-      recordId: validate.parseId(req.params.recordId, 'recordId'),
-      status: validate.text(status, 'status', { max: 10 }),
-      timeIn: validate.timeOfDay(timeIn, 'timeIn'),
+      recordId: req.validated.params.recordId,
+      status,
+      timeIn,
     })
     res.json(record)
   } catch (err) {
@@ -81,8 +70,8 @@ export async function updateAttendance(req, res, next) {
  */
 export async function getClassAttendance(req, res, next) {
   try {
-    const classId = validate.parseId(req.params.classId, 'classId')
-    const date = validate.isoDate(req.query.date, 'date', { required: false }) ?? todayInSA()
+    const { classId } = req.validated.params
+    const date = req.validated.query.date ?? todayInSA()
     const records = await attendanceService.getClassAttendance({
       userId: req.user.userId, role: actingRole(req.user), classId, date,
     })

@@ -15,7 +15,6 @@ import AttendanceRepository from '../repositories/AttendanceRepository.js'
 import SignOutEscalationRepository from '../repositories/SignOutEscalationRepository.js'
 import { pool } from '../db/pool.js'
 import { withTransaction } from '../db/transaction.js'
-import * as validate from '../utils/validation.js'
 import { actingRole } from '../middleware/auth.js'
 
 const signOutService = new SignOutService({
@@ -57,17 +56,12 @@ export async function getToday(req, res, next) {
  */
 export async function verifyGuardian(req, res, next) {
   try {
-    const { learnerId, guardianId } = req.body ?? {}
-    if (!learnerId || !guardianId) {
-      const err = new Error('learnerId and guardianId are required')
-      err.status = 400
-      throw err
-    }
+    const { learnerId, guardianId } = req.validated.body
     const result = await signOutService.verifyGuardian({
       userId: req.user.userId,
       role: actingRole(req.user),
-      learnerId: validate.parseId(learnerId, 'learnerId'),
-      guardianId: validate.parseId(guardianId, 'guardianId'),
+      learnerId,
+      guardianId,
     })
     res.json(result)
   } catch (err) {
@@ -85,21 +79,16 @@ export async function verifyGuardian(req, res, next) {
  */
 export async function confirmSignOut(req, res, next) {
   try {
-    const { learnerId, guardianId, timeOut } = req.body ?? {}
-    // guardianId must be sent explicitly: an id, or null for walking home alone.
-    if (!learnerId || guardianId === undefined || guardianId === '') {
-      const err = new Error('learnerId and guardianId are required (guardianId: null for a learner walking home alone)')
-      err.status = 400
-      throw err
-    }
+    // guardianId must be sent explicitly (the schema enforces it): an id, or null for walking home alone.
+    const { learnerId, guardianId, timeOut } = req.validated.body
     // South African date/time, the same as attendance uses (the server runs
     // in UTC on Azure), so the "present today" check looks at the right day.
     const record = await signOutService.confirmSignOut({
       userId: req.user.userId,
       role: actingRole(req.user),
-      learnerId: validate.parseId(learnerId, 'learnerId'),
-      guardianId: guardianId === null ? null : validate.parseId(guardianId, 'guardianId'),
-      timeOut: validate.timeOfDay(timeOut, 'timeOut') ?? nowInSA(),
+      learnerId,
+      guardianId,
+      timeOut: timeOut ?? nowInSA(),
       recordDate: todayInSA(),
     })
     res.status(201).json(record)
@@ -115,19 +104,12 @@ export async function confirmSignOut(req, res, next) {
  */
 export async function raiseEscalation(req, res, next) {
   try {
-    const { learnerId, collectorName } = req.body ?? {}
-    if (!learnerId || collectorName === undefined) {
-      const err = new Error('learnerId and collectorName are required (collectorName: null for a learner walking home)')
-      err.status = 400
-      throw err
-    }
+    const { learnerId, collectorName } = req.validated.body
     const entry = await signOutService.raiseEscalation({
       userId: req.user.userId,
       role: actingRole(req.user),
-      learnerId: validate.parseId(learnerId, 'learnerId'),
-      collectorName: collectorName === null
-        ? null
-        : validate.text(collectorName, 'collectorName', { max: validate.LIMITS.fullName }).trim(),
+      learnerId,
+      collectorName,
       date: todayInSA(),
     })
     res.status(201).json(entry)
@@ -152,16 +134,11 @@ export async function getEscalations(req, res, next) {
  */
 export async function resolveEscalation(req, res, next) {
   try {
-    const { action } = req.body ?? {}
-    if (action !== 'approve' && action !== 'dismiss') {
-      const err = new Error("action must be 'approve' or 'dismiss'")
-      err.status = 400
-      throw err
-    }
+    const { action } = req.validated.body
     res.json(await signOutService.resolveEscalation({
       userId: req.user.userId,
       role: actingRole(req.user),
-      escalationId: validate.parseId(req.params.escalationId, 'escalationId'),
+      escalationId: req.validated.params.escalationId,
       action,
       today: todayInSA(),
       timeOut: nowInSA(),
