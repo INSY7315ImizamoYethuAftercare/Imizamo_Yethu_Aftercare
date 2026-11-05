@@ -1,101 +1,91 @@
 # Imizamo Yethu Aftercare Management System
 
-**Part 2 – Implementation**  
+**Final Project Submission – Part 3**  
 **NovaTech Solutions**  
 **INSY7315 – Work Integrated Learning**
 
+A completed, full-stack aftercare management system developed and donated by NovaTech Solutions to support the daily operations of Imizamo Yethu Aftercare.
+
 ---
 
-# 👨‍💻 Team
-
-## NovaTech Solutions
+## Project Team
 
 | Student Number | Team Member |
 |---|---|
-| **ST10445500** | Isabelle Kathryn Devlin |
-| **ST10068995** | Thomas Pheiffer |
-| **ST10325652** | Michaela Ferraris |
-| **ST10301146** | Nomsa Mkoka |
-| **ST10280758** | Justin Fussell |
+| ST10445500 | Isabelle Kathryn Devlin |
+| ST10068995 | Thomas Pheiffer |
+| ST10325652 | Michaela Ferraris |
+| ST10301146 | Nomsa Mkoka |
+| ST10280758 | Justin Fussell |
 
-## 🌍 Project Overview
+## Project Overview
 
-The **Imizamo Yethu Aftercare Management System** is a full-stack web application developed and donated by **NovaTech Solutions** to support the daily operations of the Imizamo Yethu Aftercare.
+The **Imizamo Yethu Aftercare Management System** replaces manual, paper-based processes with a centralised digital platform for managing:
 
-The system replaces manual, paper-based processes with a centralised digital platform for managing:
-
-- Learner attendance
-- Digital learner sign-out
-- Guardian verification
+- Learner attendance and digital sign-out
+- Guardian verification and permissions
+- Learner and class management
 - Developmental observations
-- Class and learner management
 - Role-based access
-- Management reporting
+- Operational and management reporting
 - Donor and organisational reporting
 
-This implementation represents **Part 2 of the project** and realises the requirements, architecture, database design, design patterns, and non-functional requirements established during the Part 1 planning and design phase.
+The system was developed around the operational needs of the aftercare centre. Teachers primarily access the application on smartphones, while management users require broader functionality on laptops and larger screens. The interface and workflows were designed to prioritise usability, accessibility, and straightforward day-to-day operation.
 
-The application has been designed with simplicity and accessibility in mind, particularly considering that teachers primarily use smartphones while management requires more comprehensive access through laptops or other larger devices.
+This **Part 3 submission represents the final project stage**. System development and project documentation have been completed. The final deliverables bring together the original requirements and design work, the implemented application, testing and feedback review, and the handover documentation.
 
----
+## Project Links
 
-## 🚀 Live Application
+| Resource | Link |
+|---|---|
+| **Application** | [Open the Imizamo Yethu Aftercare application](https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net) |
+| **Full demonstration** | [Watch the project walkthrough](https://youtu.be/2XYmDj81yUY) |
+| **Application-only demonstration** | [Watch the application demo](https://youtu.be/dpp4UZbB32g) |
+| **GitHub repository** | [Imizamo Yethu Aftercare](https://github.com/INSY7315ImizamoYethuAftercare/Imizamo_Yethu_Aftercare) |
 
-### 🌐 Running Web Application
+The demonstration videos provide a visual overview of the completed application, its user roles, navigation, attendance workflows, learner sign-out, observations, and management functionality.
 
-> **Live Application:**  
-> https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net
-
----
-
-## 🎥 Demonstration Video
-
-A demonstration of the completed application can be viewed below.
-
-> **YouTube Demo:**  
-> https://youtu.be/2XYmDj81yUY
-
-The demonstration showcases the implemented functionality, user roles, navigation, attendance management, learner sign-out, observations, and management functionality.
+> **Deployment note:** The application has an Azure deployment URL. The production database environment has been affected by the team's Azure student-credit limitations. Please refer to the deployment and handover documentation for the current environment status, configuration, and restoration steps. Local development and automated testing can be performed using PostgreSQL.
 
 ---
 
-# 🛠️ Technology Stack
+## Technology Stack
 
 | Layer | Technology |
 |---|---|
-| **Frontend** | React (Vite) + Tailwind CSS |
-| **Backend** | Node.js 22 + Express |
-| **Database** | PostgreSQL |
-| **Architecture** | Layered Architecture |
-| **Design Patterns** | Repository Pattern, Middleware / Chain of Responsibility |
-| **Monorepo** | npm Workspaces |
-| **Authentication** | Role-Based Access Control |
-| **Deployment** | Microsoft Azure |
-| **Version Control** | Git + GitHub |
+| Frontend | React, Vite, Tailwind CSS |
+| Backend | Node.js 22, Express |
+| Database | PostgreSQL |
+| Architecture | Layered architecture |
+| Design patterns | Repository Pattern; Middleware Chain / Chain of Responsibility |
+| Workspace management | npm Workspaces |
+| Authentication and authorisation | Role-Based Access Control (RBAC) |
+| Deployment | Microsoft Azure |
+| Version control and collaboration | Git and GitHub |
 
-### Architecture
+### Application Architecture
 
-The application follows a layered architecture:
+The backend separates responsibilities into distinct layers:
 
 ```text
 Routes
-   ↓
+  ↓
 Controllers
-   ↓
+  ↓
 Services
-   ↓
+  ↓
 Repositories
-   ↓
+  ↓
 PostgreSQL Database
 ```
 
-This separation ensures that routing, request handling, business logic, and database access remain independent and maintainable.
+Routes define API endpoints, controllers handle requests, services contain business logic, and repositories manage database access. This separation supports maintainability, testing, and clear responsibility boundaries.
 
-The architectural decisions, technology evaluation, cloud architecture, security measures, and design patterns are documented in the **Part 1 submission**.
+The middleware chain handles cross-cutting request responsibilities, including logging, authentication, authorisation, and error handling.
 
 ---
 
-# 📁 Repository Structure
+## Repository Structure
 
 ```text
 .
@@ -113,73 +103,93 @@ The architectural decisions, technology evaluation, cloud architecture, security
 ├── server/                         # Express backend API
 │   └── src/
 │       ├── routes/                 # API route definitions
-│       ├── controllers/            # Request handling
-│       ├── services/               # Business logic
-│       ├── repositories/           # Database access layer
-│       ├── middleware/             # Authentication, authorisation,
-│       │                            # logging and error handling
-│       ├── config/                 # Environment configuration
-│       └── db/                     # Database-related scripts
-│           ├── migrations/         # node-pg-migrate SQL files
-│           └── legacy/             # old one-off migration history
+│       ├── controllers/             # Request handling
+│       ├── services/                # Business logic
+│       ├── repositories/             # Database access layer
+│       ├── middleware/               # Authentication, authorisation,
+│       │                             # logging and error handling
+│       ├── config/                   # Environment configuration
+│       └── db/
+│           ├── migrations/            # node-pg-migrate migrations
+│           └── legacy/                # Historical migration scripts
 │
-├── package.json                    # Root workspace configuration
-└── .nvmrc                          # Node.js version specification
+├── package.json                      # Root workspace configuration
+└── .nvmrc                            # Required Node.js version
 ```
 
-The layered structure and middleware chain directly implement the **System Architecture** and **Design Patterns** specified in the Part 1 documentation.
-
 ---
 
-# 👥 User Roles
+## User Roles and Access
 
-The system implements role-based access control to ensure that users only have access to functionality appropriate to their responsibilities.
+Role-based access control restricts users to the functionality appropriate to their responsibilities.
 
-| Role | Access Level |
+| Role | Main Responsibilities |
 |---|---|
-| **Master Administrator** | Full system configuration and development/handover functionality |
+| **Master Administrator** | System configuration and administrative handover functionality |
 | **Administrator** | Organisation-wide reporting and high-level settings |
-| **Manager** | Operational oversight across all classes |
-| **Teacher** | Attendance, observations, learner management and digital sign-out |
-| **Parent / Guardian** | Access to their own child/children's profiles, attendance and permissions |
+| **Manager** | Operational oversight across classes |
+| **Teacher** | Attendance, observations, learner management, and digital sign-out |
+| **Parent / Guardian** | Access to their own child or children's profiles, attendance, and permissions |
+
+Access is controlled through the application's authentication and authorisation mechanisms.
+
+## Key System Features
+
+### Attendance Management
+Teachers can record and manage learner attendance digitally, reducing reliance on paper registers.
+
+### Digital Learner Sign-Out
+The application supports digital sign-out and guardian verification to improve accountability and provide a centralised record of learner collection.
+
+### Guardian Portal
+Parents and guardians can access information and permissions associated with their own child or children.
+
+### Developmental Observations
+Authorised staff can record and review learner observations in a centralised system.
+
+### Learner and Class Management
+The system supports the management of learners, classes, and relevant staff information.
+
+### Reporting
+Management and administration users can access reports and operational information to support oversight and decision-making.
+
+### Responsive, Role-Specific Interfaces
+The interface is designed for mobile-first use by teachers while supporting larger-screen workflows for management and administration.
 
 ---
 
-# 💻 Prerequisites
+## Prerequisites
 
-Before running the application locally, ensure that the following software is installed:
+Install the following before setting up the application locally:
 
 - **Node.js 22**
-- **npm 10+**
+- **npm 10 or later**
 - **PostgreSQL**
 - **Git**
-- A code editor such as **Visual Studio Code**
+- A code editor such as Visual Studio Code
 
-The required Node.js version is also specified in the `.nvmrc` file.
+The required Node.js version is specified in the repository's `.nvmrc` file.
 
----
+## Local Installation and Setup
 
-# ⚙️ Local Setup
+### 1. Clone the Repository
 
-## 1. Clone the Repository
+```bash
+git clone https://github.com/INSY7315ImizamoYethuAftercare/Imizamo_Yethu_Aftercare.git
+cd Imizamo_Yethu_Aftercare
+```
 
-Link to Repository: https://github.com/INSY7315ImizamoYethuAftercare/Imizamo_Yethu_Aftercare.git
+### 2. Install Dependencies
 
----
-
-## 2. Install Dependencies
-
-Install all dependencies from the repository root:
+Run the following from the repository root:
 
 ```bash
 npm install
 ```
 
-Because the project uses **npm workspaces**, this installs the required dependencies for both the frontend and backend.
+The project uses npm Workspaces to manage frontend and backend dependencies.
 
----
-
-## 3. Configure Environment Variables
+### 3. Configure Environment Variables
 
 Create the server environment file:
 
@@ -193,31 +203,33 @@ Create the client environment file:
 cp client/.env.example client/.env.local
 ```
 
-Update the environment variables with the appropriate local PostgreSQL and application configuration.
+Configure the values for the local database and application environment.
 
-> **Important:** Environment files containing credentials or secrets should never be committed to GitHub.
+> **Security:** Do not commit environment files, passwords, tokens, or other secrets to version control. Use the provided example files as templates.
 
----
+## Database Setup
 
-# 🗄️ Database Setup
+The application uses **PostgreSQL**. Database schema changes are managed through **node-pg-migrate**, with the migration files in `server/src/db/migrations/` serving as the schema change history.
 
-The project uses **PostgreSQL** as its relational database.  
-Schema changes are managed with **node-pg-migrate**. The baseline migration under `server/src/db/migrations/` is the source of truth.
-
-## 1. Create the Development Database
-
-From a PostgreSQL-enabled terminal:
+### 1. Create a Local Development Database
 
 ```bash
 psql -U postgres -c "CREATE DATABASE imizamo_dev;"
+```
 
-The `database/schema.sql` file acts as the source of truth for the database structure.
+### 2. Configure the Database Connection
+
+Update the database connection details in `server/.env` to match the local PostgreSQL instance.
+
+### 3. Apply Database Migrations
+
+Use the project's migration command and instructions in the technical handover documentation to apply the migrations. Ensure the database is configured before starting the backend.
 
 ---
 
-# ▶️ Running the Application
+## Running the Application
 
-The frontend and backend are run separately during local development.
+Run the frontend and backend in separate terminals from the repository root.
 
 ### Terminal 1 — Backend
 
@@ -225,7 +237,7 @@ The frontend and backend are run separately during local development.
 npm run dev:server
 ```
 
-The API will run on:
+The API runs at:
 
 ```text
 http://localhost:4000
@@ -237,130 +249,81 @@ http://localhost:4000
 npm run dev:client
 ```
 
-The React application will run on:
+The frontend runs at:
 
 ```text
 http://localhost:5173
 ```
 
-The Vite development server proxies `/api/*` requests to the backend, helping to prevent CORS issues during local development.
+During local development, the Vite server proxies `/api/*` requests to the backend.
 
----
+## API Health Check
 
-# 🩺 API Health Check
-
-Once the backend is running, the API can be tested using:
+With the backend running, check the API using:
 
 ```bash
 curl http://localhost:4000/api/health
 ```
 
-A successful response should look similar to:
+A successful response should contain a status of `ok` and a timestamp.
 
-```json
-{
-  "status": "ok",
-  "timestamp": "..."
-}
+---
+
+## API Documentation (OpenAPI)
+
+The API is documented using an **OpenAPI 3.0** specification to support developers and external clients.
+
+| Documentation | Deployed environment | Local environment |
+|---|---|---|
+| **Swagger UI** | [Open API documentation](https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net/api/docs) | `http://localhost:4000/api/docs` |
+| **OpenAPI JSON** | [View raw specification](https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net/api/openapi.json) | `http://localhost:4000/api/openapi.json` |
+
+The specification documents the project's 47 API endpoints, grouped by feature, including authentication, attendance, sign-out, guardian portal, observations, reports, learners, classes, teachers, and accounts.
+
+For each endpoint, the specification includes relevant request parameters and validation rules, success responses, documented error responses, and permitted roles.
+
+### Using Swagger UI
+
+1. Open `/api/docs`.
+2. Use **Try it out** on `POST /api/auth/login`.
+3. Sign in with an authorised account so the session cookie is available to subsequent requests.
+4. Test endpoints according to the permissions of the signed-in role.
+
+### Maintaining the API Specification
+
+The OpenAPI specification is maintained in:
+
+```text
+server/src/docs/openapi.yaml
 ```
 
----
+The API documentation test is located at:
 
-# 📖 API Documentation (OpenAPI)
+```text
+server/tests/api/openapi.test.js
+```
 
-Every endpoint is described in an **OpenAPI 3.0** specification, so other clients can discover and use the API without reading the code.
-
-| | Live (Azure) | Local |
-|---|---|---|
-| **Interactive docs (Swagger UI)** | [/api/docs](https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net/api/docs) | http://localhost:4000/api/docs |
-| **Raw spec (JSON)** | [/api/openapi.json](https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net/api/openapi.json) | http://localhost:4000/api/openapi.json |
-
-The spec covers all 47 endpoints, grouped by feature (Auth, Attendance, Sign-out, Guardian portal, Observations, Reports, Learners, Classes, Teachers, Accounts). For each one it lists:
-
-- the request body, path and query parameters, with their validation rules (lengths, formats, ranges)
-- the success response
-- every error it can return (400, 401, 403, 404, 409, 429), all with the same `{ "message": "..." }` body
-- which roles may call it
-
-**Trying it out:** open `/api/docs`, run `POST /api/auth/login` with "Try it out", and the session cookie is set for the page. The other endpoints then work as that user.
-
-**Keeping it up to date:** the spec is in [`server/src/docs/openapi.yaml`](server/src/docs/openapi.yaml). The test [`server/tests/api/openapi.test.js`](server/tests/api/openapi.test.js) fails if a route in the role matrix (`server/tests/helpers/routes.js`) is missing from the spec, or the spec lists a route that doesn't exist. When you add or change a route, update the spec in the same pull request.
+The test checks the specification against the route and role information maintained in the project. When an endpoint changes, update the OpenAPI specification and relevant tests alongside the implementation.
 
 ---
 
-# 📜 Available Scripts
+## Available Scripts
 
 | Command | Description |
 |---|---|
-| `npm run dev:server` | Starts the Express API with hot reload |
+| `npm run dev:server` | Starts the Express API in development mode |
 | `npm run dev:client` | Starts the React/Vite development server |
-| `npm run build:client` | Creates a production build of the frontend |
-| `npm run start:server` | Starts the API in production mode |
-| `npm test` | Runs the test suites across the workspaces |
+| `npm run build:client` | Builds the frontend for production |
+| `npm run start:server` | Starts the backend in production mode |
+| `npm test` | Runs the workspace test suites |
 
 ---
 
-# 🔑 Key Implementation Features
+## Security and Configuration
 
-### Role-Based Access Control
+The application uses environment variables for sensitive configuration rather than hard-coding credentials into the source code.
 
-Users are assigned roles that determine which areas of the application they can access. This ensures that sensitive functionality is restricted to authorised users.
-
-### Attendance Management
-
-Teachers can digitally record learner attendance, replacing the existing paper-based attendance registers.
-
-### Digital Learner Sign-Out
-
-The system supports digital learner sign-out with guardian verification, improving accountability and reducing the reliance on physical sign-out sheets.
-
-### Developmental Observations
-
-Teachers can record developmental observations about learners, allowing relevant information to be stored digitally and accessed by authorised users.
-
-### Reporting
-
-Managers and administrators can access information and reports to support operational decision-making and organisational oversight.
-
-### Responsive Design
-
-The frontend follows a mobile-first approach to accommodate teachers who primarily access the system using smartphones while still providing an effective experience on laptops and larger screens.
-
-### Repository Pattern
-
-Database access is isolated within repositories, preventing database-specific logic from being directly embedded within controllers or frontend components.
-
-### Middleware / Chain of Responsibility
-
-Middleware is used to process requests through a sequence of responsibilities including:
-
-```text
-Request
-   ↓
-Logging
-   ↓
-Authentication
-   ↓
-Authorisation
-   ↓
-Controller
-   ↓
-Service
-   ↓
-Repository
-   ↓
-Database
-```
-
-This improves separation of concerns, security, maintainability, and testability.
-
----
-
-# 🔐 Security & Configuration
-
-Sensitive configuration information is stored using environment variables rather than being hard-coded into the application.
-
-Examples include:
+Examples of configuration values include:
 
 ```text
 DATABASE_URL
@@ -369,129 +332,156 @@ API configuration
 Authentication credentials
 ```
 
-Environment files are excluded from version control through `.gitignore`.
+Environment files are excluded from version control through `.gitignore`. For Azure deployment, application settings and secrets are configured through the App Service environment configuration.
 
-For the deployed Azure application, environment variables are configured through the **Azure App Service Environment Variables** rather than exposing credentials within the source code.
+The application also uses role-based access controls to restrict access to role-specific features and data.
 
 ---
 
-# ☁️ Deployment
+## Deployment
 
-The application is deployed using **Microsoft Azure**.
+The application was prepared for deployment through **Microsoft Azure App Service**, with PostgreSQL serving as the relational database.
 
-The deployed architecture consists of:
+The intended deployment architecture is:
 
 ```text
 User
   │
   ▼
-Azure App Service
-  │
+Microsoft Azure App Service
   ├── React Frontend
-  │
-  └── Node.js / Express Backend
-          │
-          ▼
-      PostgreSQL
+  └── Node.js / Express API
+             │
+             ▼
+        PostgreSQL
 ```
 
-The application is accessible through the live Azure deployment link provided at the beginning of this README.
+### Azure Environment Status
+
+The team's Azure student credits were exhausted, and the subscription was cancelled while the team pursued non-profit Azure credits and a suitable PostgreSQL hosting arrangement. As a result, a production Azure PostgreSQL instance was not available at the time this documentation was prepared.
+
+The live application URL is retained above as the project deployment reference. The availability of database-dependent functionality may be affected by the production database status.
+
+The system's local development and automated testing workflows remain available using PostgreSQL locally or in the CI environment. The handover documentation includes the environment configuration and database restoration considerations.
 
 ---
 
-# 📐 Relationship to Part 1
+## Testing and Quality Assurance
 
-The Part 2 implementation corresponds directly to the artefacts and decisions produced during Part 1.
+Testing was carried out as part of implementation and final project completion. The project includes automated tests and API documentation validation.
 
-These include:
+The test suite can be run from the repository root:
 
-- User Roles
-- User Stories
-- Domain Class Diagram
-- Design Class Diagram
-- Entity Relationship Diagram
-- Database Schema
-- Sequence Diagrams
-- State Diagrams
-- System Architecture
-- Cloud Architecture
-- Design Patterns
-- Non-Functional Requirements
-- Security Requirements
-- DevOps Decisions
-- Cost Analysis
-- Change Management Plan
+```bash
+npm test
+```
 
-The working application demonstrates the practical implementation and realisation of these design decisions.
+The API health endpoint, role-specific access, and documented API workflows can also be checked locally or through Swagger UI using an appropriately authorised account.
+
+Testing and demonstration evidence should be read alongside the final project documentation and demonstration video.
 
 ---
 
-# 📋 Non-Functional Requirements
+## Reviewing Feedback and Final Refinements
 
-The implementation considers the following non-functional requirements:
+Feedback from the earlier project submission was reviewed during the final stage. The team used it to evaluate the system's usability, maintainability, responsiveness, and documentation. The following table records the main feedback themes and how they informed the final project review.
 
-| Requirement | Implementation |
+| Feedback area | Review and response |
 |---|---|
-| **Performance** | Efficient API structure and database access |
-| **Security** | Authentication, authorisation and environment-based secrets |
-| **Usability** | Simple, responsive and role-specific interfaces |
-| **Reliability** | Structured backend architecture and error handling |
-| **Scalability** | Layered architecture and cloud deployment |
-| **Maintainability** | Separation of controllers, services and repositories |
-| **Portability** | Web-based application accessible across modern devices |
+| **Tailwind styling and page titles** | The feedback highlighted the value of consistent theme tokens instead of repeated hard-coded colour values, and meaningful page titles rather than generic labels. These points were included in the final UI review to support visual consistency and clearer navigation. |
+| **Role-specific home pages and PDF reporting** | Role-specific landing pages and PDF reporting were recognised as useful features. The team retained the focus on role-appropriate workflows and reporting while reviewing the overall user experience. |
+| **Large Reports and Observations components** | The feedback identified opportunities to break down larger components into smaller, more maintainable units. This was considered in the final maintainability review and handover documentation. |
+| **Responsive design and device testing** | The feedback recommended wider-screen breakpoints and testing on tablet and desktop layouts in addition to mobile. This informed the final review of the mobile-first interface and its use across different screen sizes. |
+| **Backend architecture and error handling** | The layered Express API, centralised error handling, and separation of responsibilities were recognised as strengths. These architectural decisions are documented to help future maintainers understand and extend the system. |
+| **Automated testing** | The project's test coverage was positively recognised. Automated tests and API documentation validation are retained as part of the quality assurance and future maintenance workflow. |
+
+The feedback review helped the team identify strengths to preserve and areas that future maintainers should consider when extending the system. The final project documentation records the implemented architecture, system behaviour, deployment considerations, and maintenance guidance.
 
 ---
 
-# 📚 Documentation
+## Collaboration and Contribution Evidence
 
-This README accompanies the **Part 2 – Implementation** submission.
+The team collaborated throughout requirements planning, system development, testing, deployment preparation, documentation, and the final demonstration. **GitHub Insights was not used as the collaboration evidence source.** Instead, collaboration and project progress can be demonstrated through the project artefacts and activity records listed below.
 
-For a complete explanation of the project's:
+| Evidence source | What it demonstrates |
+|---|---|
+| **Git commit history** | Contributions over time, implementation progress, fixes, and documentation updates. |
+| **Git branches and pull requests, where available** | Work completed in separate branches and changes reviewed or integrated into the shared project. |
+| **Repository file history and diffs** | Changes made to application code, tests, configuration, and documentation. |
+| **Task allocation and project planning records** | Assigned responsibilities and the distribution of work across the team. |
+| **Meeting notes and communication records** | Team discussions, decisions, progress updates, and coordination. |
+| **Testing and issue-resolution records** | Shared troubleshooting, validation, and refinement of the application. |
+| **Final documentation and handover artefacts** | Collaborative preparation of the technical, user, deployment, and project documentation. |
+| **Demonstration video and presentation** | The completed system and the team's final presentation of its functionality. |
 
-- Requirements analysis
-- User research
-- Design artefacts
-- Architecture
-- Technology evaluation
-- Cloud architecture
-- Security decisions
+These sources provide a practical record of collaboration without relying on GitHub Insights. Supporting screenshots, extracts, or records are in a seperate document included in the Part 3 submission. 
+
+---
+
+## Relationship to Part 1 and Part 2
+
+The final application builds on the planning and design work completed in Part 1 and the implementation work completed in Part 2.
+
+The project maintains traceability between the original requirements and the completed system, including:
+
+- User roles and user stories
+- Domain and design class diagrams
+- Entity Relationship Diagram (ERD)
+- Database schema and data design
+- Sequence and state diagrams
+- System and cloud architecture
 - Design patterns
+- Security requirements
 - Non-functional requirements
-- Cost projections
-- Change management
-- Implementation decisions
+- DevOps and deployment decisions
+- Cost analysis
+- Change management planning
 
-please refer to the **Part 1 planning and design document**.
+The completed application demonstrates the practical realisation of the project's design and implementation decisions.
+
+## Non-Functional Requirements
+
+| Requirement | Consideration in the system |
+|---|---|
+| **Performance** | Structured API and database access |
+| **Security** | Authentication, authorisation, role-based access, and environment-based secrets |
+| **Usability** | Simple, role-specific workflows and responsive interfaces |
+| **Reliability** | Layered backend structure and error handling |
+| **Scalability** | Separation of application layers and cloud deployment approach |
+| **Maintainability** | Separation of routes, controllers, services, and repositories |
+| **Portability** | Browser-based access across supported devices |
 
 ---
 
-# 🎬 Project Links
+## Final Documentation and Handover
 
-### 🌐 Live Web Application
+The Part 3 submission includes the completed system and its supporting documentation. The documentation is intended to help the aftercare organisation and future maintainers understand, operate, and maintain the application.
 
-https://imizamo-yethu-aftercare-webapp-c0graphudmaqe2aw.southafricanorth-01.azurewebsites.net 
+Refer to the accompanying final documentation for:
 
-### ▶️ YouTube Demonstration
-App Demo Only: https://youtu.be/dpp4UZbB32g
+- User guidance for the relevant system roles
+- Technical architecture and implementation details
+- Database configuration and migration guidance
+- Deployment and environment configuration
+- Troubleshooting and maintenance guidance
+- Backup, recovery, and restoration considerations
+- API documentation and endpoint usage
+- Handover and transition guidance
 
-Full Video: https://youtu.be/2XYmDj81yUY
+This README provides the repository overview and setup instructions. The accompanying documentation contains the more detailed operational and technical procedures.
 
 ---
 
-## 💙 NovaTech Solutions
+## Project Completion
 
-*Developed and donated by NovaTech Solutions to support the digital transformation of the Imizamo Yethu Aftercare.*
+The system development and project documentation have been completed for the final **Part 3 – Work Integrated Learning** submission. The project brings together the planning and design from Part 1, implementation from Part 2, and final review, documentation, and handover work.
 
-**INSY7315 – Work Integrated Learning | Part 2 – Implementation**
+**NovaTech Solutions** developed and donated the Imizamo Yethu Aftercare Management System to support the organisation's digital operations and reduce reliance on manual paper-based processes.
 
-## Azure environment status
+---
 
-Production deployment targets **Microsoft Azure** (App Service and Azure Database for PostgreSQL).
+## NovaTech Solutions
 
-Our project team has applied for Azure credits under a non-profit (NPO) arrangement. Until that application is approved and the PostgreSQL flexible server is provisioned:
+*Developed and donated by NovaTech Solutions to support the digital transformation of Imizamo Yethu Aftercare.*
 
-- No production Azure PostgreSQL instance is currently available as we've ran out of student credits and therefore had to cancel our subscription.
-- The schema management is handled exclusively through **node-pg-migrate**. Migrations execute automatically on application start and are validated in continuous integration against a PostgreSQL service container.
-- Once the production database is restored, the baseline migration will be recorded on that environment using a one-time `npm run migrate -w server -- --fake` operation (after the appropriate firewall rule is configured).
-
-Local development and the automated test suite are unaffected and continue to use migrations against a local or CI PostgreSQL database.
+**INSY7315 – Work Integrated Learning | Part 3 – Final Submission**
