@@ -3,7 +3,7 @@ import LearnersByClass from "./LearnersByClass";
 import { STAT_COLOURS } from "../utils/statColours";
 
 const SECTIONS = [
-  { key: "enrollment", title: "Enrollment", icon: "🎒", tint: STAT_COLOURS.learners.tint },
+  { key: "enrollment", title: "Enrolment", icon: "🎒", tint: STAT_COLOURS.learners.tint },
   { key: "operations", title: "Operations", icon: "🚪", tint: STAT_COLOURS.signOuts.tint },
   { key: "development", title: "Learner development", icon: "🌱", tint: STAT_COLOURS.observations.tint },
 ];
