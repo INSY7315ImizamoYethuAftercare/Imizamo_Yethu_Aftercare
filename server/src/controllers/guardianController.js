@@ -101,7 +101,7 @@ export async function getChildOverview(req, res, next) {
 /**
  * POST /api/guardian/children/:learnerId/pickups
  * The guardian adds someone who may collect their child.
- * Body: { fullName, relationship, contactNumber }
+ * Body: { fullName, relationship, contactNumber, canWalkHomeAlone? }
  */
 export async function addChildPickup(req, res, next) {
   try {
@@ -128,12 +128,10 @@ export async function addChildPickup(req, res, next) {
  */
 export async function setChildWalkHome(req, res, next) {
   try {
-    const { canWalkHomeAlone } = req.body ?? {}
-    // Strictly true or false: this decides whether a child may leave unaccompanied.
-    if (typeof canWalkHomeAlone !== 'boolean') throw validate.badRequest('canWalkHomeAlone must be true or false')
+    const { canWalkHomeAlone } = req.validated.body
     const result = await guardianService.setWalkHome({
       userId: req.user.userId,
-      learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
+      learnerId: req.validated.params.learnerId,
       canWalkHomeAlone,
     })
     res.json(result)

@@ -23,11 +23,7 @@ guardianRouter.get('/children/:learnerId', authorize('guardian'), validate(schem
 guardianRouter.get('/children/:learnerId/observations', authorize('guardian'), validate(schemas.childParams), getChildObservations)
 guardianRouter.get('/children/:learnerId/overview', authorize('guardian'), validate(schemas.childParams), getChildOverview)
 guardianRouter.post('/children/:learnerId/pickups', authorize('guardian'), validate(schemas.addChildPickup), addChildPickup)
-guardianRouter.get('/children/:learnerId', authorize('guardian'), getChildProfile)
-guardianRouter.get('/children/:learnerId/observations', authorize('guardian'), getChildObservations)
-guardianRouter.get('/children/:learnerId/overview', authorize('guardian'), getChildOverview)
-guardianRouter.post('/children/:learnerId/pickups', authorize('guardian'), addChildPickup)
-guardianRouter.patch('/children/:learnerId/walk-home', authorize('guardian'), setChildWalkHome)
+guardianRouter.patch('/children/:learnerId/walk-home', authorize('guardian'), validate(schemas.setChildWalkHome), setChildWalkHome)
 
 guardianRouter.patch('/:guardianId/deactivate', authenticate, authorize('manager'), validate(schemas.guardianParams), deactivateGuardian)
 guardianRouter.patch('/:guardianId/activate', authenticate, authorize('manager'), validate(schemas.guardianParams), activateGuardian)

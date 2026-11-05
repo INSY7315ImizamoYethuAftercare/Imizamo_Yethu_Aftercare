@@ -104,19 +104,12 @@ export async function confirmSignOut(req, res, next) {
  */
 export async function raiseEscalation(req, res, next) {
   try {
-    const { learnerId, collectorName } = req.body ?? {}
-    if (!learnerId || collectorName === undefined) {
-      const err = new Error('learnerId and collectorName are required (collectorName: null for a learner walking home)')
-      err.status = 400
-      throw err
-    }
+    const { learnerId, collectorName } = req.validated.body
     const entry = await signOutService.raiseEscalation({
       userId: req.user.userId,
       role: actingRole(req.user),
-      learnerId: validate.parseId(learnerId, 'learnerId'),
-      collectorName: collectorName === null
-        ? null
-        : validate.text(collectorName, 'collectorName', { max: validate.LIMITS.fullName }).trim(),
+      learnerId,
+      collectorName,
       date: todayInSA(),
     })
     res.status(201).json(entry)
@@ -141,16 +134,11 @@ export async function getEscalations(req, res, next) {
  */
 export async function resolveEscalation(req, res, next) {
   try {
-    const { action } = req.body ?? {}
-    if (action !== 'approve' && action !== 'dismiss') {
-      const err = new Error("action must be 'approve' or 'dismiss'")
-      err.status = 400
-      throw err
-    }
+    const { action } = req.validated.body
     res.json(await signOutService.resolveEscalation({
       userId: req.user.userId,
       role: actingRole(req.user),
-      escalationId: validate.parseId(req.params.escalationId, 'escalationId'),
+      escalationId: req.validated.params.escalationId,
       action,
       today: todayInSA(),
       timeOut: nowInSA(),
