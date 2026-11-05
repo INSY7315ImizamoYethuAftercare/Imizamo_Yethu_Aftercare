@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import MoreMenu from "../components/MoreMenu";
+import SettingsButton from "../components/SettingsButton";
 import { apiClient } from "../services/apiClient";
 import { dataBus } from "../services/dataBus";
 import { useSession } from "../services/session";
@@ -10,10 +9,7 @@ import { useHeader } from "./UseHeader";
 import { useLearners } from "./UseLearners";
 
 function Attendance({ role = "Teacher" }) {
-  const navigate = useNavigate();
   const comingSoon = () => alert("Coming soon");
-  const settingsPath = role === "Admin" ? "/admin/settings" : "/settings";
-  const showSettings = role === "Manager" || role === "Admin";
   const iconBtn =
     "w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition";
 
@@ -161,7 +157,7 @@ function Attendance({ role = "Teacher" }) {
     }`;
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Logo" className="w-9 h-9 object-contain" />
@@ -172,10 +168,7 @@ function Attendance({ role = "Teacher" }) {
         </div>
         <div className="flex items-center gap-3">
           <button onClick={comingSoon} className={iconBtn}>🔔</button>
-          {showSettings && (
-            <button onClick={() => navigate(settingsPath)} className={iconBtn}>⚙️</button>
-          )}
-          <MoreMenu />
+          <SettingsButton />
         </div>
       </div>
 
@@ -339,7 +332,7 @@ function Attendance({ role = "Teacher" }) {
               className={`mb-3 border text-sm font-medium rounded-2xl px-4 py-3 text-center shadow-lg ${
                 message.type === "success"
                   ? "bg-green-50 border-green-200 text-green-700"
-                  : "bg-red-50 border-red-200 text-red-700"
+                  : "bg-red-50 border-red-200 text-red-600"
               }`}
             >
               {message.text}

@@ -117,8 +117,8 @@ If you get a different result, check [known-bugs.md](known-bugs.md) before loggi
 | M6 | Deactivate **Sipho Dlamini**, then sign in as `s.dlamini@iylh.test` in a private window. | *"This account has been deactivated"*. If Sipho was **already** signed in elsewhere, his next click sends him back to the sign-in page. |
 | M7 | Reactivate Sipho. | He can sign in again. |
 | M8 | Open **Sign Out** and sign out **Zoe Ntombela** by tapping **Grace Ntombela**. | *"Zoe is signed out"*. Managers can sign learners out, and the record shows the manager as the person who did it: back on **Home**, Zoe appears in Recent Activity with *"Collected by Grace Ntombela"* and *"Signed out by Sarah Botha"*. |
-| M8a | Start a sign-out for **Keanu Abrahams**, type an unknown name, and tap **Verify**. | **"Override and approve"** is visible but greyed out, with *"Override isn't available yet: it needs the approval queue."* |
-| M9 | Open **Reports**. | Tabs: Overview, Trends, Donor Report, Board Report. (The figures are currently static placeholders, not live data.) |
+| M8a | Start a sign-out for **Keanu Abrahams**, type an unknown name, and tap **Verify**. | **"Override and approve"** is available. Tap **Send to manager queue**, then open **Queue**: Keanu is listed with the typed name. Approve it, and he appears in Recent Activity as collected by that name. |
+| M9 | Open **Reports**. | Tabs: Overview, Trends, Donor Report, Board Report. |
 | M10 | Open `http://localhost:5173/admin`. | You're sent back to `/manager`. |
 | M11 | On **Classes**, tap 🗑 on **Orange**, choose **Blue**, and tap **Move & remove**. | Orange disappears. Lwazi and Chloe are now in Blue (check **Learners**, and Blue's count on **Classes**). Teachers no longer see an Orange filter. To get Orange back for the next run, re-run the demo seed with `--reset`. |
 | M11a | Open any learner's **Edit details**. | Orange is no longer offered as a class. |

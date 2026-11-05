@@ -112,27 +112,25 @@ describe('Add Authorised Pickup', () => {
     expect(submit).toBeEnabled()
   })
 
-  it('adds the person, with the walk-home permission, and refreshes the list', async () => {
+  it('adds the person and refreshes the list', async () => {
     onApi('POST', '/guardian/children/3/pickups', { guardianId: 7, fullName: 'Zainab Hendricks', relationship: 'Aunt', isPrimaryContact: false, isYou: false })
     await renderParent()
     await open()
     await userEvent.type(screen.getByLabelText('FULL NAME *'), '  Zainab Hendricks ')
     await userEvent.type(screen.getByLabelText('RELATIONSHIP TO CHILD *'), 'Aunt')
     await userEvent.type(screen.getByLabelText('CONTACT NUMBER *'), '072 345 6789')
-    await userEvent.click(screen.getByLabelText(/Aisha may walk home alone/))
 
     onApi('GET', '/guardian/children/3/overview', {
       ...AISHA_OVERVIEW,
-      child: { ...AISHA_OVERVIEW.child, canWalkHomeAlone: true },
       pickups: [...AISHA_OVERVIEW.pickups, { guardianId: 7, fullName: 'Zainab Hendricks', relationship: 'Aunt', isPrimaryContact: false, isYou: false }],
     })
     await userEvent.click(screen.getByRole('button', { name: 'Submit Request' }))
 
     expect(apiClient.post).toHaveBeenCalledWith('/guardian/children/3/pickups', {
-      fullName: 'Zainab Hendricks', relationship: 'Aunt', contactNumber: '072 345 6789', canWalkHomeAlone: true,
+      fullName: 'Zainab Hendricks', relationship: 'Aunt', contactNumber: '072 345 6789',
     })
     expect(await screen.findByRole('status')).toHaveTextContent('Zainab Hendricks can now collect Aisha.')
-    expect(await screen.findByText('May walk home alone')).toBeInTheDocument()
+    expect(await screen.findByText('Zainab Hendricks')).toBeInTheDocument()
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
@@ -158,10 +156,50 @@ describe('Add Authorised Pickup', () => {
     expect(apiClient.post).not.toHaveBeenCalledWith('/guardian/children/3/pickups', expect.anything())
   })
 
-  it('hides the walk-home tick box when the child already has that permission', async () => {
-    onApi('GET', '/guardian/children/3/overview', { ...AISHA_OVERVIEW, child: { ...AISHA_OVERVIEW.child, canWalkHomeAlone: true } })
+  it('only asks about the person, not about walking home', async () => {
     await renderParent()
     await open()
-    expect(screen.queryByLabelText(/may walk home alone/)).not.toBeInTheDocument()
+    expect(within(dialog()).queryByText(/walk home/)).not.toBeInTheDocument()
+  })
+})
+
+describe('Walking home', () => {
+  const tickBox = () => screen.getByRole('checkbox', { name: /Aisha may walk home alone/ })
+  const url = '/guardian/children/3/walk-home'
+
+  it('saves straight away, without adding a person', async () => {
+    onApi('PATCH', url, { learnerId: 3, canWalkHomeAlone: true })
+    await renderParent()
+    expect(tickBox()).not.toBeChecked()
+
+    await userEvent.click(tickBox())
+
+    expect(apiClient.patch).toHaveBeenCalledWith(url, { canWalkHomeAlone: true })
+    expect(await screen.findByRole('status')).toHaveTextContent('Aisha may now walk home alone.')
+    expect(tickBox()).toBeChecked()
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(apiClient.post).not.toHaveBeenCalledWith('/guardian/children/3/pickups', expect.anything())
+  })
+
+  it('can be taken back', async () => {
+    onApi('GET', '/guardian/children/3/overview', { ...AISHA_OVERVIEW, child: { ...AISHA_OVERVIEW.child, canWalkHomeAlone: true } })
+    onApi('PATCH', url, { learnerId: 3, canWalkHomeAlone: false })
+    await renderParent()
+    expect(tickBox()).toBeChecked()
+
+    await userEvent.click(tickBox())
+
+    expect(apiClient.patch).toHaveBeenCalledWith(url, { canWalkHomeAlone: false })
+    expect(await screen.findByRole('status')).toHaveTextContent('Aisha must now be collected by someone on the pickup list.')
+    expect(tickBox()).not.toBeChecked()
+  })
+
+  it('stays as it was and says why if saving fails', async () => {
+    onApi('PATCH', url, new ApiError('Something went wrong', 500))
+    await renderParent()
+    await userEvent.click(tickBox())
+    expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong')
+    expect(tickBox()).not.toBeChecked()
+    expect(tickBox()).toBeEnabled()
   })
 })

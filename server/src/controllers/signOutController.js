@@ -12,7 +12,9 @@ import TeacherRepository from '../repositories/TeacherRepository.js'
 import ManagerRepository from '../repositories/ManagerRepository.js'
 import LearnerRepository from '../repositories/LearnerRepository.js'
 import AttendanceRepository from '../repositories/AttendanceRepository.js'
+import SignOutEscalationRepository from '../repositories/SignOutEscalationRepository.js'
 import { pool } from '../db/pool.js'
+import { withTransaction } from '../db/transaction.js'
 import * as validate from '../utils/validation.js'
 import { actingRole } from '../middleware/auth.js'
 
@@ -23,6 +25,15 @@ const signOutService = new SignOutService({
   managerRepository: new ManagerRepository(pool),
   learnerRepository: new LearnerRepository(pool),
   attendanceRepository: new AttendanceRepository(pool),
+  escalationRepository: new SignOutEscalationRepository(pool),
+  // Approving closes the queue entry and records the sign-out as one unit.
+  runInTransaction: (work) =>
+    withTransaction((client) =>
+      work({
+        escalationRepository: new SignOutEscalationRepository(client),
+        signOutRepository: new SignOutRepository(client),
+      }),
+    ),
 })
 
 /**
@@ -92,6 +103,69 @@ export async function confirmSignOut(req, res, next) {
       recordDate: todayInSA(),
     })
     res.status(201).json(record)
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * POST /api/signout/escalations
+ * Sends a collection staff couldn't verify to the manager's queue.
+ * collectorName: null means the learner wants to walk home without permission.
+ */
+export async function raiseEscalation(req, res, next) {
+  try {
+    const { learnerId, collectorName } = req.body ?? {}
+    if (!learnerId || collectorName === undefined) {
+      const err = new Error('learnerId and collectorName are required (collectorName: null for a learner walking home)')
+      err.status = 400
+      throw err
+    }
+    const entry = await signOutService.raiseEscalation({
+      userId: req.user.userId,
+      role: actingRole(req.user),
+      learnerId: validate.parseId(learnerId, 'learnerId'),
+      collectorName: collectorName === null
+        ? null
+        : validate.text(collectorName, 'collectorName', { max: validate.LIMITS.fullName }).trim(),
+      date: todayInSA(),
+    })
+    res.status(201).json(entry)
+  } catch (err) {
+    next(err)
+  }
+}
+
+/** GET /api/signout/escalations - today's queue, for the manager. */
+export async function getEscalations(req, res, next) {
+  try {
+    res.json(await signOutService.getEscalations({ date: todayInSA() }))
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * PATCH /api/signout/escalations/:escalationId
+ * The manager's decision. action: 'approve' signs the learner out with the
+ * named collector; 'dismiss' leaves them at the centre.
+ */
+export async function resolveEscalation(req, res, next) {
+  try {
+    const { action } = req.body ?? {}
+    if (action !== 'approve' && action !== 'dismiss') {
+      const err = new Error("action must be 'approve' or 'dismiss'")
+      err.status = 400
+      throw err
+    }
+    res.json(await signOutService.resolveEscalation({
+      userId: req.user.userId,
+      role: actingRole(req.user),
+      escalationId: validate.parseId(req.params.escalationId, 'escalationId'),
+      action,
+      today: todayInSA(),
+      timeOut: nowInSA(),
+    }))
   } catch (err) {
     next(err)
   }

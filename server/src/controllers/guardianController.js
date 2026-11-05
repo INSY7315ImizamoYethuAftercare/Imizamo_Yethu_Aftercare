@@ -30,16 +30,24 @@ const guardianService = new GuardianService({
   pickupPermissionRepository: new PickupPermissionRepository(pool),
   schoolClassRepository: new SchoolClassRepository(pool),
   teacherRepository: new TeacherRepository(pool),
-  // Adding a pickup writes guardians + pickup_permissions (+ learners) as one unit.
+  // Adding a pickup writes guardians + pickup_permissions as one unit.
   runInTransaction: (work) =>
     withTransaction((client) =>
       work({
         guardianRepository: new GuardianRepository(client),
         pickupPermissionRepository: new PickupPermissionRepository(client),
-        learnerRepository: new LearnerRepository(client),
       }),
     ),
 })
+
+/** GET /api/guardian/me - the logged-in guardian's own details and children. */
+export async function getMyProfile(req, res, next) {
+  try {
+    res.json(await guardianService.getMyProfile(req.user.userId))
+  } catch (err) {
+    next(err)
+  }
+}
 
 /** GET /api/guardian/children - lists the logged-in guardian's own children. */
 export async function getMyChildren(req, res, next) {
@@ -94,21 +102,41 @@ export async function getChildOverview(req, res, next) {
 /**
  * POST /api/guardian/children/:learnerId/pickups
  * The guardian adds someone who may collect their child.
- * Body: { fullName, relationship, contactNumber, canWalkHomeAlone? }
+ * Body: { fullName, relationship, contactNumber }
  */
 export async function addChildPickup(req, res, next) {
   try {
-    const { fullName, relationship, contactNumber, canWalkHomeAlone } = req.body ?? {}
+    const { fullName, relationship, contactNumber } = req.body ?? {}
     const pickup = await guardianService.addPickup({
       userId: req.user.userId,
       learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
       fullName: validate.text(fullName, 'fullName', { max: validate.LIMITS.fullName }),
       relationship: validate.text(relationship, 'relationship', { max: validate.LIMITS.relationship }),
       contactNumber: validate.text(contactNumber, 'contactNumber', { max: validate.LIMITS.contactNumber }),
-      canWalkHomeAlone: canWalkHomeAlone === true || canWalkHomeAlone === 'true',
       today: todayInSA(),
     })
     res.status(201).json(pickup)
+  } catch (err) {
+    next(err)
+  }
+}
+
+/**
+ * PATCH /api/guardian/children/:learnerId/walk-home
+ * The guardian gives or takes back permission for their child to walk home alone.
+ * Body: { canWalkHomeAlone: boolean }
+ */
+export async function setChildWalkHome(req, res, next) {
+  try {
+    const { canWalkHomeAlone } = req.body ?? {}
+    // Strictly true or false: this decides whether a child may leave unaccompanied.
+    if (typeof canWalkHomeAlone !== 'boolean') throw validate.badRequest('canWalkHomeAlone must be true or false')
+    const result = await guardianService.setWalkHome({
+      userId: req.user.userId,
+      learnerId: validate.parseId(req.params.learnerId, 'learnerId'),
+      canWalkHomeAlone,
+    })
+    res.json(result)
   } catch (err) {
     next(err)
   }

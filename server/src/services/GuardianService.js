@@ -106,6 +106,27 @@ async #assertIsManager(userId) {
   }
 
   /**
+   * The logged-in guardian's own details and children, for their Settings page.
+   *
+   * @param {number} userId
+   * @returns {Promise<{ fullName: string, contactNumber: string, relationship: string,
+   *   children: Array<{ learnerId: number, name: string }> }>}
+   */
+  async getMyProfile(userId) {
+    const guardian = await this.guardianRepository.findByUserId(userId)
+    if (!guardian) throw httpError('Only guardians can perform this action', 403)
+
+    const children = await this.learnerRepository.findByGuardianId(guardian.guardian_id)
+
+    return {
+      fullName: guardian.full_name,
+      contactNumber: guardian.contact_number,
+      relationship: guardian.relationship,
+      children: children.map((c) => ({ learnerId: c.learner_id, name: `${c.first_name} ${c.last_name}` })),
+    }
+  }
+
+  /**
    * Lists all learners linked to the logged-in guardian.
    *
    * @param {number} userId
@@ -219,14 +240,12 @@ async #assertIsManager(userId) {
 
   /**
    * A parent adds someone who may collect their child (they don't need an
-   * account). The person is authorised straight away. Optionally the parent
-   * also gives permission for the child to walk home alone. All of it is
-   * saved together, or not at all.
+   * account). The person is authorised straight away.
    *
    * @param {{ userId: number, learnerId: number, fullName: string, relationship: string,
-   *   contactNumber: string, canWalkHomeAlone?: boolean, today: string }} params
+   *   contactNumber: string, today: string }} params
    */
-  async addPickup({ userId, learnerId, fullName, relationship, contactNumber, canWalkHomeAlone = false, today }) {
+  async addPickup({ userId, learnerId, fullName, relationship, contactNumber, today }) {
     const myGuardianId = await this.#assertOwnsLearner(userId, learnerId)
 
     const current = await this.pickupPermissionRepository.findActiveByLearnerIds([learnerId])
@@ -235,7 +254,7 @@ async #assertIsManager(userId) {
       throw httpError(`${name} is already on the pickup list.`, 409)
     }
 
-    return this.runInTransaction(async ({ guardianRepository, pickupPermissionRepository, learnerRepository }) => {
+    return this.runInTransaction(async ({ guardianRepository, pickupPermissionRepository }) => {
       const person = await guardianRepository.createPickupPerson({ fullName: name, relationship, contactNumber })
       await pickupPermissionRepository.create({
         learnerId,
@@ -244,7 +263,6 @@ async #assertIsManager(userId) {
         authorisedDate: today,
         addedByGuardianId: myGuardianId,
       })
-      if (canWalkHomeAlone) await learnerRepository.update(learnerId, { can_walk_home_alone: true })
       return {
         guardianId: person.guardian_id,
         fullName: person.full_name,
@@ -253,6 +271,18 @@ async #assertIsManager(userId) {
         isYou: false,
       }
     })
+  }
+
+  /**
+   * A parent gives, or takes back, permission for their child to walk home
+   * alone. This is separate from who may collect the child.
+   *
+   * @param {{ userId: number, learnerId: number, canWalkHomeAlone: boolean }} params
+   */
+  async setWalkHome({ userId, learnerId, canWalkHomeAlone }) {
+    await this.#assertOwnsLearner(userId, learnerId)
+    await this.learnerRepository.update(learnerId, { can_walk_home_alone: canWalkHomeAlone })
+    return { learnerId, canWalkHomeAlone }
   }
 
   /**

@@ -1,25 +1,47 @@
 import TrendChart from "./TrendChart";
-import { exportChart } from "../utils/charts";
+import ReportsBanner from "./ReportsBanner";
 import { colourForClass } from "../pages/AddClassSheet";
+import { changeLabel, pointsChange } from "../utils/insights";
 
 function ReportsTrends({
   orgTrend,
+  orgTrendView,
   classRows,
+  insight,
+  pastMonth,
+  weekWords,
   exportTrends,
+  exportChart,
   pct,
   card,
   primary,
 }) {
   return (
     <div className="space-y-5 w-full pb-8">
-      <div className={card}>
+      <ReportsBanner icon="📈" title="Trends" subtitle={pastMonth ? `${pastMonth}: the final week against the week before` : "This week against last week"} insight={insight} />
+
+      <div className={card} data-pdf-chart>
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-          <h3 className="font-semibold text-gray-900">Organisation trend</h3>
+          <div>
+            <h3 className="font-semibold text-gray-900">Organisation trend</h3>
+            {orgTrend.length > 0 && (
+              <p className="text-xs text-gray-400 mt-0.5">
+                {orgTrendView === "daily"
+                  ? pastMonth
+                    ? `Attendance day by day, as only one week was recorded up to the end of ${pastMonth}.`
+                    : "Attendance day by day. This changes to weekly once two weeks are recorded."
+                  : pastMonth
+                    ? `Attendance each week, Monday to Friday, up to the end of ${pastMonth}.`
+                    : "Attendance each week, Monday to Friday."}
+              </p>
+            )}
+          </div>
           <button
-            onClick={() => exportChart("org-trend")}
+            data-pdf-skip
+            onClick={exportChart}
             className="px-3 py-1.5 rounded-full text-xs font-semibold bg-white text-orange-500 border border-gray-200 shadow-lg hover:border-orange-300 active:scale-95 transition"
           >
-            Export chart
+            Export chart as PDF
           </button>
         </div>
         <TrendChart data={orgTrend} />
@@ -32,39 +54,45 @@ function ReportsTrends({
             <thead>
               <tr className="text-left text-gray-500 border-b border-gray-100">
                 <th className="py-2 font-medium">Class</th>
-                <th className="py-2 font-medium">This week</th>
-                <th className="py-2 font-medium">Last week</th>
+                <th className="py-2 font-medium">{weekWords.Now}</th>
+                <th className="py-2 font-medium">{weekWords.Before}</th>
+                <th className="py-2 font-medium">Change</th>
               </tr>
             </thead>
             <tbody>
               {classRows.length === 0 && (
                 <tr>
-                  <td colSpan={3} className="py-3 text-xs text-gray-400">
+                  <td colSpan={4} className="py-3 text-xs text-gray-400">
                     No class trend data yet.
                   </td>
                 </tr>
               )}
-              {classRows.map((cls) => (
-                <tr key={cls.name} className="border-b border-gray-50">
-                  <td className="py-2 font-medium">
-                    <span className="inline-flex items-center gap-2">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
-                        style={{ backgroundColor: colourForClass(cls.name, cls.colour) }}
-                      />
-                      {cls.name}
-                    </span>
-                  </td>
-                  <td className="py-2">{pct(cls.thisWeek)}</td>
-                  <td className="py-2">{pct(cls.lastWeek)}</td>
-                </tr>
-              ))}
+              {classRows.map((cls) => {
+                const diff = pointsChange(cls.thisWeek, cls.lastWeek);
+                const tone = diff === null ? "text-gray-400" : diff > 0 ? "text-green-600" : diff < 0 ? "text-red-500" : "text-gray-500";
+                return (
+                  <tr key={cls.name} className="border-b border-gray-50">
+                    <td className="py-2 font-medium">
+                      <span className="inline-flex items-center gap-2">
+                        <span
+                          className="w-2.5 h-2.5 rounded-full inline-block shrink-0"
+                          style={{ backgroundColor: colourForClass(cls.name, cls.colour) }}
+                        />
+                        {cls.name}
+                      </span>
+                    </td>
+                    <td className="py-2">{pct(cls.thisWeek)}</td>
+                    <td className="py-2">{pct(cls.lastWeek)}</td>
+                    <td className={`py-2 font-semibold ${tone}`}>{changeLabel(diff)}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
       </div>
 
-      <button onClick={exportTrends} className={primary}>
+      <button data-pdf-skip onClick={exportTrends} className={primary}>
         📄 Export as PDF
       </button>
     </div>

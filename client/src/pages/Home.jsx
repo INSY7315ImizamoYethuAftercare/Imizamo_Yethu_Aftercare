@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import MoreMenu from "../components/MoreMenu";
+import SettingsButton from "../components/SettingsButton";
 import { apiClient } from "../services/apiClient";
 import { dataBus } from "../services/dataBus";
 import { useSession } from "../services/session";
 import { greeting, longDate, todayInSA } from "../utils/dates";
+import { STAT_COLOURS } from "../utils/statColours";
 import { getClasses, refreshClasses, useClasses } from "./UseClasses";
 import { useHeader } from "./UseHeader";
 import { refreshLearners, useLearners } from "./UseLearners";
@@ -88,10 +89,10 @@ function Home() {
 
   // Stat cards in the Figma style: tinted icon, coloured number, progress bar.
   const stats = [
-    { label: "Present", icon: "✅", value: present, bar: pct(present, total), tint: "bg-green-50", text: "text-green-600", fill: "bg-green-500" },
+    { label: "Present", icon: "✅", value: present, bar: pct(present, total), ...STAT_COLOURS.attendance },
     { label: "Absent", icon: "❌", value: absent, bar: pct(absent, total), tint: "bg-red-50", text: "text-red-500", fill: "bg-red-500" },
     // Signed out as a share of who came in today.
-    { label: "Signed out", icon: "🚪", value: signOuts.length, bar: pct(signOuts.length, present), tint: "bg-purple-50", text: "text-purple-600", fill: "bg-purple-500" },
+    { label: "Signed out", icon: "🚪", value: signOuts.length, bar: pct(signOuts.length, present), ...STAT_COLOURS.signOuts },
     // Turns green at 0 once everyone who came in has gone home.
     allCollected
       ? { label: "Still here", icon: "🏠", value: 0, bar: 0, tint: "bg-green-50", text: "text-green-600", fill: "bg-green-500" }
@@ -109,7 +110,7 @@ function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-cream flex flex-col">
+    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex flex-col">
       <div className="flex items-center justify-between px-4 pt-4 pb-3 bg-white">
         <div className="flex items-center gap-2">
           <img src="/logo.png" alt="Imizamo Yethu Learning Hub" className="w-9 h-9 object-contain" />
@@ -120,7 +121,7 @@ function Home() {
         </div>
         <div className="flex items-center gap-3">
           <button onClick={comingSoon} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-50 shadow-md border border-gray-200 hover:bg-gray-100 active:scale-95 transition">🔔</button>
-          <MoreMenu />
+          <SettingsButton />
         </div>
       </div>
 

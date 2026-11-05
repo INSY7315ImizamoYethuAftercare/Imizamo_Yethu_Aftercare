@@ -55,7 +55,7 @@ function TeacherBottomNav() {
           <span className={`text-[10px] ${isActive("/home") ? "font-semibold" : ""}`}>Home</span>
         </button>
         <button onClick={() => navigate("/attendance")} className={navBtn(isActive("/attendance"))}>
-          <span className="text-lg text-green-500">✓</span>
+          <span className="text-lg text-green-600">✓</span>
           <span className={`text-[10px] ${isActive("/attendance") ? "font-semibold" : ""}`}>Attendance</span>
         </button>
         <button onClick={() => navigate("/learners")} className={navBtn(isActive("/learners"))}>
@@ -83,7 +83,7 @@ function TeacherBottomNav() {
             <span>🏠</span> Home
           </button>
           <button onClick={() => navigate("/attendance")} className={sideNavBtn(isActive("/attendance"))}>
-            <span className="text-green-500">✓</span> Attendance
+            <span className="text-green-600">✓</span> Attendance
           </button>
           <button onClick={() => navigate("/learners")} className={sideNavBtn(isActive("/learners"))}>
             <span>🎒</span> Learners
@@ -114,7 +114,7 @@ function ManagerBottomNav() {
             <span className={`text-[10px] ${isActive("/manager") ? "font-semibold" : ""}`}>Home</span>
           </button>
           <button onClick={() => navigate("/manager/attendance")} className={navBtn(isActive("/manager/attendance"))}>
-            <span className="text-lg text-green-500">✓</span>
+            <span className="text-lg text-green-600">✓</span>
             <span className={`text-[10px] ${isActive("/manager/attendance") ? "font-semibold" : ""}`}>Attendance</span>
           </button>
           <button onClick={() => navigate("/manager/learners")} className={navBtn(isActive("/manager/learners"))}>
@@ -146,7 +146,7 @@ function ManagerBottomNav() {
             <span>🏠</span> Home
           </button>
           <button onClick={() => navigate("/manager/attendance")} className={sideNavBtn(isActive("/manager/attendance"))}>
-            <span className="text-green-500">✓</span> Attendance
+            <span className="text-green-600">✓</span> Attendance
           </button>
           <button onClick={() => navigate("/manager/learners")} className={sideNavBtn(isActive("/manager/learners"))}>
             <span>🎒</span> Learners
@@ -248,7 +248,7 @@ function Protected({ role, children }) {
 
   if (status === "unknown") {
     return (
-      <div className="min-h-screen bg-cream flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-orange-50 to-white flex items-center justify-center">
         <p className="text-sm text-gray-400">Loading...</p>
       </div>
     );

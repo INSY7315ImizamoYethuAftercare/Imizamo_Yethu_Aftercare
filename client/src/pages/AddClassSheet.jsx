@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getClasses } from "./UseClasses";
+import { useStaff, teachersOnly, NO_TEACHER } from "./UseTeachers";
 
 export const GRADE_RANGES = ["Gr R", "Gr 1-2", "Gr 3-4", "Gr 5-6", "Gr 7"];
 export const UNASSIGNED_GRADE = "Unassigned";
@@ -14,16 +15,17 @@ export const CLASS_COLOURS = [
   { name: "Orange", hex: "#FDBA74" },
 ];
 
-// The swatches offered when adding a class.
+// The swatches offered when adding a class: pastels like the five original
+// classes, in different colours so a new class stands apart from them.
 export const SWATCHES = [
-  { label: "Yellow", hex: "#FFD166" },
-  { label: "Sky blue", hex: "#4CC9F0" },
-  { label: "Orange", hex: "#FF6B35" },
-  { label: "Teal", hex: "#00C9A7" },
-  { label: "Purple", hex: "#9B5DE5" },
-  { label: "Pink", hex: "#F15BB5" },
-  { label: "Green", hex: "#06D6A0" },
-  { label: "Amber", hex: "#FFB830" },
+  { label: "Teal", hex: "#5EEAD4" },
+  { label: "Purple", hex: "#D8B4FE" },
+  { label: "Pink", hex: "#F9A8D4" },
+  { label: "Periwinkle", hex: "#A5B4FC" },
+  { label: "Lime", hex: "#BEF264" },
+  { label: "Aqua", hex: "#A5F3FC" },
+  { label: "Lilac", hex: "#F0ABFC" },
+  { label: "Tan", hex: "#E7C9A9" },
 ];
 
 const NAME_MAX = 100; // school_classes.class_name
@@ -38,10 +40,14 @@ export const colourForClass = (name, colour) =>
 
 const label = "block text-xs font-bold text-gray-500 tracking-wide mb-2";
 
-function AddClassSheet({ existingNames, onAdd, onClose }) {
+function AddClassSheet({ existingNames, classes = [], onAdd, onClose }) {
   const [name, setName] = useState("");
   const [grade, setGrade] = useState("Gr 1-2");
   const [colour, setColour] = useState(SWATCHES[0].hex);
+  const [teacher, setTeacher] = useState(NO_TEACHER);
+  const teachers = teachersOnly(useStaff()).filter((t) => t.status === "Active");
+  // The class the picked teacher leads now, so the manager can see they'll be moved.
+  const movingFrom = teacher !== NO_TEACHER ? classes.find((c) => c.teacher === teacher)?.name : null;
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
 
@@ -62,7 +68,7 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
     setSaving(true);
     setError("");
     try {
-      await onAdd({ name: trimmed, grade, colour });
+      await onAdd({ name: trimmed, grade, colour, teacher });
     } catch (err) {
       setError(err?.message || "Couldn't add the class. Please try again.");
       setSaving(false);
@@ -80,7 +86,7 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
       >
         <form onSubmit={submit} noValidate>
           <div className="w-12 h-1.5 bg-gray-200 rounded-full mx-auto mb-5"></div>
-          <h2 id="add-class-title" className="text-2xl font-extrabold text-navy">Add New Classroom</h2>
+          <h2 id="add-class-title" className="text-2xl font-extrabold text-gray-900">Add New Classroom</h2>
           <p className="text-sm text-gray-400 mt-1 mb-6">Create a new class group for your learners</p>
 
           <label htmlFor="class-name" className={label}>
@@ -108,13 +114,33 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
                 aria-pressed={grade === g}
                 onClick={() => setGrade(g)}
                 className={`px-5 py-3 rounded-2xl text-sm font-bold transition active:scale-95 ${
-                  grade === g ? "bg-navy text-white shadow-md" : "bg-beige text-gray-500 hover:bg-gray-200"
+                  grade === g ? "bg-orange-400 text-white shadow-md" : "bg-beige text-gray-500 hover:bg-gray-200"
                 }`}
               >
                 {g}
               </button>
             ))}
           </div>
+
+          <p id="teacher-label" className={label}>TEACHER</p>
+          <div role="group" aria-labelledby="teacher-label" className="flex flex-wrap gap-2 mb-2">
+            {[NO_TEACHER, ...teachers.map((t) => t.name)].map((n) => (
+              <button
+                key={n}
+                type="button"
+                aria-pressed={teacher === n}
+                onClick={() => setTeacher(n)}
+                className={`px-5 py-3 rounded-2xl text-sm font-bold transition active:scale-95 ${
+                  teacher === n ? "bg-orange-400 text-white shadow-md" : "bg-beige text-gray-500 hover:bg-gray-200"
+                }`}
+              >
+                {n === NO_TEACHER ? "No teacher" : n}
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-orange-500 min-h-[1rem] mb-6">
+            {movingFrom ? `${teacher} currently leads ${movingFrom}. Adding this class will move them here.` : ""}
+          </p>
 
           <p id="colour-label" className={label}>CLASS COLOUR</p>
           <div role="group" aria-labelledby="colour-label" className="grid grid-cols-5 gap-3 mb-6">
@@ -137,8 +163,8 @@ function AddClassSheet({ existingNames, onAdd, onClose }) {
           <div aria-hidden="true" className="flex items-center gap-3 bg-amber-50 border-2 border-amber-100 rounded-2xl px-4 py-4 mb-4">
             <span className="w-12 h-12 rounded-xl bg-amber-100/70 flex items-center justify-center text-xl">🏫</span>
             <div className="flex-1 min-w-0">
-              <p className="text-base font-bold text-navy truncate">{trimmed || "Class Name"}</p>
-              <p className="text-xs font-semibold" style={{ color: colour }}>{grade}</p>
+              <p className="text-base font-bold text-gray-900 truncate">{trimmed || "Class Name"}</p>
+              <p className="text-xs font-semibold text-gray-500">{grade}</p>
             </div>
             <span className="w-2 h-8 rounded-full" style={{ backgroundColor: colour }}></span>
           </div>

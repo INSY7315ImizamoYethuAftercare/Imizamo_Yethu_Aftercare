@@ -88,5 +88,7 @@ describe('Admin home', () => {
     onApi('GET', '/reports/overview', new ApiError('Internal server error', 500))
     await renderAdmin()
     expect(await screen.findByRole('alert')).toHaveTextContent('Internal server error')
+    // The quick actions don't depend on the numbers, so they still work.
+    expect(screen.getByRole('button', { name: /Reports/ })).toBeInTheDocument()
   })
 })
