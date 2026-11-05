@@ -335,7 +335,7 @@ describe('ON DELETE RESTRICT on sign_out_records', () => {
 
     // Postgres reports 23503 (foreign_key_violation) on older versions and
   // 23001 (restrict_violation) on newer ones for ON DELETE RESTRICT.
-  const FK_BLOCKED = { code: expect.stringMatching(/^2300[13]$/) }
+  const FK_BLOCKED = { code: expect.stringMatching(/^23(503|001)$/) }
 
   it('blocks deleting a teacher referenced by a sign-out (23503 or 23001)', async () => {
     await expect(pool.query('DELETE FROM teachers WHERE "teacher_id" = $1', [teacher.profile.teacher_id])).rejects.toMatchObject(
